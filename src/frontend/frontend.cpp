@@ -1,4 +1,11 @@
- #define MOVABLE
+#define MOVABLE
+
+// set (git)-repository-Version to unknown
+// (if not defined in makefile during compile process)
+#ifndef VERSION_STRING
+#define VERSION_STRING "unknown"
+#endif
+
 
 // gcc standard C++ libraries (common stuff)
 #include <iostream>  // standard I/O-Operations (I/O to console)
@@ -34,6 +41,8 @@
 
 #include "IO.hpp"
 
+#include <unistd.h>
+#include <limits.h>
 #include <omp.h>
 //double omp_get_wtime(void);
 
@@ -54,13 +63,18 @@ double beta = 0.0;
 
 
 
+
+
 // main #######################################################################
 int main(void)
 {
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	logger my_log("frontend");
-	my_log << "start";
+	my_log << "running version";
+	my_log << VERSION_STRING;
    #endif
+
+
 
 	axis_CoSiSt x_axis(-5.,20.,Nx,1.2);
 	axis_CoSiSt y_axis(-5.,10.,Ny,1.2);

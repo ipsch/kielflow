@@ -1,5 +1,18 @@
 #include "IO.hpp"
 
+// function to read program execution path
+std::string get_selfpath()
+{
+    char buff[PATH_MAX];
+    ssize_t len = ::readlink("/proc/self/exe", buff, sizeof(buff)-1);
+    if (len != -1) {
+      buff[len] = '\0';
+      return std::string(buff);
+    }
+    return std::string(buff);
+    /* handle error condition */
+}
+
 
 
 inline bool file_exist (const std::string& path)
@@ -35,9 +48,19 @@ void file_create(const std::string &path)
 
 	echelon::file hdf5_file(path, echelon::file::create_mode::truncate);
 
+	echelon::group gr_program    = hdf5_file.create_group("program");
 	echelon::group gr_parameters = hdf5_file.create_group("parameters");
 	echelon::group gr_domain     = hdf5_file.create_group("domain");
 	echelon::group gr_data       = hdf5_file.create_group("data");
+
+	time_t  timev;
+	time(&timev);
+	std::string selfpath = get_selfpath();
+	std::string version = VERSION_STRING;
+
+	echelon::scalar_dataset ds_V    = hdf5_file.create_scalar_dataset("version", version);
+	echelon::scalar_dataset ds_T    = hdf5_file.create_scalar_dataset("date"  , timev);
+	echelon::scalar_dataset ds_P    = hdf5_file.create_scalar_dataset("path", selfpath);
 
 	return;
 }

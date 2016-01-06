@@ -1,5 +1,12 @@
  //#define MOVABLE
 
+// set (git)-repository-Version to unknown
+// (if not defined in makefile during compile process)
+#ifndef VERSION_STRING
+#define VERSION_STRING "unknown"
+#endif
+
+
 // gcc standard C++ libraries (common stuff)
 #include <iostream>  // standard I/O-Operations (I/O to console)
 
@@ -68,9 +75,10 @@ double charge(const double t)
 
 int main(void)
 {
-   #ifdef _MY_VERBOSE
+   #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	logger my_log("main");
-	my_log << "start";
+	my_log << "running version";
+	my_log << VERSION_STRING;
    #endif
 
 	counter iteration(5000);   // set counter for how many iterations are allowed
@@ -106,7 +114,7 @@ int main(void)
 
 	// ##### RELAXATIONS-SOLVER #####
 	fkt3d_const boundary_shape(0.); // there are no additional boundarys (except Domain borders)
-	fkt3d_const boundary_value(0.); // the value of the boundarys is always zero
+	fkt3d_const boundary_value(0.); // the potential at the boundary is zero
 	double SOR = .9; // Overrelaxation parameter
 	solver_poisson_jacobi_nlin NLJ(boundary_shape, boundary_value, SOR);
 	NLJ.set_max_iterations(80);

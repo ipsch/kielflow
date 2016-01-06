@@ -1,6 +1,11 @@
 #ifndef IO_HPP
 #define IO_HPP
 
+// set (git)-repository-Version to unknown
+// (if not defined in makefile during compile process)
+#ifndef VERSION_STRING
+#define VERSION_STRING "unknown"
+#endif
 
 #include <cmath>
 #include <string>
@@ -17,6 +22,8 @@
 #include "axis.hpp"
 #include "operations.hpp"
 #include "particle.hpp"
+
+#include <ctime>
 
 
 
