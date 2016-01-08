@@ -16,14 +16,16 @@ double axis_CoSiSt::bisect(const double &a, const double &b, const double &y) co
 
 axis_CoSiSt::axis_CoSiSt(const double &l0_, const double &L_, const int &N_, const double &m_)
 {
+	/* m_ = Der Anstieg der  Skalierungsfunktion bei x=0; Werte für m_ ]0,1[*/
    #ifdef _MY_VERBOSE_MORE
 	logger log("axis_CoSiSt");
 	log << "axis_CoSiSt(const double &l0_, const double &L_, const int &N_, const int &m_)";
    #endif
+	double pi = acos(-1.);
 	l0 = l0_;
 	L = L_;
 	N = N_;
-	m = m_;
+	m = L*(1-m_)/(2*pi);
 	type_id = 3;
 }
 
