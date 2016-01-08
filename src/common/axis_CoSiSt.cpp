@@ -25,7 +25,7 @@ axis_CoSiSt::axis_CoSiSt(const double &l0_, const double &L_, const int &N_, con
 	l0 = l0_;
 	L = L_;
 	N = N_;
-	m = L*(1-m_)/(2*pi);
+	m = m_;
 	type_id = 3;
 }
 

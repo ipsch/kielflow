@@ -22,6 +22,8 @@
 #include "axis.hpp"
 #include "operations.hpp"
 #include "particle.hpp"
+#include "subdim.hpp"
+
 
 #include <ctime>
 
@@ -40,29 +42,19 @@
 
 
 
-
-class subdim
-{
-
-public:
-	double default_plane;
-	double default_direction;
-	double default_xpos;
-	double default_ypos;
-	double default_zpos;
-};
-
+void save_1d(const field_real &XX,
+		     subdim &sdim, const std::string &path = "./data/plot_data.dat");
 void save_1d(const field_real &Ux, const field_real &Uy, const field_real  &Uz, const field_real  &ni, const field_real &Ph,
-		     const subdim & sdim, const std::string &path = "./data/plot_data.dat");
-void save_1d(const field_real &Ux,const subdim & sdim, const std::string &path = "./data/plot_data.dat");
+		     subdim &sdim, const std::string &path = "./data/plot_data.dat");
 
-
-void save_2d(const field_real &Ux, const subdim & sdim,
-		     const std::string &path = "./data/splot_data.dat");
+void save_2d(const field_real &XX,
+		     subdim &sdim, const std::string &path = "./data/splot_data.dat");
 void save_2d(const field_real &Ux, const field_real &Uy, const field_real  &Uz, const field_real  &ni, const field_real &Ph,
-		     const subdim & sdim, const std::string &path = "./data/splot_data.dat");
-void save_3d(const std::string &file_name , const field_real &Ux, const field_real &Uy, const field_real  &Uz, const field_real  &ni, const field_real &Ph);
+		     subdim &sdim, const std::string &path = "./data/splot_data.dat");
+
 void save_3d(const field_real &XX, const std::string &path);
+void save_3d(const std::string &file_name , const field_real &Ux, const field_real &Uy, const field_real  &Uz, const field_real  &ni, const field_real &Ph);
+
 
 void file_create(const std::string &path);
 

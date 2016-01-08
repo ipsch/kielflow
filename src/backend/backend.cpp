@@ -12,6 +12,8 @@
 #include "plot.hpp"
 #include "IO.hpp"
 #include "o_string.hpp"
+#include "subdim.hpp"
+
 
 #include "fftw3.h"
 
@@ -181,11 +183,19 @@ int main(int argc, char *argv[])
 
 	subdim save_opt;
 
-	save_opt.default_plane = plot_2d::default_plane;
-	save_opt.default_direction = plot_2d::default_direction;
-	save_opt.default_xpos = plot_2d::default_xpos;
-	save_opt.default_ypos = plot_2d::default_ypos;
-	save_opt.default_zpos = plot_2d::default_zpos;
+	save_opt.plane = plot_2d::default_plane;
+	save_opt.direction = plot_2d::default_direction;
+	save_opt.xpos = plot_2d::default_xpos;
+	save_opt.ypos = plot_2d::default_ypos;
+	save_opt.zpos = plot_2d::default_zpos;
+
+	save_opt.Nx = Omega.x_axis->N;
+	save_opt.Ny = Omega.y_axis->N;
+	save_opt.Nz = Omega.z_axis->N;
+	save_opt.set();
+
+
+
 
 	#ifdef _MY_VERBOSE
 	log << "saving 2D plot data";

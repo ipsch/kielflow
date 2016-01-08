@@ -18,6 +18,9 @@
 // gcc standard C libraries (common stuff)
 //#include <complex.h> // simple arithmetics with complex numbers (defines symbol "I" for imaginary unit)
 #include <stdio.h>      /* printf, scanf, puts, NULL */
+#include <unistd.h>
+#include <limits.h>
+#include <omp.h>
 
 // uncommon libraries
 #include "fftw3.h"   // google it (something about discret fourier Transformations)
@@ -30,33 +33,34 @@
 #include "field.hpp"
 #include "masks.hpp"
 #include "init_cond.hpp"
-#ifdef _MY_VERBOSE
-#include "logger.hpp"
-#endif
-// magic stuff
-
+#include "subdim.hpp"
 #include "solver_poisson_jacobi_lin.hpp"
 #include "solver_poisson_jacobi_nlin.hpp"
 #include "solver_poisson_multigrid.hpp"
 
 #include "IO.hpp"
 
-#include <unistd.h>
-#include <limits.h>
-#include <omp.h>
+
 //double omp_get_wtime(void);
 
-
+#if defined (_MY_VERBOSE) || defined (_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+#include "logger.hpp"
+#endif
 
 // number of grid-points
 // in different space directions
+
 int Nx = 256;
 int Ny = 128;
 int Nz = 128;
 
+double Lx = 20.;
+double Ly = 10.;
+double Lz = 10.;
+
 double M = 0.3;
 double tau = 0.1;
-double theta = 10.;
+double theta = 30.;
 double mu = 0.;
 double beta = 0.0;
 
@@ -74,11 +78,10 @@ int main(void)
 	my_log << VERSION_STRING;
    #endif
 
-
-
-	axis_CoSiSt x_axis(-5.,20.,Nx,1.2);
-	axis_CoSiSt y_axis(-5.,10.,Ny,1.2);
-	axis_CoSiSt z_axis(-5.,10.,Nz,1.2);
+	double pi = acos(-1.);
+	axis_CoSiSt x_axis(-0.5*Lx, Lx, Nx, Lx*(1.-0.25)/(2*pi) );
+	axis_CoSiSt y_axis(-0.5*Ly, Ly, Ny, Ly*(1.-0.25)/(2*pi) );
+	axis_CoSiSt z_axis(-0.5*Lz, Lz, Nz, Lz*(1.-0.25)/(2*pi) );
 
 	/*
 	axis_CoSiSt x_axis(-5.,10.,Nx,1.24);
@@ -97,12 +100,13 @@ int main(void)
 	grid_Co Omega(x_axis,y_axis,z_axis);
 	parameters Params(M,tau,theta,mu,beta);
 
+
 	subdim my_dim;
-	my_dim.default_xpos = Nx/2.;
-	my_dim.default_ypos = Ny/2.;
-	my_dim.default_zpos = Nz/2.;
-	my_dim.default_direction = 0;
-	my_dim.default_plane = 2;
+	my_dim.xpos = Nx/2.;
+	my_dim.ypos = Ny/2.;
+	my_dim.zpos = Nz/2.;
+	my_dim.direction = 0;
+	my_dim.plane = 2;
 
 
 
@@ -136,8 +140,8 @@ int main(void)
 	fkt3d_Gauss dust_3d_fkt(-14.,0.15,0.15,0.15);
 	//fkt3d_shift H_3d_shifted_fkt(dust_3d_fkt, shift, 0., 0.);
 	nd.fill(dust_3d_fkt);
-	save_2d(nd,my_dim, "./data/nd.dat");
-
+	//save_2d(nd, my_dim, "./data/nd2d.dat");
+	//save_1d(nd, my_dim, "./data/nd1d.dat");
 
 
 	// ##### RELAXATIONS-SOLVER #####

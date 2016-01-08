@@ -13,6 +13,25 @@ std::string get_selfpath()
     /* handle error condition */
 }
 
+std::string get_header(const grid_Co &grid)
+{
+	// write header to file (3-lines of header)
+	std::stringstream sstr;
+
+	sstr << "output from PFluidDy\n";
+	sstr << "Domain: ";
+	sstr << "[" << grid.x_axis->val_at(0) << "," << grid.x_axis->val_at(grid.Nx)<< "]x";
+	sstr << "[" << grid.y_axis->val_at(0) << "," << grid.y_axis->val_at(grid.Nx)<< "]x";
+	sstr << "[" << grid.z_axis->val_at(0) << "," << grid.z_axis->val_at(grid.Nx)<< "]x";
+	sstr << "Nx/Ny/Nz ";
+	sstr << grid.Nx << "/";
+	sstr << grid.Ny << "/";
+	sstr << grid.Nz << "\n";
+	sstr << "x\ty\tz\tUx\tUy\tUz\tni\n\n";
+
+	return sstr.str();
+}
+
 
 
 inline bool file_exist (const std::string& path)
@@ -537,10 +556,7 @@ void save_particles(std::vector<particle> &particle_list, const std::string &pat
 }
 
 
-
-
-void save_1d(const field_real &Ux, const field_real &Uy, const field_real  &Uz, const field_real  &ni, const field_real &Ph,
-		     const subdim & sdim, const std::string &path)
+void save_1d(const field_real &XX, subdim & sdim, const std::string &path)
 {
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	logger my_log("save_1d");
@@ -555,29 +571,120 @@ void save_1d(const field_real &Ux, const field_real &Uy, const field_real  &Uz, 
 
 	 int *i, *j, *k;
 
-	int direction = sdim.default_direction;
+	int direction = sdim.direction;
 
 	switch( direction )
 	{
 	case  0:
-		first_fixed = sdim.default_ypos;
-		second_fixed = sdim.default_zpos;
+		first_fixed = sdim.ypos;
+		second_fixed = sdim.zpos;
+		i = &i_fast;
+		j = &first_fixed;
+		k = &second_fixed;
+	    N_fast = XX.Nx;
+		break;
+	case 1:
+		first_fixed = sdim.xpos;
+		second_fixed = sdim.zpos;
+		i = &first_fixed;
+		j = &i_fast;
+		k = &second_fixed;
+	    N_fast = XX.Ny;
+	    break;
+	case 2:
+		first_fixed = sdim.xpos;
+		second_fixed = sdim.ypos;
+		i = &first_fixed;
+		j = &second_fixed;
+	    k = &i_fast;
+	    N_fast = XX.Nz;
+	    break;
+	} // END of switch
+
+
+
+	std::ofstream output_stream(path.c_str(), std::ofstream::trunc);
+
+
+	// write header to file (3-lines of header)
+	output_stream << "output from PFluidDy\n";
+	output_stream << "Domain: ";
+	output_stream << "[" << XX.my_grid->x_axis->val_at(0) << "," <<  XX.my_grid->x_axis->val_at(XX.Nx) << "]x";
+	output_stream << "[" << XX.my_grid->y_axis->val_at(0) << "," <<  XX.my_grid->y_axis->val_at(XX.Nx) << "]x";
+	output_stream << "[" << XX.my_grid->z_axis->val_at(0) << "," <<  XX.my_grid->z_axis->val_at(XX.Nx) << "]\t";
+	output_stream << "Nx/Ny/Nz ";
+	output_stream << XX.Nx << "/";
+	output_stream << XX.Ny << "/";
+	output_stream << XX.Nz << "\n";
+	output_stream << "x\ty\tz\tXX\tUy\tUz\tni\n\n";
+
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	my_log << "writing to file";
+   #endif
+
+	// write data to file
+	for(i_fast=0; i_fast<N_fast; ++i_fast)
+	{
+		//std::cout << "(" << *i << "," << *j << "," << *k << ")" << std::endl;
+		//i_fast << " " << domain::index_3d_re(*i,*j,*k) << std::endl;
+		output_stream << std::scientific << std::setprecision(3);
+		output_stream << XX.my_grid->x_axis->val_at(*i) << "\t";
+		output_stream << XX.my_grid->y_axis->val_at(*j) << "\t";
+		output_stream << XX.my_grid->z_axis->val_at(*k) << "\t";
+		output_stream << std::scientific << std::setprecision(6);
+		int index = XX.my_grid->index_at(*i,*j,*k);
+		output_stream << XX.val[index] << "\n";
+		//output_stream << std::endl;
+	}
+
+	output_stream.close();
+
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	my_log << "done.";
+   #endif
+
+	return;
+}
+
+void save_1d(const field_real &Ux, const field_real &Uy, const field_real  &Uz, const field_real  &ni, const field_real &Ph,
+		     subdim & sdim, const std::string &path)
+{
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("save_1d");
+	my_log << "start";
+   #endif
+
+	 int first_fixed;
+	 int second_fixed;
+
+	 int i_fast;
+	 int N_fast;
+
+	 int *i, *j, *k;
+
+	int direction = sdim.direction;
+
+	switch( direction )
+	{
+	case  0:
+		first_fixed = sdim.ypos;
+		second_fixed = sdim.zpos;
 		i = &i_fast;
 		j = &first_fixed;
 		k = &second_fixed;
 	    N_fast = Ux.Nx;
 		break;
 	case 1:
-		first_fixed = sdim.default_xpos;
-		second_fixed = sdim.default_zpos;
+		first_fixed = sdim.xpos;
+		second_fixed = sdim.zpos;
 		i = &first_fixed;
 		j = &i_fast;
 		k = &second_fixed;
 	    N_fast = Ux.Ny;
 	    break;
 	case 2:
-		first_fixed = sdim.default_xpos;
-		second_fixed = sdim.default_ypos;
+		first_fixed = sdim.xpos;
+		second_fixed = sdim.ypos;
 		i = &first_fixed;
 		j = &second_fixed;
 	    k = &i_fast;
@@ -631,98 +738,13 @@ void save_1d(const field_real &Ux, const field_real &Uy, const field_real  &Uz, 
 	return;
 }
 
-void save_1d(const field_real &Ux, const subdim & sdim, const std::string &path)
+
+void save_2d(const field_real &XX, const subdim & sdim,  const std::string &path)
 {
-   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
-	logger my_log("save_1d");
-	my_log << "start";
+   #if defined(MY_VERBOSE_MORE) || defined(MY_VERBOSE_TEDIOUS)
+	std::cout << "   save(): saving data to " << path;
+	std::cout << " .. this may take a while\n";
    #endif
-
-	 int first_fixed;
-	 int second_fixed;
-
-	 int i_fast;
-	 int N_fast;
-
-	 int *i, *j, *k;
-
-	int direction = sdim.default_direction;
-
-	switch( direction )
-	{
-	case  0:
-		first_fixed = sdim.default_ypos;
-		second_fixed = sdim.default_zpos;
-		i = &i_fast;
-		j = &first_fixed;
-		k = &second_fixed;
-	    N_fast = Ux.Nx;
-		break;
-	case 1:
-		first_fixed = sdim.default_xpos;
-		second_fixed = sdim.default_zpos;
-		i = &first_fixed;
-		j = &i_fast;
-		k = &second_fixed;
-	    N_fast = Ux.Ny;
-	    break;
-	case 2:
-		first_fixed = sdim.default_xpos;
-		second_fixed = sdim.default_ypos;
-		i = &first_fixed;
-		j = &second_fixed;
-	    k = &i_fast;
-	    N_fast = Ux.Nz;
-	    break;
-	} // END of switch
-
-
-
-	std::ofstream output_stream(path.c_str(), std::ofstream::trunc);
-
-
-	// write header to file (3-lines of header)
-	output_stream << "output from PFluidDy\n";
-	output_stream << "Domain: ";
-	output_stream << "[" << Ux.my_grid->x_axis->val_at(0) << "," <<  Ux.my_grid->x_axis->val_at(Ux.Nx) << "]x";
-	output_stream << "[" << Ux.my_grid->y_axis->val_at(0) << "," <<  Ux.my_grid->y_axis->val_at(Ux.Nx) << "]x";
-	output_stream << "[" << Ux.my_grid->z_axis->val_at(0) << "," <<  Ux.my_grid->z_axis->val_at(Ux.Nx) << "]\t";
-	output_stream << "Nx/Ny/Nz ";
-	output_stream << Ux.Nx << "/";
-	output_stream << Ux.Ny << "/";
-	output_stream << Ux.Nz << "\n";
-	output_stream << "x\ty\tz\tUx\tUy\tUz\tni\n\n";
-
-   #if defined(_MY_VERBOSE_TEDIOUS)
-	my_log << "writing to file";
-   #endif
-
-	// write data to file
-	for(i_fast=0; i_fast<N_fast; ++i_fast)
-	{
-		//std::cout << "(" << *i << "," << *j << "," << *k << ")" << std::endl;
-		//i_fast << " " << domain::index_3d_re(*i,*j,*k) << std::endl;
-		output_stream << std::scientific << std::setprecision(3);
-		output_stream << Ux.my_grid->x_axis->val_at(*i) << "\t";
-		output_stream << Ux.my_grid->y_axis->val_at(*j) << "\t";
-		output_stream << Ux.my_grid->z_axis->val_at(*k) << "\t";
-		output_stream << std::scientific << std::setprecision(6);
-		int index = Ux.my_grid->index_at(*i,*j,*k);
-		output_stream << Ux.val[index] << "\n";
-		//output_stream << std::endl;
-	}
-
-	output_stream.close();
-
-   #if defined(_MY_VERBOSE_TEDIOUS)
-	my_log << "done.";
-   #endif
-
-	return;
-}
-
-void save_2d(const field_real &Ux, const subdim & sdim,  const std::string &path)
-{
 	int i_fixed;
 	int i_slow;
 	int i_fast;
@@ -732,7 +754,7 @@ void save_2d(const field_real &Ux, const subdim & sdim,  const std::string &path
 
 	int *i, *j, *k;
 
-	int direction = sdim.default_plane;
+	int direction = sdim.plane;
 	    // 0 : x fixiert => out: y-z-ebene
 		// 1 : y fixiert => out: x-z-ebene
 	    // 2 : z fixiert => out: x-y-ebene
@@ -740,51 +762,37 @@ void save_2d(const field_real &Ux, const subdim & sdim,  const std::string &path
 	switch( direction )
 	{
 	case 0:
-		i_fixed = sdim.default_xpos;
+		i_fixed = sdim.xpos;
 		i = &i_fixed;
 		j = &i_slow;
 	    k = &i_fast;
-	    N_slow = Ux.Ny;
-	    N_fast = Ux.Nz;
+	    N_slow = XX.Ny;
+	    N_fast = XX.Nz;
 	    break;
 	case 1:
-		i_fixed = sdim.default_ypos;
+		i_fixed = sdim.ypos;
 		i = &i_slow;
 		j = &i_fixed;
 		k = &i_fast;
-	    N_slow = Ux.Nx;
-	    N_fast = Ux.Nz;
+	    N_slow = XX.Nx;
+	    N_fast = XX.Nz;   #if defined(MY_VERBOSE_MORE) || defined(MY_VERBOSE_TEDIOUS)
+	std::cout << "   save(): saving data to " << path;
+	std::cout << " .. this may take a while\n";
+   #endif
 	    break;
 	case  2:
-		i_fixed = sdim.default_zpos;
+		i_fixed = sdim.zpos;
 		i = &i_slow;
 		j = &i_fast;
 		k = &i_fixed;
-	    N_slow = Ux.Nx;
-	    N_fast = Ux.Ny;
+	    N_slow = XX.Nx;
+	    N_fast = XX.Ny;
 		break;
 	} // END of switch
 
 
 	std::ofstream output_stream(path.c_str(), std::ofstream::trunc);
-
-
-	// write header to file (2-lines of header)
-	output_stream << "Domain: ";
-	output_stream << "[" << Ux.my_grid->x_axis->val_at(0) << "," << Ux.my_grid->x_axis->val_at(Ux.Nx)<< "]x";
-	output_stream << "[" << Ux.my_grid->y_axis->val_at(0) << "," << Ux.my_grid->y_axis->val_at(Ux.Nx)<< "]x";
-	output_stream << "[" << Ux.my_grid->z_axis->val_at(0) << "," << Ux.my_grid->z_axis->val_at(Ux.Nx)<< "]x";
-	output_stream << "Nx/Ny/Nz ";
-	output_stream << Ux.Nx << "/";
-	output_stream << Ux.Ny << "/";
-	output_stream << Ux.Nz << "\n";
-	output_stream << "x\ty\tz\tUx\tUy\tUz\tni\n\n";
-
-
-   #if defined(MY_VERBOSE_MORE) || defined(MY_VERBOSE_TEDIOUS)
-	std::cout << "   save(): saving data to " << path;
-	std::cout << " .. this may take a while\n";
-   #endif
+	output_stream << get_header(*XX.my_grid);
 
 	// write data to file
 	for(i_slow=0; i_slow<N_slow; ++i_slow)
@@ -792,12 +800,12 @@ void save_2d(const field_real &Ux, const subdim & sdim,  const std::string &path
 		for(i_fast=0; i_fast<N_fast; ++i_fast)
 		{
 			output_stream << std::scientific << std::setprecision(3);
-			output_stream << Ux.my_grid->x_axis->val_at(*i) << "\t";
-			output_stream << Ux.my_grid->y_axis->val_at(*j) << "\t";
-			output_stream << Ux.my_grid->z_axis->val_at(*k) << "\t";
+			output_stream << XX.my_grid->x_axis->val_at(*i) << "\t";
+			output_stream << XX.my_grid->y_axis->val_at(*j) << "\t";
+			output_stream << XX.my_grid->z_axis->val_at(*k) << "\t";
 			output_stream << std::scientific << std::setprecision(6);
-			 int index = Ux.my_grid->index_at(*i,*j,*k);
-			output_stream << Ux.val[index] << "\n";
+			 int index = XX.my_grid->index_at(*i,*j,*k);
+			output_stream << XX.val[index] << "\n";
 		}
 		output_stream << std::endl;
 	}
@@ -806,96 +814,41 @@ void save_2d(const field_real &Ux, const subdim & sdim,  const std::string &path
 	return;
 }
 
-void save_2d(const field_real &Ux, const field_real &Uy, const field_real  &Uz, const field_real  &ni, const field_real &Ph, const subdim & sdim,
-		     const std::string &path)
+void save_2d(const field_real &Ux, const field_real &Uy, const field_real  &Uz, const field_real  &ni, const field_real &Ph,
+	 subdim &sdim, const std::string &path)
 {
-	int i_fixed;
-	int i_slow;
-	int i_fast;
-
-	int N_slow;
-	int N_fast;
-
-	int *i, *j, *k;
-
-	int direction = sdim.default_plane;
-	    // 0 : x fixiert => out: y-z-ebene
-		// 1 : y fixiert => out: x-z-ebene
-	    // 2 : z fixiert => out: x-y-ebene
-
-	switch( direction )
-	{
-	case 0:
-		i_fixed = sdim.default_xpos;
-		i = &i_fixed;
-		j = &i_slow;
-	    k = &i_fast;
-	    N_slow = Ux.Ny;
-	    N_fast = Ux.Nz;
-	    break;
-	case 1:
-		i_fixed = sdim.default_ypos;
-		i = &i_slow;
-		j = &i_fixed;
-		k = &i_fast;
-	    N_slow = Ux.Nx;
-	    N_fast = Ux.Nz;
-	    break;
-	case  2:
-		i_fixed = sdim.default_zpos;
-		i = &i_slow;
-		j = &i_fast;
-		k = &i_fixed;
-	    N_slow = Ux.Nx;
-	    N_fast = Ux.Ny;
-		break;
-	} // END of switch
-
-
-	std::ofstream output_stream(path.c_str(), std::ofstream::trunc);
-
-	// write header to file (3-lines of header)
-	output_stream << "output from PFluidDy\n";
-	output_stream << "Domain: ";
-	output_stream << "[" << Ux.my_grid->x_axis->val_at(0) << "," << Ux.my_grid->x_axis->val_at(Ux.Nx)<< "]x";
-	output_stream << "[" << Ux.my_grid->y_axis->val_at(0) << "," << Ux.my_grid->y_axis->val_at(Ux.Nx)<< "]x";
-	output_stream << "[" << Ux.my_grid->z_axis->val_at(0) << "," << Ux.my_grid->z_axis->val_at(Ux.Nx)<< "]x";
-	output_stream << "Nx/Ny/Nz ";
-	output_stream << Ux.Nx << "/";
-	output_stream << Ux.Ny << "/";
-	output_stream << Uy.Nz << "\n";
-	output_stream << "x\ty\tz\tUx\tUy\tUz\tni\n\n";
-
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	std::cout << "   save(): saving data to ";
 	std::cout << path;
 	std::cout << " .. this may take a while\n";
    #endif
 
+	std::ofstream output_stream(path.c_str(), std::ofstream::trunc);
+	output_stream << get_header(*Ux.my_grid);
+
 	// write data to file
-	for(i_slow=0; i_slow<N_slow; ++i_slow)
+	for(sdim.i_slow=0; sdim.i_slow<sdim.N_slow; ++sdim.i_slow)
 	{
-		for(i_fast=0; i_fast<N_fast; ++i_fast)
+		for(sdim.i_fast=0; sdim.i_fast<sdim.N_fast; ++sdim.i_fast)
 		{
 			output_stream << std::scientific << std::setprecision(3);
-			output_stream << Ux.my_grid->x_axis->val_at(*i) << "\t";
-			output_stream << Ux.my_grid->y_axis->val_at(*j) << "\t";
-			output_stream << Ux.my_grid->z_axis->val_at(*k) << "\t";
+			output_stream << Ux.my_grid->x_axis->val_at(*sdim.i) << "\t";
+			output_stream << Ux.my_grid->y_axis->val_at(*sdim.j) << "\t";
+			output_stream << Ux.my_grid->z_axis->val_at(*sdim.k) << "\t";
 			output_stream << std::scientific << std::setprecision(6);
-			 int index = Ux.my_grid->index_at(*i,*j,*k);
+			int index = Ux.my_grid->index_at(*sdim.i,*sdim.j,*sdim.k);
 			output_stream << Ux.val[index] << "\t";
 			output_stream << Uy.val[index] << "\t";
 			output_stream << Uz.val[index] << "\t";
 			output_stream << ni.val[index] << "\t";
 			output_stream << Ph.val[index] << "\n";
-			//output_stream << std::endl;
 		}
 		output_stream << std::endl;
 	}
 	output_stream.close();
-
 	return;
 }
+
 
 void save_3d(const std::string &file_name , const field_real &Ux, const field_real &Uy, const field_real  &Uz, const field_real  &ni, const field_real &Ph)
 {
@@ -931,7 +884,7 @@ void save_3d(const std::string &file_name , const field_real &Ux, const field_re
 				output_stream << Ux.my_grid->y_axis->val_at(j) << "\t";
 				output_stream << Ux.my_grid->z_axis->val_at(k) << "\t";
 				output_stream << std::scientific << std::setprecision(6);
-				 int index = Ux.my_grid->index_at(i,j,k);
+				int index = Ux.my_grid->index_at(i,j,k);
 				output_stream << Ux.val[index] << "\t";
 				output_stream << Uy.val[index] << "\t";
 				output_stream << Uz.val[index] << "\t";
