@@ -9,9 +9,9 @@ effect_force_linear::effect_force_linear(const double &k) :
 
 void effect_force_linear::execute(const field_imag &in, field_imag &out)
 {
-   #ifdef _MY_VERBOSE
-	logger log("effect_force_linear");
-	log <<"execute(...)";
+   #if defined(_MY_VERBOSE)
+	logger my_log("effect_force_linear");
+	my_log <<"execute(...)";
    #endif
 
 	for(int i=0; i<in.N; ++i)
@@ -20,8 +20,8 @@ void effect_force_linear::execute(const field_imag &in, field_imag &out)
 		out.val[i][1] += hook_constant*in.val[i][1];
 	}
 
-  #ifdef _MY_VERBOSE
-	log <<"done";
+  #if defined(_MY_VERBOSE_TEDIOUS)
+	my_log <<"done";
    #endif
 
 	return;

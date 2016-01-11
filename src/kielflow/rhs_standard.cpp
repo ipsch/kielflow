@@ -82,7 +82,7 @@ void rhs_standard::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, fiel
 	handle_dealiasing(Fni);
    #endif
 
-   #if defined(ADVECTION)
+   #if defined(ADVECTION) // ##########################
 	static effect_advection advection;
 	advection.execute(FUx, FUy, FUz, FUx, Buffer_FUx);
 	advection.execute(FUx, FUy, FUz, FUy, Buffer_FUy);
@@ -97,7 +97,7 @@ void rhs_standard::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, fiel
 	translation_Ex.execute(FUz, Buffer_FUz);
    #endif
 
-   #if defined(DIFFUSION) || defined(E_INT)
+   #if defined(DIFFUSION) || defined(E_INT) // ##########################
 	static effect_force_E Div;
    #if defined(DIFFUSION)
 	iFFT(Fni,ni);

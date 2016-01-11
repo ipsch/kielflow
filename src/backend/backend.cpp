@@ -16,13 +16,24 @@
 
 
 #include "fftw3.h"
+#include "operations.hpp"
+#include "effect.hpp"
 
 
 
 
 
 
-
+ #define POISSON
+ #define ADVECTION
+ #define DIFFUSION
+ #define E_INT
+ #define E_EXT
+ #define DISSIPATION
+ //#define PENALIZATION_U
+ #define CONTINUITY
+ //#define DEALAISING_MORE
+ #define SPECTRAL_VISCOSITY
 
 
 
@@ -39,8 +50,8 @@ void help(void)
 int main(int argc, char *argv[])
 {
    #ifdef _MY_VERBOSE
-	logger log("backend");
-	log << "start";
+	logger my_log("backend");
+	my_log << "start";
    #endif
 
 
@@ -97,31 +108,11 @@ int main(int argc, char *argv[])
 
 
 
-   #ifdef _MY_VERBOSE
-	log << "load domain";
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TIDEOUS)
+	my_log << "load domain";
    #endif
 	grid_Co Omega = load_grid(file_name_h5);
-
-
-	std::cout << "achsen" << std::endl;
-	std::cout << Omega.x_axis->m << std::endl;
-	std::cout << Omega.y_axis->m << std::endl;
-	std::cout << Omega.z_axis->m << std::endl;
-
-
-	for(int i=0; i<Omega.Nx; ++i)
-		std::cout << Omega.x_axis->val_at(i) << std::endl;
-
-   #ifdef _MY_VERBOSE
-	log << "load parameters";
-   #endif
 	parameters Params = load_parameters(file_name_h5);
-
-
-	// ToDo : Particle missing here
-   #ifdef _MY_VERBOSE
-	log << "load particles";
-   #endif
 	//particle::load();
 
 
@@ -132,7 +123,7 @@ int main(int argc, char *argv[])
 	if(slice_flag==true)
 	{
 	   #ifdef _MY_VERBOSE
-		log << "slice_flag==true";
+		my_log << "slice_flag==true";
 	   #endif
 
 		double * Ux = new double [Omega.Nx*Omega.Ny];
@@ -140,8 +131,6 @@ int main(int argc, char *argv[])
 		double * Uz = new double [Omega.Nx*Omega.Ny];
 		double * ni = new double [Omega.Nx*Omega.Ny];
 		double * Ph = new double [Omega.Nx*Omega.Ny];
-
-
 
 		load_slice("Ux", Ux,file_name_h5);
 		load_slice("Uy", Uy,file_name_h5);
@@ -156,15 +145,15 @@ int main(int argc, char *argv[])
 
 		std::cout << "done.";
        #ifdef _MY_VERBOSE
-		log << "done";
+		my_log << "done";
        #endif
 		return 0;
 	}
 
 
 	// Load fields (real-space) from file
-   #ifdef _MY_VERBOSE
-	log << "load fields (real-space)";
+   #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE)
+	my_log << "load fields (real-space)";
    #endif
 	field_real Ux = load_field_real(file_name_h5,"Ux");
 	field_real Uy = load_field_real(file_name_h5,"Uy");
@@ -197,14 +186,10 @@ int main(int argc, char *argv[])
 
 
 
-	#ifdef _MY_VERBOSE
-	log << "saving 2D plot data";
+   #if defined(_MY_VERBOSE)
+	my_log << "saving 2D plot data";
    #endif
 	save_2d(Ux, Uy, Uz, ni, Ph, save_opt, "./data/splot_data.dat");
-
-   #ifdef _MY_VERBOSE
-	log << "saving 1D plot data";
-   #endif
 	save_1d(Ux, Uy, Uz, ni, Ph, save_opt, "./data/plot_data.dat");
 
 
@@ -226,8 +211,271 @@ int main(int argc, char *argv[])
 
 
 
-   #ifdef _MY_VERBOSE
-	log << "done. backend terminated";
+   #if defined(ADVECTION) || defined(E_EXT) || defined(E_INT) || defined(DISSIPATION)
+	field_imag FUx(*Ux.my_grid);
+	field_imag FUy(*Ux.my_grid);
+	field_imag FUz(*Ux.my_grid);
+	field_imag Fni(*Ux.my_grid);
+	field_imag FPh(*Ux.my_grid);
+	field_imag Buffer_FUx(*Ux.my_grid);
+	field_imag Buffer_FUy(*Ux.my_grid);
+	field_imag Buffer_FUz(*Ux.my_grid);
+	field_imag Buffer_Fni(*Ux.my_grid);
+	field_imag Buffer_FPh(*Ux.my_grid);
+
+	field_real out(*Ux.my_grid);
+	field_real Ux_total(*Ux.my_grid);
+	field_real Uy_total(*Ux.my_grid);
+	field_real Uz_total(*Ux.my_grid);
+
+	FFT(Ux,FUx);
+	FFT(Uy,FUy);
+	FFT(Uz,FUz);
+	FFT(ni,Fni);
+	FFT(Ph,FPh);
+
+	for(int i=0; i<Ux_total.N; ++i)
+	{
+		Ux_total.val[i] = 0.;
+		Uy_total.val[i] = 0.;
+		Uz_total.val[i] = 0.;
+	}
+   #endif
+
+
+   #if defined(ADVECTION) // ##########################
+	for(int i=0; i<Buffer_FUx.N; ++i)
+	{
+		Buffer_FUx.val[i][0] = 0.;
+		Buffer_FUx.val[i][1] = 0.;
+		Buffer_FUy.val[i][0] = 0.;
+		Buffer_FUy.val[i][1] = 0.;
+		Buffer_FUz.val[i][0] = 0.;
+		Buffer_FUz.val[i][1] = 0.;
+	}
+	static effect_advection advection;
+	advection.execute(FUx, FUy, FUz, FUx, Buffer_FUx);
+	advection.execute(FUx, FUy, FUz, FUy, Buffer_FUy);
+	advection.execute(FUx, FUy, FUz, FUz, Buffer_FUz);
+
+	iFFT(Buffer_FUx,out);
+	save_2d(out, save_opt, "./data/splot_ADVECTION_Ux.dat");
+	save_1d(out, save_opt, "./data/plot_ADVECTION_Ux.dat");
+	for(int i=0; i<Ux_total.N; ++i)
+		Ux_total.val[i] += out.val[i];
+
+	iFFT(Buffer_FUy,out);
+	save_2d(out, save_opt, "./data/splot_ADVECTION_Uy.dat");
+	save_1d(out, save_opt, "./data/plot_ADVECTION_Uy.dat");
+	for(int i=0; i<Ux_total.N; ++i)
+		Uy_total.val[i] += out.val[i];
+
+	iFFT(Buffer_FUz,out);
+	save_2d(out, save_opt, "./data/splot_ADVECTION_Uz.dat");
+	save_1d(out, save_opt, "./data/plot_ADVECTION_Uz.dat");
+	for(int i=0; i<Ux_total.N; ++i)
+		Uz_total.val[i] += out.val[i];
+   #endif // END ADVECTION
+
+
+   #if defined(E_EXT) // ##########################
+	for(int i=0; i<Buffer_FUx.N; ++i)
+	{
+		Buffer_FUx.val[i][0] = 0.;
+		Buffer_FUx.val[i][1] = 0.;
+		Buffer_FUy.val[i][0] = 0.;
+		Buffer_FUy.val[i][1] = 0.;
+		Buffer_FUz.val[i][0] = 0.;
+		Buffer_FUz.val[i][1] = 0.;
+	}
+	static effect_translation translation_Ex(Params.M, e_x);
+	// translation_Ex is also applied to ion density
+	translation_Ex.execute(FUx, Buffer_FUx);
+	translation_Ex.execute(FUy, Buffer_FUy);
+	translation_Ex.execute(FUz, Buffer_FUz);
+
+	iFFT(Buffer_FUx,out);
+	save_2d(out, save_opt, "./data/splot_E_EXT_Ux.dat");
+	save_1d(out, save_opt, "./data/plot_E_EXT_Ux.dat");
+	for(int i=0; i<Ux_total.N; ++i)
+		Ux_total.val[i] += out.val[i];
+
+	iFFT(Buffer_FUy,out);
+	save_2d(out, save_opt, "./data/splot_E_EXT_Uy.dat");
+	save_1d(out, save_opt, "./data/plot_E_EXT_Uy.dat");
+	for(int i=0; i<Ux_total.N; ++i)
+		Uy_total.val[i] += out.val[i];
+
+	iFFT(Buffer_FUz,out);
+	save_2d(out, save_opt, "./data/splot_E_EXT_Uz.dat");
+	save_1d(out, save_opt, "./data/plot_E_EXT_Uz.dat");
+	for(int i=0; i<Ux_total.N; ++i)
+		Uz_total.val[i] += out.val[i];
+   #endif
+
+
+   #if defined(DIFFUSION) // ##########################
+	for(int i=0; i<Buffer_FUx.N; ++i)
+	{
+		Buffer_FUx.val[i][0] = 0.;
+		Buffer_FUx.val[i][1] = 0.;
+		Buffer_FUy.val[i][0] = 0.;
+		Buffer_FUy.val[i][1] = 0.;
+		Buffer_FUz.val[i][0] = 0.;
+		Buffer_FUz.val[i][1] = 0.;
+	}
+	static effect_force_E DivP;
+
+	for(int i=0; i<ni.N; ++i)
+	{
+		out.val[i] = log(ni.val[i])/Params.theta;
+		if(fabs(ni.val[i]) < 1.e-10)
+			out.val[i] = 0.;
+	}
+	field_imag FBuffer(*ni.my_grid);
+	FFT(out,Buffer_Fni);
+	DivP.execute(Buffer_Fni, Buffer_FUx, Buffer_FUy, Buffer_FUz);
+
+	iFFT(Buffer_FUx,out);
+	save_2d(out, save_opt, "./data/splot_DIFFUSION_Ux.dat");
+	save_1d(out, save_opt, "./data/plot_DIFFUSION_Ux.dat");
+	for(int i=0; i<Ux_total.N; ++i)
+		Ux_total.val[i] += out.val[i];
+
+	iFFT(Buffer_FUy,out);
+	save_2d(out, save_opt, "./data/splot_DIFFUSION_Uy.dat");
+	save_1d(out, save_opt, "./data/plot_DIFFUSION_Uy.dat");
+	for(int i=0; i<Uy_total.N; ++i)
+		Uy_total.val[i] += out.val[i];
+
+	iFFT(Buffer_FUz,out);
+	save_2d(out, save_opt, "./data/splot_DIFFUSION_Uz.dat");
+	save_1d(out, save_opt, "./data/plot_DIFFUSION_Uz.dat");
+	for(int i=0; i<Uz_total.N; ++i)
+		Uz_total.val[i] += out.val[i];
+   #endif // END DIFFUSION
+
+
+   #if defined(E_INT) // ##########################
+	for(int i=0; i<Buffer_FUx.N; ++i)
+	{
+		Buffer_FUx.val[i][0] = 0.;
+		Buffer_FUx.val[i][1] = 0.;
+		Buffer_FUy.val[i][0] = 0.;
+		Buffer_FUy.val[i][1] = 0.;
+		Buffer_FUz.val[i][0] = 0.;
+		Buffer_FUz.val[i][1] = 0.;
+	}
+	static effect_force_E DivE;
+	for(int i=0; i<ni.N; ++i)
+	{
+		out.val[i] += Ph.val[i];
+	}
+	FFT(out,Buffer_Fni);
+	DivP.execute(Buffer_Fni, Buffer_FUx, Buffer_FUy, Buffer_FUz);
+
+	iFFT(Buffer_FUx,out);
+	save_2d(out, save_opt, "./data/splot_E_INT_Ux.dat");
+	save_1d(out, save_opt, "./data/plot_E_INT_Ux.dat");
+	for(int i=0; i<Ux_total.N; ++i)
+		Ux_total.val[i] += out.val[i];
+
+	iFFT(Buffer_FUy,out);
+	save_2d(out, save_opt, "./data/splot_E_INT_Uy.dat");
+	save_1d(out, save_opt, "./data/plot_E_INT_Uy.dat");
+	for(int i=0; i<Uy_total.N; ++i)
+		Uy_total.val[i] += out.val[i];
+
+	iFFT(Buffer_FUz,out);
+	save_2d(out, save_opt, "./data/splot_E_INT_Uz.dat");
+	save_1d(out, save_opt, "./data/plot_E_INT_Uz.dat");
+	for(int i=0; i<Uz_total.N; ++i)
+		Uz_total.val[i] += out.val[i];
+   #endif // END E_INT
+
+
+   #if defined(DISSIPATION) // ##########################
+	for(int i=0; i<Buffer_FUx.N; ++i)
+	{
+		Buffer_FUx.val[i][0] = 0.;
+		Buffer_FUx.val[i][1] = 0.;
+		Buffer_FUy.val[i][0] = 0.;
+		Buffer_FUy.val[i][1] = 0.;
+		Buffer_FUz.val[i][0] = 0.;
+		Buffer_FUz.val[i][1] = 0.;
+	}
+	static effect_force_linear dissipation(-Params.tau);
+	dissipation.execute(FUx, Buffer_FUx);
+	dissipation.execute(FUy, Buffer_FUy);
+	dissipation.execute(FUz, Buffer_FUz);
+
+	iFFT(Buffer_FUx,out);
+	save_2d(out, save_opt, "./data/splot_DISSIPATION_Ux.dat");
+	save_1d(out, save_opt, "./data/plot_DISSIPATION_Ux.dat");
+	for(int i=0; i<Ux_total.N; ++i)
+		Ux_total.val[i] += out.val[i];
+
+	iFFT(Buffer_FUy,out);
+	save_2d(out, save_opt, "./data/splot_DISSIPATION_Uy.dat");
+	save_1d(out, save_opt, "./data/plot_DISSIPATION_Uy.dat");
+	for(int i=0; i<Uy_total.N; ++i)
+		Uy_total.val[i] += out.val[i];
+
+	iFFT(Buffer_FUz,out);
+	save_2d(out, save_opt, "./data/splot_DISSIPATION_Uz.dat");
+	save_1d(out, save_opt, "./data/plot_DISSIPATION_Uz.dat");
+	for(int i=0; i<Uz_total.N; ++i)
+		Uz_total.val[i] += out.val[i];
+   #endif // END DISSIPATION
+
+
+   #if defined(SPECTRAL_VISCOSITY)
+	for(int i=0; i<Buffer_FUx.N; ++i)
+	{
+		Buffer_FUx.val[i][0] = 0.;
+		Buffer_FUx.val[i][1] = 0.;
+		Buffer_FUy.val[i][0] = 0.;
+		Buffer_FUy.val[i][1] = 0.;
+		Buffer_FUz.val[i][0] = 0.;
+		Buffer_FUz.val[i][1] = 0.;
+	}
+	static effect_spectral_viscosity VS(0.66,FUx.my_grid->x_axis->L,FUx.Nx);
+	VS.execute(FUx,Buffer_FUx);
+	VS.execute(FUy,Buffer_FUy);
+	VS.execute(FUz,Buffer_FUz);
+
+	iFFT(Buffer_FUx,out);
+	save_2d(out, save_opt, "./data/splot_SPECTRAL_VISCOSITY_Ux.dat");
+	save_1d(out, save_opt, "./data/plot_SPECTRAL_VISCOSITY_Ux.dat");
+	for(int i=0; i<Ux_total.N; ++i)
+		Ux_total.val[i] += out.val[i];
+
+	iFFT(Buffer_FUy,out);
+	save_2d(out, save_opt, "./data/splot_SPECTRAL_VISCOSITY_Uy.dat");
+	save_1d(out, save_opt, "./data/plot_SPECTRAL_VISCOSITY_Uy.dat");
+	for(int i=0; i<Uy_total.N; ++i)
+		Uy_total.val[i] += out.val[i];
+
+	iFFT(Buffer_FUz,out);
+	save_2d(out, save_opt, "./data/splot_SPECTRAL_VISCOSITY_Uz.dat");
+	save_1d(out, save_opt, "./data/plot_SPECTRAL_VISCOSITY_Uz.dat");
+	for(int i=0; i<Uz_total.N; ++i)
+		Uz_total.val[i] += out.val[i];
+   #endif
+
+	save_2d(Ux_total, save_opt, "./data/splot_TOTAL_Ux.dat");
+	save_1d(Ux_total, save_opt, "./data/plot_TOTAL_Ux.dat");
+
+	save_2d(Uy_total, save_opt, "./data/splot_TOTAL_Uy.dat");
+	save_1d(Uy_total, save_opt, "./data/plot_TOTAL_Uy.dat");
+
+	save_2d(Uz_total, save_opt, "./data/splot_TOTAL_Uz.dat");
+	save_1d(Uz_total, save_opt, "./data/plot_TOTAL_Uz.dat");
+
+
+
+   #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	my_log << "done. backend terminated";
    #endif
 	std::cout << "backend terminated" << std::endl;
 
