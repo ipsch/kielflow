@@ -1,6 +1,7 @@
 #ifndef EFFECT_SPECTRAL_VISCOSITY_HPP
 #define EFFECT_SPECTRAL_VISCOSITY_HPP
 
+#include <iostream> // ToDO : remove
 #include <cmath>
 #include "effect_base.hpp"
 #include "field.hpp"
@@ -21,7 +22,7 @@ private :
 	effect_spectral_viscosity() : eps(0.), cutoff(0.) { }
 	double filter(const double &k2) const;
 	double eps;
-	int cutoff;
+	double cutoff;
 };
 
 

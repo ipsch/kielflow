@@ -11,13 +11,13 @@ effect_spectral_viscosity::effect_spectral_viscosity(const double &fraction, con
 
 	double k_max = (pi*N/L);
 	cutoff = fraction*k_max;
-	cutoff = pow(cutoff,2.);
+	cutoff = cutoff*cutoff;
 	eps = 0.25/(fraction*double(N));
 }
 
 inline double effect_spectral_viscosity::filter(const double &k2) const
 {
-	return (k2<cutoff) ? 0 : 1;
+	return (k2<cutoff) ? 0. : 1.;
 }
 
 void effect_spectral_viscosity::execute(const field_imag &in, field_imag &out) const
@@ -27,6 +27,10 @@ void effect_spectral_viscosity::execute(const field_imag &in, field_imag &out) c
 	double kx, ky, kz;
 
 	double retrn;
+
+	for(int i=0; i<in.my_grid->x_axis->N; ++i)
+		std::cout << in.my_grid->x_axis->val_at(i) << " ";
+	std::cout << std::endl;
 
 	for(int i=0; i<in.Nx;++i)
 	{
@@ -38,9 +42,9 @@ void effect_spectral_viscosity::execute(const field_imag &in, field_imag &out) c
 			{
 				kz = in.my_grid->z_axis->val_at(k);
 				int index= in.my_grid->index_at(i,j,k);
-				double k2 = kx*kx + ky*ky * kz*kz;
-				out.val[index][0] += -eps*k2*this->filter(i)*in.val[index][0];
-				out.val[index][1] += -eps*k2*this->filter(i)*in.val[index][1];
+				double k2 = kx*kx + ky*ky + kz*kz;
+				out.val[index][0] += -eps*k2*this->filter(k2)*in.val[index][0];
+				out.val[index][1] += -eps*k2*this->filter(k2)*in.val[index][1];
 			}
 		}
 	}
