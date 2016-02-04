@@ -25,7 +25,7 @@ void show_percent(int i) {
 
 
 solver_poisson_jacobi_nlin::solver_poisson_jacobi_nlin(interface_3d_fkt &boundary, interface_3d_fkt &val_boundary, const double &w) :
-	H(boundary), val_H(val_boundary), eps(0.0001), omega_SOR(w)
+	H(boundary), val_H(val_boundary), eps(0.0001), omega_SOR(w), hxmm(0.), hymm(0.), hzmm(0.)
 {
 	my_logfile = "./diagnostics/norm_max.log";
 	std::ofstream output_stream(my_logfile, std::ofstream::trunc);

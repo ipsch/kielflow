@@ -77,31 +77,28 @@ inline double axis_CoSiSt::S(const double &x) const
 
 double axis_CoSiSt::val_at(const int &index) const
 {
-	double x;
-	x = l0 + L*double(index)/(N);
 
 	int shift = 0;
-
-
-	if(x< -L/2.)
+	if(index<0)
 	{
 		do
 		{
-			x += L;
-			shift -= 1;
-		} while(x<-L/2.);
-	}
-
-	if(x>= L/2.)
-	{
-		do
-		{
-			x -= L;
 			shift += 1;
-		} while(x>=l0+L);
+		} while(index+shift*N <0);
 	}
 
-	x =  shift*L + S(x);
+	if(index>=N)
+	{
+		do
+		{
+			shift -= 1;
+		} while(index+shift*N>=N-1);
+	}
+
+
+	double x;
+	x = l0 + L*double(index+shift*N)/(N);
+	x =  S(x)-shift*L;
 	return x;
 }
 

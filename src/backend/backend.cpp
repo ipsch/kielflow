@@ -19,7 +19,7 @@
 #include "operations.hpp"
 #include "effect.hpp"
 
-
+#include "field_integrate.hpp"
 
 
 
@@ -34,6 +34,7 @@
  #define CONTINUITY
  //#define DEALAISING_MORE
  #define SPECTRAL_VISCOSITY
+#define COMBINED
 
 
 
@@ -383,8 +384,8 @@ int main(int argc, char *argv[])
 	iFFT(Buffer_FUx,out);
 	save_2d(out, save_opt, "./data/splot_DIFFUSION_Ux.dat");
 	save_1d(out, save_opt, "./data/plot_DIFFUSION_Ux.dat");
-	for(int i=0; i<Ux_total.N; ++i)
-		Ux_total.val[i] += out.val[i];
+	//for(int i=0; i<Ux_total.N; ++i)
+	//	Ux_total.val[i] += out.val[i];
 
 	iFFT(Buffer_FUy,out);
 	save_2d(out, save_opt, "./data/splot_DIFFUSION_Uy.dat");
@@ -416,7 +417,8 @@ int main(int argc, char *argv[])
 		out.val[i] += Ph.val[i];
 	}
 	FFT(out,Buffer_Fni);
-	DivP.execute(Buffer_Fni, Buffer_FUx, Buffer_FUy, Buffer_FUz);
+	DivE.execute(Buffer_Fni, Buffer_FUx, Buffer_FUy, Buffer_FUz);
+
 
 	for(int i=0; i<Buffer_FUx.N; ++i)
 	{
@@ -431,8 +433,8 @@ int main(int argc, char *argv[])
 	iFFT(Buffer_FUx,out);
 	save_2d(out, save_opt, "./data/splot_E_INT_Ux.dat");
 	save_1d(out, save_opt, "./data/plot_E_INT_Ux.dat");
-	for(int i=0; i<Ux_total.N; ++i)
-		Ux_total.val[i] += out.val[i];
+	//for(int i=0; i<Ux_total.N; ++i)
+	//	Ux_total.val[i] += out.val[i];
 
 	iFFT(Buffer_FUy,out);
 	save_2d(out, save_opt, "./data/splot_E_INT_Uy.dat");
@@ -446,6 +448,63 @@ int main(int argc, char *argv[])
 	for(int i=0; i<Uz_total.N; ++i)
 		Uz_total.val[i] += out.val[i];
    #endif // END E_INT
+
+
+
+#if defined(COMBINED) // ##########################
+	for(int i=0; i<Buffer_FUx.N; ++i)
+	{
+		Buffer_FUx.val[i][0] = 0.;
+		Buffer_FUx.val[i][1] = 0.;
+		Buffer_FUy.val[i][0] = 0.;
+		Buffer_FUy.val[i][1] = 0.;
+		Buffer_FUz.val[i][0] = 0.;
+		Buffer_FUz.val[i][1] = 0.;
+	}
+	static effect_force_E DivPP;
+
+	for(int i=0; i<ni.N; ++i)
+	{
+		out.val[i] = log(ni.val[i])/Params.theta + Ph.val[i];;
+		if(fabs(ni.val[i]) < 1.e-10)
+			out.val[i] = 0.;
+	}
+
+	save_2d(out, save_opt, "./data/splot_COMBINED_Div.dat");
+	save_1d(out, save_opt, "./data/plot_COMBINED_Div.dat");
+
+	field_imag FFBuffer(*ni.my_grid);
+	FFT(out,Buffer_Fni);
+	DivPP.execute(Buffer_Fni, Buffer_FUx, Buffer_FUy, Buffer_FUz);
+
+	for(int i=0; i<Buffer_FUx.N; ++i)
+	{
+		FUx_total.val[i][0] += Buffer_FUx.val[i][0];
+		FUx_total.val[i][1] += Buffer_FUx.val[i][1];
+		FUy_total.val[i][0] += Buffer_FUy.val[i][0];
+		FUy_total.val[i][1] += Buffer_FUy.val[i][1];
+		FUz_total.val[i][0] += Buffer_FUz.val[i][0];
+		FUz_total.val[i][1] += Buffer_FUz.val[i][1];
+	}
+
+	iFFT(Buffer_FUx,out);
+	save_2d(out, save_opt, "./data/splot_COMBINED_Ux.dat");
+	save_1d(out, save_opt, "./data/plot_COMBINED_Ux.dat");
+	for(int i=0; i<Ux_total.N; ++i)
+		Ux_total.val[i] += out.val[i];
+
+	iFFT(Buffer_FUy,out);
+	save_2d(out, save_opt, "./data/splot_COMBINED_Uy.dat");
+	save_1d(out, save_opt, "./data/plot_COMBINED_Uy.dat");
+	for(int i=0; i<Uy_total.N; ++i)
+		Uy_total.val[i] += out.val[i];
+
+	iFFT(Buffer_FUz,out);
+	save_2d(out, save_opt, "./data/splot_COMBINED_Uz.dat");
+	save_1d(out, save_opt, "./data/plot_COMBINED_Uz.dat");
+	for(int i=0; i<Uz_total.N; ++i)
+		Uz_total.val[i] += out.val[i];
+   #endif // END COMBINED
 
 
    #if defined(DISSIPATION) // ##########################
@@ -503,28 +562,28 @@ int main(int argc, char *argv[])
 		Buffer_FUz.val[i][0] = 0.;
 		Buffer_FUz.val[i][1] = 0.;
 	}
-	static effect_spectral_viscosity VS(0.66,FUx.my_grid->x_axis->L,FUx.Nx);
-	VS.execute(FUx_total,Buffer_FUx);
-	VS.execute(FUy_total,Buffer_FUy);
-	VS.execute(FUz_total,Buffer_FUz);
+	static effect_spectral_viscosity VS(0.66,*FUx.my_grid);
+	VS.execute(FUx,Buffer_FUx);
+	VS.execute(FUy,Buffer_FUy);
+	VS.execute(FUz,Buffer_FUz);
 
 	iFFT(Buffer_FUx,out);
 	save_2d(out, save_opt, "./data/splot_SPECTRAL_VISCOSITY_Ux.dat");
 	save_1d(out, save_opt, "./data/plot_SPECTRAL_VISCOSITY_Ux.dat");
-	//for(int i=0; i<Ux_total.N; ++i)
-	//	Ux_total.val[i] += out.val[i];
+	for(int i=0; i<Ux_total.N; ++i)
+		Ux_total.val[i] += out.val[i];
 
 	iFFT(Buffer_FUy,out);
 	save_2d(out, save_opt, "./data/splot_SPECTRAL_VISCOSITY_Uy.dat");
 	save_1d(out, save_opt, "./data/plot_SPECTRAL_VISCOSITY_Uy.dat");
-	//for(int i=0; i<Uy_total.N; ++i)
-	//	Uy_total.val[i] += out.val[i];
+	for(int i=0; i<Uy_total.N; ++i)
+		Uy_total.val[i] += out.val[i];
 
 	iFFT(Buffer_FUz,out);
 	save_2d(out, save_opt, "./data/splot_SPECTRAL_VISCOSITY_Uz.dat");
 	save_1d(out, save_opt, "./data/plot_SPECTRAL_VISCOSITY_Uz.dat");
-	//for(int i=0; i<Uz_total.N; ++i)
-	//	Uz_total.val[i] += out.val[i];
+	for(int i=0; i<Uz_total.N; ++i)
+		Uz_total.val[i] += out.val[i];
    #endif
 
 	save_2d(Ux_total, save_opt, "./data/splot_TOTAL_Ux.dat");
@@ -536,6 +595,19 @@ int main(int argc, char *argv[])
 	save_2d(Uz_total, save_opt, "./data/splot_TOTAL_Uz.dat");
 	save_1d(Uz_total, save_opt, "./data/plot_TOTAL_Uz.dat");
 
+
+	field_integrate IntO(*Ux.my_grid);
+
+	double V_ges = 0;
+
+
+	for(int i=0; i<Ux.N; ++i)
+	{
+		V_ges += IntO.V[i];
+	}
+		std::cout << IntO.execute(Ux);
+
+	std::cout << "V_ges" << V_ges << "\n";
 
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)

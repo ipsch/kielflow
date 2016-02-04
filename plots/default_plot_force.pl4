@@ -1,0 +1,34 @@
+#PLOT -l
+#PLOT -s 12
+#PLOT -w 18 -h 10
+
+filename= "./data/plot_data.dat"
+
+set xzeroaxis
+set yzeroaxis
+
+set ylabel "Volumkenkraft"
+set xlabel "$x$ in $\\lambda_{De}$" 
+
+set xrange[-5:5]
+#set yrange[-.02:.02]
+nd(x,A,v) = A*exp(-(x/v)**2.)
+
+set style line 1 linetype 1 linewidth 1 linecolor rgb '#ff0000'
+set style line 2 linetype 1 linewidth 1 linecolor rgb '#0000ff'
+set style line 3 linetype 1 linewidth 1 linecolor rgb '#ff0077'
+set style line 4 linetype 1 linewidth 1 linecolor rgb '#007700'
+set style line 5 linetype 1 linewidth 1 linecolor rgb '#770000'
+set style line 6 linetype 1 linewidth 1 linecolor rgb '#000000'
+set style line 7 linetype 4 linewidth 1 linecolor rgb '#ff0077'
+set style line 8 linetype 1 linewidth 1 linecolor rgb '#007777'
+
+plot "./data/plot_ADVECTION_Ux.dat" using 1:4 with lines ls 1 title "Advektion", \
+     "./data/plot_DIFFUSION_Ux.dat" using 1:4 with lines ls 2 title "Diffusion", \
+     "./data/plot_E_EXT_Ux.dat" using 1:4 with lines ls 3 title "$F_{ext}$", \
+     "./data/plot_COMBINED_Div.dat" using 1:4 with lines ls 7 title "Combined", \
+     "./data/plot_E_INT_Ux.dat" using 1:4 with lines ls 4 title "$E_{int}$", \
+     "./data/plot_DISSIPATION_Ux.dat" using 1:4 with lines ls 5 title "Dissipation", \
+     "./data/plot_TOTAL_Ux.dat" using 1:4 with lines ls 6 title "$F_{ges}$" ,\
+     "./data/plot_SPECTRAL_VISCOSITY_Ux.dat" using 1:4 with lines ls 8 title "SV"     
+     

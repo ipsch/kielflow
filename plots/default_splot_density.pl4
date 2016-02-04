@@ -1,0 +1,61 @@
+# File for ploting Ion-Densities via plot4
+
+#PLOT -l
+#PLOT -s 12
+#PLOT -w 16 -h 16
+
+########## quick Options #######################################################
+if (!exists("filename")) filename="./data/splot_data.dat"
+cb_scale = .1
+Xrange = 6.
+Yrange = 6.
+
+########## SPLOT Options #######################################################
+set palette model RGB defined ( 0"black", 1"blue", 2"cyan",3"green",4"yellow", 5"red",8"purple", 9"white" )
+unset surface
+set pm3d map
+set pm3d implicit at b
+# set contour base
+# set cntrparam bspline
+# set cntrparam levels discrete -1,0,1
+
+set xtics 2
+set ytics 2
+set grid
+
+########## Canvas ##############################################################
+# reference is left buttom
+set lmargin at screen .12
+set rmargin at screen .8
+set bmargin at screen .15
+set tmargin at screen .85
+
+########## Format and Scaling ##################################################
+# set format x ''
+# set format y ''
+# set format z ''
+# set format cb "%.1e"
+# set logscale x
+# set logscale y
+# set logscale z
+
+########## Ranges ##############################################################
+set xrange [-Xrange:Xrange]
+set yrange [-Yrange:Yrange]
+set cbrange [1.-cb_scale:1.+2.*cb_scale]
+
+########## Labels #############################################################
+set xlabel  'x in $\lambda_{De}$'
+set ylabel  'y in $\lambda_{De}$' offset -2,0
+set cblabel '$n_i$'
+set title 'Ionendichte $n_i$' offset 0,-.5
+
+########## Style Definitions ###################################################
+set style line 1 lt 1 lw 6 lc rgb "black" 
+set style line 2 lt 1 lw 1.5 lc rgb "yellow" 
+set style line 3 lt 1 lw 1.5 lc rgb "#006400" 
+set style line 4 lt 1 lw 1.5 lc rgb "blue" 
+set style increment userstyles
+
+########## Plot-Command ########################################################
+splot filename using ($1):($2):7 notitle

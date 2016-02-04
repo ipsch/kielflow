@@ -1,0 +1,191 @@
+# File for ploting electric-potential via plot4
+#PLOT -l
+#PLOT -s 12
+#PLOT -w 16 -h 32
+
+########## SPLOT Options #######################################################
+
+file_name_P1= "./data/splot_data.dat" 
+file_name_P2= "./data/splot_data.dat" 
+file_name_P3= "./data/splot_data.dat" 
+file_name_P4= "./data/splot_data.dat" 
+file_name_P5= "./data/splot_data.dat" 
+
+
+set xzeroaxis
+
+x_min = -2
+x_max = 5
+y_min = -3
+y_max = 3
+
+vel_scale = 10.
+cb_pot_min = -0.0085
+cb_pot_max =  0.0085
+cb_den_min = -0.185
+cb_den_max =  2*0.185
+
+
+
+########## Style Definitions ###################################################
+set style arrow 1 head filled size screen 0.03,5 ls 1
+set style line 1 lt 1 lw 2 lc rgb "#aaaaaa"
+set style line 2 lt 1 lw 2 lc rgb "#aaaaaa"
+set style line 3 lt 1 lw 2 lc rgb "#aaaaaa"
+set style line 4 lt 1 lw 2 lc rgb "#aaaaaa"
+set style increment userstyles
+
+set macros
+LPOS = "at graph 0.05,0.9 font ',8'"
+XTICS =   "set format x '%.0f';\
+           set xlabel '$x / \\lambda_{D_e}$'"
+YTICS =   "set format y '%.0f'; \
+           set ylabel '$y / \\lambda_{D_e}$'"         
+NOXTICS = "set xtics format ''; \
+           unset xlabel"
+NOYTICS = "set format y ''; \
+           unset ylabel"
+NOCB = "unset colorbox"
+
+PL_VEL = "reset; \
+          set object rectangle front at graph 0.30,0.90 size char 10,1.7 fc rgb 'white' fillstyle solid; \
+          set label 1 front"
+
+
+
+
+PL_DEN = "reset; \
+          set palette model RGB defined ( 0'black', 1'blue', 2'cyan',3'green',4'yellow', 5'red',8'purple', 9'white' ); \
+          set cbrange [cb_den_min:cb_den_max]; \
+          unset surface; \
+          set pm3d map; \
+          set pm3d implicit at b; \
+          set contour base; \
+          set cntrparam bspline; \
+          set cntrparam levels discrete -0.1*cb_den_max, 0., 0.1*cb_den_max;"
+          
+PL_POT = "reset; \
+          set palette model RGB defined ( 0'black', 1'blue', 2'cyan',3'green',4'yellow', 5'red',6'black' ); \
+          set cbrange [cb_pot_min:cb_pot_max]; \
+          unset surface; \
+          set pm3d map; \
+          set pm3d implicit at b; \
+          set contour base; \
+          set cntrparam bspline; \
+          set cntrparam levels discrete -0.1*cb_pot_max, 0., 0.1*cb_pot_max;"
+          
+
+PL_COM = "set xrange[x_min:x_max] ;\
+          set yrange[y_min:y_max] ;\
+          set xtics 2; \
+          set ytics 2; \
+          set mxtics 2; \
+          set mytics 2; \
+          set grid lc rgb '#888888'"
+          
+CB_VEL = "unset colorbox; \ "
+
+          
+
+CB_DEN = "set colorbox horizontal user origin .4, .065 size .272,.015; \
+          set format cb '%.0e';\
+          set cblabel '$(n_i-n_0)/n_{0}$';\
+          set cbtics 0.2; \
+          set mcbtics 4"
+          
+CB_POT = "set colorbox horizontal user origin .701, .065 size .272,.015; \
+          set format cb '%.0e';\
+          set cblabel '$\\Phi \\left[ q_i^2 m_i^{-1} c_{si}^{-2} \\right]$';\
+          set cbtics 0.005; \
+          set mcbtics 4"          
+          
+ROW_A = "set tmargin at screen 0.95; set bmargin at screen 0.83"
+ROW_B = "set tmargin at screen 0.81; set bmargin at screen 0.69"
+ROW_C = "set tmargin at screen 0.67; set bmargin at screen 0.56"
+ROW_D = "set tmargin at screen 0.54; set bmargin at screen 0.42"
+ROW_E = "set tmargin at screen 0.40; set bmargin at screen 0.29"
+ROW_F = "set tmargin at screen 0.27; set bmargin at screen 0.15"
+
+
+COL_A = "set lmargin at screen 0.10; set rmargin at screen 0.37"
+COL_B = "set lmargin at screen 0.40; set rmargin at screen 0.67"
+COL_C = "set lmargin at screen 0.70; set rmargin at screen 0.97"
+
+
+
+
+
+
+
+set multiplot layout 3,5 rowsfirst
+set key below
+
+################## 1st ROW ##################################
+@PL_VEL; @PL_COM; @ROW_A; @COL_A; @NOXTICS; @YTICS; @NOCB; 
+set title 'ion velocity';
+set label 1 '$t= 0.001\omega_{pi}^{-1}$' at graph 0.05,0.9 font ',8'; 
+plot file_name_P1 every 1:1 using ($1):($2):(($3)*vel_scale):(($4)*vel_scale) with vectors head size 0.1,20,60 filled lc '#444444'  notitle
+
+@PL_DEN; @PL_COM; @ROW_A; @COL_B; @NOXTICS; @NOYTICS; @NOCB; 
+set title 'ion density';
+splot file_name_P1 using ($1):($2):($6) notitle lc rgb '#888888'
+
+@PL_POT; @PL_COM; @ROW_A; @COL_C; @NOXTICS; @NOYTICS; @NOCB
+set title 'electric potential';
+splot file_name_P1 using ($1):($2):(($7)+($8)) notitle
+
+################## 2nd ROW ##################################
+@PL_VEL; @PL_COM; @ROW_B; @COL_A; @NOXTICS; @YTICS; @NOCB
+set label 1 '$t= 0.11\omega_{pi}^{-1}$' at graph 0.05,0.9 font ',8'; 
+plot "fields_0110.dat" every 1:1 using ($1):($2):(($3)*vel_scale):(($4)*vel_scale) with vectors head size 0.1,20,60 filled lc '#444444'  notitle
+
+@PL_DEN; @PL_COM; @ROW_B; @COL_B; @NOXTICS; @NOYTICS; @NOCB
+splot "fields_0110.dat" using ($1):($2):($6) notitle
+
+@PL_POT; @PL_COM; @ROW_B; @COL_C; @NOXTICS; @NOYTICS; @NOCB
+splot "fields_0110.dat" using ($1):($2):(($7)+($8)) notitle
+
+################## 3rd ROW ##################################
+@PL_VEL; @PL_COM; @ROW_C; @COL_A; @NOXTICS; @YTICS; @NOCB
+set label 1 '$t= 0.22\omega_{pi}^{-1}$' at graph 0.05,0.9 font ',8'; 
+plot "fields_0220.dat" every 1:1 using ($1):($2):(($3)*vel_scale):(($4)*vel_scale) with vectors head size 0.1,20,60 filled lc '#444444'  notitle
+
+@PL_DEN; @PL_COM; @ROW_C; @COL_B; @NOXTICS; @NOYTICS; @NOCB
+splot "fields_0220.dat" using ($1):($2):($6) notitle
+
+@PL_POT; @PL_COM; @ROW_C; @COL_C; @NOXTICS; @NOYTICS; @NOCB
+splot "fields_0220.dat" using ($1):($2):(($7)+($8)) notitle
+
+################## 4th ROW ##################################
+@PL_VEL; @PL_COM; @ROW_D; @COL_A; @NOXTICS; @YTICS; @NOCB
+set label 1 '$t= 0.33\omega_{pi}^{-1}$' at graph 0.05,0.9 font ',8'; 
+plot "fields_0330.dat" every 1:1 using ($1):($2):(($3)*vel_scale):(($4)*vel_scale) with vectors head size 0.1,20,60 filled lc '#444444'  notitle
+
+@PL_DEN; @PL_COM; @ROW_D; @COL_B; @NOXTICS; @NOYTICS; @NOCB
+splot "fields_0330.dat" using ($1):($2):($6) notitle
+
+@PL_POT; @PL_COM; @ROW_D; @COL_C; @NOXTICS; @NOYTICS; @NOCB
+splot "fields_0330.dat" using ($1):($2):(($7)+($8)) notitle
+
+################## 4th ROW ##################################
+@PL_VEL; @PL_COM; @ROW_E; @COL_A; @NOXTICS; @YTICS; @NOCB
+set label 1 '$t= 0.44\omega_{pi}^{-1}$' at graph 0.05,0.9 font ',8'; 
+plot "fields_0440.dat" every 1:1 using ($1):($2):(($3)*vel_scale):(($4)*vel_scale) with vectors head size 0.1,20,60 filled lc '#444444'  notitle
+
+@PL_DEN; @PL_COM; @ROW_E; @COL_B; @NOXTICS; @NOYTICS; @NOCB
+splot "fields_0440.dat" using ($1):($2):($6) notitle
+
+@PL_POT; @PL_COM; @ROW_E; @COL_C; @NOXTICS; @NOYTICS; @NOCB
+splot "fields_0440.dat" using ($1):($2):(($7)+($8)) notitle
+
+################## 5th ROW ##################################
+@PL_VEL; @PL_COM; @ROW_F; @COL_A; @XTICS; @YTICS; @CB_VEL
+set label 1 '$t= 0.55\omega_{pi}^{-1}$' at graph 0.05,0.9 font ',8'; 
+plot "fields_0550.dat" every 1:1 using ($1):($2):(($3)*vel_scale):(($4)*vel_scale) with vectors head size 0.1,20,60 filled lc '#444444'  notitle
+
+@PL_DEN; @PL_COM; @ROW_F; @COL_B; @XTICS; @NOYTICS; @CB_DEN
+splot "fields_0550.dat" using ($1):($2):($6) notitle
+
+@PL_POT; @PL_COM; @ROW_F; @COL_C; @XTICS; @NOYTICS; @CB_POT
+splot "fields_0550.dat" using ($1):($2):(($7)+($8)) notitle
+

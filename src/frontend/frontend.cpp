@@ -31,6 +31,7 @@
 #include "grid.hpp"
 //#include "particle.hpp"
 #include "field.hpp"
+#include "field_integrate.hpp"
 #include "masks.hpp"
 #include "init_cond.hpp"
 #include "subdim.hpp"
@@ -51,21 +52,18 @@
 // in different space directions
 
 int Nx = 256;
-int Ny = 128;
-int Nz = 128;
+int Ny = 192;
+int Nz = 192;
 
-double Lx = 20.;
-double Ly = 10.;
-double Lz = 10.;
+double Lx = 18.;
+double Ly = 12.;
+double Lz = 12.;
 
-double M = 0.3;
+double M = 0.5;
 double tau = 0.1;
-double theta = 30.;
+double theta = 10.;
 double mu = 0.;
 double beta = 0.0;
-
-
-
 
 
 
@@ -79,23 +77,24 @@ int main(void)
    #endif
 
 	double pi = acos(-1.);
+
 	axis_CoSiSt x_axis(-0.5*Lx, Lx, Nx, Lx*(1.-0.25)/(2*pi) );
 	axis_CoSiSt y_axis(-0.5*Ly, Ly, Ny, Ly*(1.-0.25)/(2*pi) );
 	axis_CoSiSt z_axis(-0.5*Lz, Lz, Nz, Lz*(1.-0.25)/(2*pi) );
-
 	/*
-	axis_CoSiSt x_axis(-5.,10.,Nx,1.24);
-	axis_CoSiSt y_axis(-5.,10.,Ny,1.24);
-	axis_CoSiSt z_axis(-5.,10.,Nz,1.24);
+	axis_CoSiSt x_axis(-0.5*Lx, Lx, Nx, Lx*(1.-0.25)/(2*pi) );
+	axis_CoSiSt y_axis(-0.5*Ly, Ly, Ny, Ly*(1.-0.25)/(2*pi) );
+	axis_CoSiSt z_axis(-0.5*Lz, Lz, Nz, Lz*(1.-0.25)/(2*pi) );
 
 	axis_CoHySt x_axis(-5.,10.,Nx,3);
 	axis_CoHySt y_axis(-5.,10.,Ny,3);
 	axis_CoHySt z_axis(-5.,10.,Nz,3);
 
-	axis_CoEqSt x_axis(-5.,10.,128);
-	axis_CoEqSt y_axis(-5.,10.,128);
-	axis_CoEqSt z_axis(-5.,10.,128);
+	axis_CoEqSt x_axis(-0.5*Lx,Lx,Nx);
+	axis_CoEqSt y_axis(-0.5*Ly,Ly,Ny);
+	axis_CoEqSt z_axis(-0.5*Lz,Lz,Nz);
 	*/
+
 
 	grid_Co Omega(x_axis,y_axis,z_axis);
 	parameters Params(M,tau,theta,mu,beta);
@@ -115,34 +114,36 @@ int main(void)
    #endif
 	double v0 = M/tau;
 
-   #ifdef _MY_VERBOSE
+   #if defined(_MY_VERBOSE)
 	my_log << "init fields";
    #endif
 	field_real Ux(Omega), Uy(Omega), Uz(Omega);
 	field_real ni(Omega), nd(Omega);
 	field_real Ph(Omega);
 
-	fkt3d_const H_zero(0.);
 	Ux.fill(&set_zero);
 	Uy.fill(&set_zero);
 	Uz.fill(&set_zero);
 
 
-	//theta_fkt dust_1d_fkt(R, Q, 0.);
-	//Gauss_1d_fkt dust_1d_fkt(Q, 10000);
-	//theta_fkt dust_1d_fkt(R, Q);
-	//smooth_rectangle dust_1d_fkt(nd0, 56, -.8);
-	//fkt3d_from_fkt1d dust_3d_fkt(dust_1d_fkt);
 	// ##### DUST #####
 	double Rd = 0.1183;
 	double nd0 = -11.940;
 	double shift = 0;
-	fkt3d_Gauss dust_3d_fkt(-14.,0.15,0.15,0.15);
+	// Option A
+	//fkt1d_theta dust_1d_fkt(Rd, nd0, 0.);
+	//fkt1d_theta dust_1d_fkt(0.1, 1, 0.);
+	//fkt3d_from_fkt1d dust_3d_fkt(dust_1d_fkt);
+	// Option B
+	//Gauss_1d_fkt dust_1d_fkt(Q, 10000);
+	//theta_fkt dust_1d_fkt(R, Q);
+	//smooth_rectangle dust_1d_fkt(nd0, 56, -.8);
+	// Option C
+	fkt3d_Gauss dust_3d_fkt(-7.,0.15,0.15,0.15);
 	//fkt3d_shift H_3d_shifted_fkt(dust_3d_fkt, shift, 0., 0.);
 	nd.fill(dust_3d_fkt);
-	//save_2d(nd, my_dim, "./data/nd2d.dat");
-	//save_1d(nd, my_dim, "./data/nd1d.dat");
-
+	save_2d(nd, my_dim, "./data/nd2d.dat");
+	save_1d(nd, my_dim, "./data/nd1d.dat");
 
 	// ##### RELAXATIONS-SOLVER #####
 	fkt3d_const boundary_shape(0.); // there are no additional boundarys (except Domain borders)
@@ -170,10 +171,11 @@ int main(void)
 
 	MG.solve(Ph,nd);
 
-
-	//Ph.fill(Potential_shifted);
 	for(int i=0; i<ni.N; ++i)
+	{
 		ni.val[i] = exp(-theta*Ph.val[i]);
+	}
+
 
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)

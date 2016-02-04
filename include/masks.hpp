@@ -309,6 +309,22 @@ private :
 	double my_val;
 };
 
+class fkt3d_sin : public interface_3d_fkt
+{
+public :
+	fkt3d_sin(const double &amplitude = 1., const double &kx=1., const double &ky=0., const double &kz=0.) :
+		A(amplitude), kx(kx), ky(ky), kz(kz)
+		{ }
+	~fkt3d_sin() { }
+	double operator()(const double &x, const double &y, const double &z) const
+	{return A*sin(kx*x + ky*y + kz*z);}
+private :
+	const double A;
+	const double kx;
+	const double ky;
+	const double kz;
+};
+
 class fkt3d_Gauss : public interface_3d_fkt
 {
 public :

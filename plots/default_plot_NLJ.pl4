@@ -1,0 +1,37 @@
+#PLOT -l
+#PLOT -s 6
+#PLOT -h 7.6 -w 12.2
+
+filename = "norm_max.log"
+
+#set format y "%s \\cdot 10^{%S}"
+
+#set format y "%.2t*10^%+03T"; set ytic(12345)# "1.23*10^+04"
+
+set format y "%.0t  $\\cdot 10 ^{ %T } $"
+
+#set ytic(1)   # "12.345*10^{3}"
+
+set style line 1 linetype 1 linewidth 3 linecolor rgb '#ff0000' 
+set style line 2 linetype 2 linewidth 3 linecolor rgb '#00ff00' 
+set style line 3 linetype 2 linewidth 3 linecolor rgb '#00ff00' 
+set style line 4 linetype 2 linewidth 3 linecolor rgb '#00ff00' 
+set style line 5 linetype 1 linewidth 3 linecolor rgb '#0000ff' 
+set style line 6 pointtype 7 pointsize 2 linecolor rgb '#000000'
+
+set key font ",14"
+set key spacing 1.5
+
+set logscale y
+
+set xlabel "steps"
+set ylabel ""
+
+
+
+i=500
+plot filename every ::65000 using 0:3 with lines ls 1 title "$\\|\\Phi\\\|_1$", \
+     filename every ::65000 using 0:4 with lines ls 5 title "$\\frac{1}{N_x N_y N_z} \\|\\Phi\\|_\\infty$"
+     
+
+     

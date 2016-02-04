@@ -1,0 +1,66 @@
+# File for ploting electric-potential via plot4
+
+#PLOT -l
+#PLOT -s 6
+#PLOT -w 16 -h 16
+
+########## quick Options #######################################################
+if (!exists("filename")) filename="./data/splot_data.dat"
+cb_scale = 0.1
+
+########## SPLOT Options #######################################################
+set palette model RGB defined ( 0"black", 1"blue", 2"cyan",3"white",4"yellow", 5"red",6"black" )
+unset surface
+set pm3d map
+set pm3d implicit at b
+#set contour base
+#set cntrparam bspline
+#set cntrparam levels discrete -1,0,1
+
+set xtics 1
+set ytics 1
+set grid
+
+########## Canvas ##############################################################
+set lmargin 1
+set tmargin 1
+set rmargin 3
+set bmargin 2
+
+########## Format and Scaling ##################################################
+# set format x ''
+# set format y ''
+# set format z ''
+set format cb "%.1e"
+# set logscale x
+# set logscale y
+# set logscale z
+
+########## Ranges ##############################################################
+set xrange [-5:5]
+#set yrange [0:6]
+set cbrange [cb_scale:-cb_scale]
+
+########## Labels #############################################################
+set xlabel  'x in $\lambda_{De}$'
+set ylabel  'y in $\lambda_{De}$' offset -2,0
+set cblabel '$\Phi$ in $\frac{q_i^2}{m_i c_{si}^2}$'
+set title 'Kraft'
+
+########## Legend #############################################################
+set key at 4,4
+set key title '$M=0.2$ \	$\theta=10$ \	$\tau=0.1$'
+
+########## Labels #############################################################
+set label '[b]{$\stackrel{\vec{E}_0}{\longrightarrow}$ }' at -4,4 front
+set label '[b]{Schnitt in z-Ebene @ $z=0$ }' at -3,-4.5 front
+
+########## Style Definitions ###################################################
+set style line 1 lt 1 lw 2 lc rgb "#aaaaaa"
+set style line 2 lt 1 lw 2 lc rgb "#aaaaaa"
+set style line 3 lt 1 lw 2 lc rgb "#aaaaaa"
+set style line 4 lt 1 lw 2 lc rgb "#aaaaaa"
+set style increment userstyles
+
+########## Plot-Command ########################################################
+splot filename using ($1):($2):($4) notitle

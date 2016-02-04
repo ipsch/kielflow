@@ -138,7 +138,8 @@ void rhs_standard::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, fiel
    #endif
 
    #if defined(SPECTRAL_VISCOSITY)
-	static effect_spectral_viscosity VS(0.66,FUx.my_grid->x_axis->L,FUx.Nx);
+	static effect_spectral_viscosity VS(.5,*FUx.my_grid);
+
 	VS.execute(FUx,Buffer_FUx);
 	VS.execute(FUy,Buffer_FUy);
 	VS.execute(FUz,Buffer_FUz);
