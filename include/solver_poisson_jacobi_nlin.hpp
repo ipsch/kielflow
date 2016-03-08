@@ -19,6 +19,8 @@
 #include <fstream>
 #include <thread>
 #include "IO.hpp"
+#include <omp.h>
+
 
 #include <iostream>
 #include <iomanip>
@@ -51,7 +53,7 @@ private :
 	void iteration_loop(const field_real &in, field_real &out, const field_real &rho);
 
 	double get_PG(const field_real &in, int i, int j, int k) const;
-	double get_HXX(const axis * const A, const int &i, double &hp, double &hm, double &hmm) const;
+	void get_HXX(const axis * const A, const int &i, double &hp, double &hm) const;
 
 	//void   check_convergence(const field_real &field_new, const field_real &field_old);
 	void check_Norms(const field_real &field_new, const field_real &field_old);
@@ -63,17 +65,6 @@ private :
 	interface_3d_fkt &H;
 	interface_3d_fkt &val_H;
 
-	double Hx,Hy,Hz;
-
-	double hxp;
-	double hxm;
-	double hxmm;
-	double hyp;
-	double hym;
-	double hymm;
-	double hzp;
-	double hzm;
-	double hzmm;
 
 	std::string my_logfile;
 

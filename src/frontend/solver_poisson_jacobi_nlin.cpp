@@ -41,17 +41,6 @@ solver_poisson_jacobi_nlin::solver_poisson_jacobi_nlin(interface_3d_fkt &boundar
 	invocations = 0;
 	max_iterations = 50;
 
-	hxp = 0;
-	hxm = 0;
-	hxmm = 0.;
-	hyp = 0;
-	hym = 0;
-	hymm = 0;
-	hzp = 0;
-	hzm = 0;
-	hzmm = 0;
-	Hx = Hy = Hz = 0.;
-
 	output_stream << "s" << "\t";
 	output_stream << "i" << "\t";
 	output_stream << "NM" << "\t";
@@ -157,9 +146,9 @@ void solver_poisson_jacobi_nlin::solve(field_real &Phi_IO, field_real &rho)
 
 
 
-double solver_poisson_jacobi_nlin::get_HXX(const axis * const A, const int &i, double &hp, double &hm, double &hmm) const
+void solver_poisson_jacobi_nlin::get_HXX(const axis * const A, const int &i, double &hp, double &hm) const
 {
-	hmm= A->val_at(i) - A->val_at(i-2);
+
 	hm = A->val_at(i) - A->val_at(i-1);
 	hp = A->val_at(i+1) - A->val_at(i);
 
@@ -168,7 +157,7 @@ double solver_poisson_jacobi_nlin::get_HXX(const axis * const A, const int &i, d
 	//if(i==A->N-1) hp = A->val_at(1) - A->val_at(0);
 	//if(i==0)      hm = hp;
 
-	return hp*(hp+hm)*hm;
+	return;
 }
 
 
@@ -210,15 +199,12 @@ void solver_poisson_jacobi_nlin::iteration_loop(const field_real &in, field_real
 	for(int i=0; i < out.Nx; ++i)
 	{
 		x = in.my_grid->x_axis->val_at(i);
-		Hx = get_HXX(in.my_grid->x_axis, i, hxp, hxm, hxmm);
 		for(int j=0; j<out.Ny; ++j)
 		{
 			y = in.my_grid->y_axis->val_at(j);
-			Hy = get_HXX(in.my_grid->y_axis, j, hyp, hym, hymm);
 			for(int k=0; k<out.Nz; ++k)
 			{
 				z = in.my_grid->z_axis->val_at(k);
-				Hz = get_HXX(in.my_grid->z_axis, k, hzp, hzm, hzmm);
 				int index = out.my_grid->index_at(i,j,k);
 
 				if( (H(x,y,z)==0.) && (i!=0) && (j!=0) && (k!=0) )
@@ -337,13 +323,14 @@ double solver_poisson_jacobi_nlin::newton(const int &i, const int j, const int k
 	log << get_PG(Phi,i,j,k+1);
 	log << get_PG(Phi,i,j,k-1);
 	log << "hxmm/hxm/hxp/hymm/hym/hyp/hzmm/hzm/hzp: ";
-	log << hxmm;
+	double hxp, hxm, hyp, hym ,hzp, hzm;
+	get_HXX(Phi.my_grid->x_axis,i,hxp,hxm);
+	get_HXX(Phi.my_grid->x_axis,j,hyp,hym);
+	get_HXX(Phi.my_grid->x_axis,k,hzp,hzm);
 	log << hxm;
 	log << hxp;
-	log << hymm;
 	log << hym;
 	log << hyp;
-	log << hzmm;
 	log << hzm;
 	log << hzp;
 	log << "rho_ijk: ";
@@ -373,44 +360,34 @@ double solver_poisson_jacobi_nlin::f_df(const double &x,
 	// Zähler
 
 
+	double f=0.;
+	double hxp, hxm, hyp, hym ,hzp, hzm;
 
-	double Ax = 2.*(hxp-hxm)/(hxmm*(hxmm+hxp)*(hxmm-hxm));
-	double Bx = 2.*(hxmm-hxp)/(hxm*(hxmm-hxm)*(hxm+hxp));
-	double Cx = 2.*(hxmm+hxm)/(hxp*(hxm+hxp)*(hxmm+hxp));
+	get_HXX(Phi.my_grid->x_axis, i, hxp, hxm);
+	get_HXX(Phi.my_grid->y_axis, j, hyp, hym);
+	get_HXX(Phi.my_grid->z_axis, k, hzp, hzm);
 
-	double Ay = 2.*(hyp-hym)/(hymm*(hymm+hyp)*(hymm-hym));
-	double By = 2.*(hymm-hyp)/(hym*(hymm-hym)*(hym+hyp));
-	double Cy = 2.*(hymm+hym)/(hyp*(hym+hyp)*(hymm+hyp));
+	f += get_PG(Phi,i+1,j,k) / (hxp*(hxp+hxm));
+	f += get_PG(Phi,i-1,j,k) / (hxm*(hxp+hxm));
+	f -= x / (hxp*hxm);
 
-	double Az = 2.*(hzp-hzm)/(hzmm*(hzmm+hzp)*(hzmm-hzm));
-	double Bz = 2.*(hzmm-hzp)/(hzm*(hzmm-hzm)*(hzm+hzp));
-	double Cz = 2.*(hzmm+hzm)/(hzp*(hzm+hzp)*(hzmm+hzp));
+	f += get_PG(Phi,i,j+1,k) / (hyp*(hyp+hym));
+	f += get_PG(Phi,i,j-1,k) / (hym*(hyp+hym));
+	f -= x / (hyp*hym);
 
+	f += get_PG(Phi,i,j,k+1) / (hzp*(hzp+hzm));
+	f += get_PG(Phi,i,j,k-1) / (hzm*(hzp+hzm));
+	f -= x / (hzp*hzm);
 
-	double f = 0.;
-
-	f += Ax*get_PG(Phi,i-2,j,k);
-	f += Bx*get_PG(Phi,i-1,j,k);
-	f += -(Ax+Bx+Cx)*x;
-	f += Cx*get_PG(Phi,i+1,j,k);
-
-	f += Ay*get_PG(Phi,i,j-2,k);
-	f += By*get_PG(Phi,i,j-1,k);
-	f += -(Ay+By+Cy)*x;
-	f += Cy*get_PG(Phi,i,j+1,k);
-
-	f += Az*get_PG(Phi,i,j,k-2);
-	f += Bz*get_PG(Phi,i,j,k-1);
-	f += -(Az+Bz+Cz)*x;
-	f += Cz*get_PG(Phi,i,j,k+1);
+	f = 2.*f;
 
 	f += rho_ijk - exp(x) + exp(-10.*x);
 
 	// Nenner
 	double df = 0.;
-	df += -(Ax+Bx+Cx);
-	df += -(Ay+By+Cy);
-	df += -(Az+Bz+Cz);
+	df -= 2./(hxp*hxm);
+	df -= 2./(hyp*hym);
+	df -= 2./(hzp*hzm);
 	df += -exp(x); // -10.*exp(-10.*x);
 
 	return (f/df);

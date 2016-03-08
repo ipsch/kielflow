@@ -22,7 +22,7 @@ void show_percent(int i) {
 
 
 solver_poisson_jacobi_nlin::solver_poisson_jacobi_nlin(interface_3d_fkt &boundary, interface_3d_fkt &val_boundary, const double &w) :
-	H(boundary), val_H(val_boundary), eps(0.0001), omega_SOR(w), hxmm(0.), hymm(0.), hzmm(0.)
+	H(boundary), val_H(val_boundary), eps(0.0001), omega_SOR(w)
 {
 	my_logfile = "./diagnostics/norm_max.log";
 	std::ofstream output_stream(my_logfile, std::ofstream::trunc);
@@ -37,14 +37,6 @@ solver_poisson_jacobi_nlin::solver_poisson_jacobi_nlin(interface_3d_fkt &boundar
 	iteration = 0;
 	invocations = 0;
 	max_iterations = 50;
-
-	hxp = 0;
-	hxm = 0;
-	hyp = 0;
-	hym = 0;
-	hzp = 0;
-	hzm = 0;
-	Hx = Hy = Hz = 0.;
 
 	output_stream << "s" << "\t";
 	output_stream << "i" << "\t";
@@ -149,7 +141,7 @@ void solver_poisson_jacobi_nlin::solve(field_real &Phi_IO, field_real &rho)
 
 
 
-double solver_poisson_jacobi_nlin::get_HXX(const axis * const A, const int &i, double &hp, double &hm, double &hmm) const
+void solver_poisson_jacobi_nlin::get_HXX(const axis * const A, const int &i, double &hp, double &hm) const
 {
 	hm = A->val_at(i) - A->val_at(i-1);
 	hp = A->val_at(i+1) - A->val_at(i);
@@ -158,7 +150,7 @@ double solver_poisson_jacobi_nlin::get_HXX(const axis * const A, const int &i, d
 	//if(i==A->N-1) hp = A->val_at(1) - A->val_at(0);
 	//if(i==0)      hm = hp;
 
-	return hp*(hp+hm)*hm;
+	return;
 }
 
 
@@ -196,33 +188,39 @@ void solver_poisson_jacobi_nlin::iteration_loop(const field_real &in, field_real
    #endif
 
 	double x, y, z;
+	double hxp, hxm, hyp, hym, hzp, hzm;
+
 
 	for(int i=0; i < out.Nx; ++i)
 	{
 		x = in.my_grid->x_axis->val_at(i);
-		Hx = get_HXX(in.my_grid->x_axis, i, hxp, hxm, hxmm);
+
 		for(int j=0; j<out.Ny; ++j)
 		{
 			y = in.my_grid->y_axis->val_at(j);
-			Hy = get_HXX(in.my_grid->y_axis, j, hyp, hym, hymm);
-			for(int k=0; k<out.Nz; ++k)
-			{
-				z = in.my_grid->z_axis->val_at(k);
-				Hz = get_HXX(in.my_grid->z_axis, k, hzp, hzm, hzmm);
-				int index = out.my_grid->index_at(i,j,k);
 
-				if( H(x,y,z)==0. )
-				{
-					// if not within boundary layer : calculate new potential
-					double rho_ijk = rho(i,j,k);
-					out.val[index] = newton(i,j,k,in,rho_ijk);
-				}
-				else
-				{
+           #pragma omp parallel shared(i,j,H,rho,in,out) private(k)
+			{ // begin of parallel section
+               #pragma omp for schedule(dynamic)
+				for(int k=0; k<out.Nz; ++k)
+				{ // begin loop over k
+					z = in.my_grid->z_axis->val_at(k);
+
+					int index = out.my_grid->index_at(i,j,k);
+
+					if( H(x,y,z)==0. )
+					{
+						// if not within boundary layer : calculate new potential
+						double rho_ijk = rho(i,j,k);
+						out.val[index] = newton(i,j,k,in,rho_ijk);
+					}
+					else
+					{
 					// if within boundary layer : keep boundary value
-					out.val[index] = in.val[index];
-				}
-			} // enf loop over k
+						out.val[index] = in.val[index];
+					}
+				} // end loop over k
+			} // end of parallel section
 		} // end loop over j
 	} // end loop over i
 
@@ -328,6 +326,10 @@ double solver_poisson_jacobi_nlin::newton(const int &i, const int j, const int k
 	my_log << get_PG(Phi,i,j,k+1);
 	my_log << get_PG(Phi,i,j,k-1);
 	my_log << "hxp/hxm/hyp/hym/hzp/hzm: ";
+	double hxp, hxm, hyp, hym ,hzp, hzm;
+	get_HXX(Phi.my_grid->x_axis,i,hxp,hxm);
+	get_HXX(Phi.my_grid->x_axis,j,hyp,hym);
+	get_HXX(Phi.my_grid->x_axis,k,hzp,hzm);
 	my_log << hxp;
 	my_log << hxm;
 	my_log << hyp;
@@ -360,6 +362,12 @@ double solver_poisson_jacobi_nlin::f_df(const double &x,
 {
 	// Zähler
 	double f = 0.;
+
+	double hxp, hxm, hyp, hym ,hzp, hzm;
+
+	get_HXX(Phi.my_grid->x_axis, i, hxp, hxm);
+	get_HXX(Phi.my_grid->y_axis, j, hyp, hym);
+	get_HXX(Phi.my_grid->z_axis, k, hzp, hzm);
 
 	f += get_PG(Phi,i+1,j,k) / (hxp*(hxp+hxm));
 	f += get_PG(Phi,i-1,j,k) / (hxm*(hxp+hxm));
