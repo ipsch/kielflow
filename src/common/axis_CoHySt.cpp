@@ -4,9 +4,9 @@
 
 axis_CoHySt::axis_CoHySt(const double &l0_, const double &L_, const int &N_, const int &m_)
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("axis_CoHySt");
-	log << "axis_CoHySt(const double &l0_, const double &L_, const int &N_, const int &m_)";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("axis_CoHySt");
+	my_log << "axis_CoHySt(const double &l0_, const double &L_, const int &N_, const int &m_)";
    #endif
 	l0 = l0_;
 	L = L_;
@@ -17,9 +17,9 @@ axis_CoHySt::axis_CoHySt(const double &l0_, const double &L_, const int &N_, con
 
 axis_CoHySt::axis_CoHySt(const axis_CoHySt &that)
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("axis_CoHySt");
-	log << "axis_CoHySt(const axis_CoHySt &that)";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("axis_CoHySt");
+	my_log << "axis_CoHySt(const axis_CoHySt &that)";
    #endif
 	l0 = that.l0;
 	L = that.L;
@@ -30,26 +30,26 @@ axis_CoHySt::axis_CoHySt(const axis_CoHySt &that)
 
 axis_CoHySt::~axis_CoHySt()
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("axis_CoHySt");
-	log << "~axis_CoHySt()";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("axis_CoHySt");
+	my_log << "~axis_CoHySt()";
    #endif
 }
 
 axis * axis_CoHySt::clone () const
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("axis_FoHySt");
-	log << "clone() const";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("axis_FoHySt");
+	my_log << "clone() const";
    #endif
 	return new axis_CoHySt(*this);
 }
 
 axis * axis_CoHySt::create_reciprocal() const
 {
-  #ifdef _MY_VERBOSE_MORE
-	logger log("axis_CoHySt");
-	log << "create_reciprocal()";
+  #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("axis_CoHySt");
+	my_log << "create_reciprocal()";
    #endif
 
 	return new axis_FoHySt(l0,L,N,m);

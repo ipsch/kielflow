@@ -1,6 +1,9 @@
 #ifndef AXIS_FOSIST_HPP_
 #define AXIS_FOSIST_HPP_
 
+#if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+#include "logger.hpp"
+#endif
 
 #include "axis_Fo.hpp"
 #include "axis_CoSiSt.hpp"

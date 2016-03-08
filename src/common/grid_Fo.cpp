@@ -6,9 +6,9 @@
 grid_Fo::grid_Fo(const axis_Fo &x, const axis_Fo &y, const axis_Fo &z) :
 		grid(x.N, y.N, z.N/2+1, x, y, z, &axis::clone)
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("grid_Fo");
-	log << "grid_Fo(const axis_Fo &x, const axis_Fo &y, const axis_Fo &z)";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("grid_Fo");
+	my_log << "grid_Fo(const axis_Fo &x, const axis_Fo &y, const axis_Fo &z)";
    #endif
 }
 
@@ -18,9 +18,9 @@ grid_Fo::grid_Fo(const grid_Fo &that) :
 			*that.x_axis,   *that.y_axis,   *that.z_axis,
 				&axis::clone)
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("grid_Fo");
-	log << "grid_Fo(const grid_Fo &that)";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("grid_Fo");
+	my_log << "grid_Fo(const grid_Fo &that)";
    #endif
 }
 
@@ -30,18 +30,18 @@ grid_Fo::grid_Fo(const grid_Co &that) :
 			*that.x_axis,   *that.y_axis,   *that.z_axis,
 				&axis_Co::create_reciprocal)
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("grid_Fo");
-	log << "grid_Fo(const grid_Co &that)";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("grid_Fo");
+	my_log << "grid_Fo(const grid_Co &that)";
    #endif
 }
 
 
 grid_Fo * grid_Fo::clone() const
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("grid_Fo");
-	log << "grid_Fo::clone() const";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("grid_Fo");
+	my_log << "grid_Fo::clone() const";
    #endif
 	return new grid_Fo(*this);
 }
@@ -49,9 +49,9 @@ grid_Fo * grid_Fo::clone() const
 
 grid_Co * grid_Fo::reziprocal() const
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("grid_Fo");
-	log << "grid_Co::reziprocal() const";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("grid_Fo");
+	my_log << "grid_Co::reziprocal() const";
    #endif
 	return new grid_Co(*this);
 }
@@ -59,9 +59,9 @@ grid_Co * grid_Fo::reziprocal() const
 
 grid_Fo::~grid_Fo()
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("grid_Fo");
-	log << "~grid_Fo()";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("grid_Fo");
+	my_log << "~grid_Fo()";
    #endif
 }
 
@@ -88,9 +88,9 @@ void grid_Fo::ijk_at(const  int &index,  int &i,  int &j,  int &k) const
 // ######### Operatoren #######################################################
 bool operator==(const grid_Co &c1, const grid_Co &c2)
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("grid");
-	log << "operator==(const grid_Co &c1, const grid_Co &c2)";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("grid");
+	my_log << "operator==(const grid_Co &c1, const grid_Co &c2)";
    #endif
     if (c1.N!=c2.N) return false;
     if (c1.x_axis->N!=c2.x_axis->N) return false;
@@ -101,9 +101,9 @@ bool operator==(const grid_Co &c1, const grid_Co &c2)
 
 bool operator==(const grid_Fo &c1, const grid_Fo &c2)
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("grid");
-	log << "operator==(const grid &c1, const grid &c2)";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("grid");
+	my_log << "operator==(const grid &c1, const grid &c2)";
    #endif
     if (c1.N!=c2.N) return false;
     if (c1.x_axis->N!=c2.x_axis->N) return false;

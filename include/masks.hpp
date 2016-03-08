@@ -1,15 +1,16 @@
 #ifndef MASKS_HPP_
 #define MASKS_HPP_
 
+#if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+#include "logger.hpp"
+#endif
+
+#include <iostream>
 
 #include <cmath>
 #include "interface_1d_fkt.hpp"
 #include "interface_3d_fkt.hpp"
 #include "o_math.hpp"
-
-#ifdef _MY_VERBOSE
-#include "logger.hpp"
-#endif
 
 
 

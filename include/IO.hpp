@@ -1,6 +1,10 @@
 #ifndef IO_HPP
 #define IO_HPP
 
+#if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+#include "logger.hpp"
+#endif
+
 // set (git)-repository-Version to unknown
 // (if not defined in makefile during compile process)
 #ifndef VERSION_STRING
@@ -35,9 +39,7 @@
 
 
 
-#ifdef _MY_VERBOSE
-#include "logger.hpp"
-#endif
+
 
 
 

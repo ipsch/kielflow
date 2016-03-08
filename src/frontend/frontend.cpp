@@ -61,7 +61,7 @@ double Lz = 12.;
 
 double M = 0.5;
 double tau = 0.1;
-double theta = 10.;
+double theta = 30.;
 double mu = 0.;
 double beta = 0.0;
 
@@ -139,7 +139,7 @@ int main(void)
 	//theta_fkt dust_1d_fkt(R, Q);
 	//smooth_rectangle dust_1d_fkt(nd0, 56, -.8);
 	// Option C
-	fkt3d_Gauss dust_3d_fkt(-7.,0.15,0.15,0.15);
+	fkt3d_Gauss dust_3d_fkt(-5.,0.15,0.15,0.15);
 	//fkt3d_shift H_3d_shifted_fkt(dust_3d_fkt, shift, 0., 0.);
 	nd.fill(dust_3d_fkt);
 	save_2d(nd, my_dim, "./data/nd2d.dat");

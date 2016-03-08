@@ -1,6 +1,10 @@
 #ifndef GRID_FO_HPP_
 #define GRID_FO_HPP_
 
+#if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+#include "logger.hpp"
+#endif
+
 #include "grid_base.hpp"
 #include "grid_Co.hpp"
 

@@ -50,7 +50,7 @@ void help(void)
 
 int main(int argc, char *argv[])
 {
-   #ifdef _MY_VERBOSE
+   #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	logger my_log("backend");
 	my_log << "start";
    #endif

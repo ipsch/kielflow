@@ -6,6 +6,9 @@
 #define VERSION_STRING "unknown"
 #endif
 
+#if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+#include "logger.hpp"
+#endif
 
 // gcc standard C++ libraries (common stuff)
 #include <iostream>  // standard I/O-Operations (I/O to console)
@@ -45,9 +48,7 @@
 
 
 
-#ifdef _MY_VERBOSE
-#include "logger.hpp"
-#endif
+
 
 
 
@@ -104,7 +105,7 @@ int main(void)
 
 	// ##### DUST #####
 	field_real nd(*FPh.my_grid);
-	fkt3d_Gauss dust_3d_fkt(-14.,0.15,0.15,0.15);
+	fkt3d_Gauss dust_3d_fkt(-5.,0.15,0.15,0.15);
 	nd.fill(dust_3d_fkt);
 
 	field_real Hd(*FPh.my_grid);
@@ -129,12 +130,13 @@ int main(void)
 		int * MG_steps_sizes = new int[MG_N]
                   {1,1,1,-1,-1,-1};
 	    MG_lvl_control * cycle_shape = new MG_lvl_control[MG_N]
-			      {lvl_keep, lvl_down, lvl_keep, lvl_down, lvl_up, lvl_up};
+				  {lvl_keep, lvl_down, lvl_keep, lvl_down, lvl_up, lvl_up};
 	    MG.set_level_control(MG_N, MG_steps_sizes, cycle_shape);
 	    // Sketch of cycle:
 	    // _
-	    //  \_  /
-	    //    \/
+	    //  \_     /
+	    //    \_  /
+	    //      \/
 	} // configure done
 
 
@@ -142,16 +144,18 @@ int main(void)
 	field_real Ph(*FPh.my_grid);
 	iFFT(FPh, Ph);
 	rhs_standard rhs(Params, MG, Ph, nd, Hd);
-
-
+   #if defined(TEST_RHS)
+	//rhs.solve(FUx, FUy, FUz, Fni);
+   #endif
 	// ##### TIME-INTEGRATOR #####
 	double t_delta = 0.01;
 	Runge_kutta_O4 time_integrator(rhs, t_delta);
 
 
+   //#define TEST_MULTIGRID
+   #ifdef TEST_MULTIGRID
 	// ##### MULTIGRID TESTING #####
 	// uncomment for testing purposes only
-	/*
 	std::cout << "MG testing" << std::endl;
 	field_real ni(*FPh.my_grid);
 	field_real rho(*FPh.my_grid);
@@ -159,15 +163,15 @@ int main(void)
 	for(int i=0; i<ni.N; ++i)
 	{
 		Ph.val[i] = 0.;
-		rho.val[i] = (ni.val[i]) + nd.val[i];
+		ni.val[i] += nd.val[i];
 	}
-	MG.solve(Ph,rho);
-	*/
+	MG.solve(Ph,ni);
+   #endif
 
 
 
-
-
+   //#define KILL_MAIN_LOOP
+   #ifndef KILL_MAIN_LOOP
 	// #### Time-Step #########################################################
 	while(iteration.good())
 	{
@@ -211,7 +215,7 @@ int main(void)
 
 			sstr.str(std::string());
 			sstr << "./data/FUz_" << (iteration.show()) << ".dat";
-			save_major_wavevectors(sstr.str(), FUz);
+			sa#endif /* KILL_MAIN_LOOPve_major_wavevectors(sstr.str(), FUz);
 
 			sstr.str(std::string());
 			sstr << "./data/Fni_" << (iteration.show()) << ".dat";
@@ -236,10 +240,7 @@ int main(void)
 
 		t_total += t_delta;
 	}
-
-
-
-	//rhs.solve(FUx, FUy, FUz, Fni);
+   #endif // KILL_MAIN_LOOP
 
 	save_all(particle_list, Omega, t_total, Params, FUx, FUy, FUz, Fni, FPh);
 

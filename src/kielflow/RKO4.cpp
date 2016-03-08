@@ -16,7 +16,7 @@ Runge_kutta_O4::Runge_kutta_O4(interface_rhs &rhs, double dt) :
 void Runge_kutta_O4::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, field_imag &Fni)
 {
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_TEDIOUS)
-	logger log("RK-method");
+	logger my_log("RK-method");
    #endif
 
 	int N = FUx.N;
@@ -29,7 +29,7 @@ void Runge_kutta_O4::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, fi
 
 	// Speicher für Runge-Kutta-Koeffizienten allokieren (hier ist FniCHTS optimiert)
    #if defined(_MY_TEDIOUS)
-	log << "allocating fields (fourierspace) (for RK-coefficients)";
+	my_log << "allocating fields (fourierspace) (for RK-coefficients)";
    #endif
 	static field_imag RK0_FUx(*FUx.my_grid), RK0_FUy(*FUy.my_grid), RK0_FUz(*FUz.my_grid), RK0_Fni(*Fni.my_grid);
 	static field_imag RK1_FUx(*FUx.my_grid), RK1_FUy(*FUy.my_grid), RK1_FUz(*FUz.my_grid), RK1_Fni(*Fni.my_grid);
@@ -41,7 +41,7 @@ void Runge_kutta_O4::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, fi
 
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_TEDIOUS)
-	log << "coefficient k0";
+	my_log << "coefficient k0";
    #endif
 	for(int i=0; i<FUx.N; ++i)
 	{
@@ -59,7 +59,7 @@ void Runge_kutta_O4::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, fi
 	}
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_TEDIOUS)
-	log << "evaluating 1.coefficient";
+	my_log << "evaluating 1.coefficient";
    #endif
 	my_rhs.solve(RK1_FUx, RK1_FUy, RK1_FUz, RK1_Fni); // 1. Koeff
 
@@ -105,7 +105,7 @@ void Runge_kutta_O4::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, fi
 	}
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_TEDIOUS)
-	log << "evaluating 2.coefficient";
+	my_log << "evaluating 2.coefficient";
    #endif
 	my_rhs.solve(RK2_FUx, RK2_FUy, RK2_FUz, RK2_Fni); // 2. Koeff
 
@@ -125,7 +125,7 @@ void Runge_kutta_O4::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, fi
 	}
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_TEDIOUS)
-	log << "evaluating 3.coefficient";
+	my_log << "evaluating 3.coefficient";
    #endif
 	my_rhs.solve(RK3_FUx, RK3_FUy, RK3_FUz, RK3_Fni); // 3. Koeff
 
@@ -145,7 +145,7 @@ void Runge_kutta_O4::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, fi
 	}
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_TEDIOUS)
-	log << "evaluating 4.coefficient";
+	my_log << "evaluating 4.coefficient";
    #endif
 	my_rhs.solve(RK4_FUx, RK4_FUy, RK4_FUz, RK4_Fni); // 4. Koeff
 
@@ -173,7 +173,7 @@ void Runge_kutta_O4::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, fi
 
 
    #if defined(_MY_TEDIOUS)
-	log << "finished";
+	my_log << "finished";
    #endif
 	return;
 }

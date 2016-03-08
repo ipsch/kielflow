@@ -741,7 +741,7 @@ void save_1d(const field_real &Ux, const field_real &Uy, const field_real  &Uz, 
 
 void save_2d(const field_real &XX, subdim & sdim,  const std::string &path)
 {
-   #if defined(MY_VERBOSE_MORE) || defined(MY_VERBOSE_TEDIOUS)
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	std::cout << "   save(): saving data to " << path;
 	std::cout << " .. this may take a while\n";
    #endif
@@ -776,7 +776,7 @@ void save_2d(const field_real &XX, subdim & sdim,  const std::string &path)
 		k = &i_fast;
 	    N_slow = XX.Nx;
 	    N_fast = XX.Nz;
-   #if defined(MY_VERBOSE_MORE) || defined(MY_VERBOSE_TEDIOUS)
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	std::cout << "   save(): saving data to " << path;
 	std::cout << " .. this may take a while\n";
    #endif

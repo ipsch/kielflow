@@ -27,7 +27,7 @@ plot "./data/plot_ADVECTION_Ux.dat" using 1:4 with lines ls 1 title "Advektion",
      "./data/plot_DIFFUSION_Ux.dat" using 1:4 with lines ls 2 title "Diffusion", \
      "./data/plot_E_EXT_Ux.dat" using 1:4 with lines ls 3 title "$F_{ext}$", \
      "./data/plot_COMBINED_Div.dat" using 1:4 with lines ls 7 title "Combined", \
-     "./data/plot_E_INT_Ux.dat" using 1:4 with lines ls 4 title "$E_{int}$", \
+     #"./data/plot_E_INT_Ux.dat" using 1:4 with lines ls 4 title "$E_{int}$", \
      "./data/plot_DISSIPATION_Ux.dat" using 1:4 with lines ls 5 title "Dissipation", \
      "./data/plot_TOTAL_Ux.dat" using 1:4 with lines ls 6 title "$F_{ges}$" ,\
      "./data/plot_SPECTRAL_VISCOSITY_Ux.dat" using 1:4 with lines ls 8 title "SV"     

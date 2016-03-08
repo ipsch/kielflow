@@ -40,7 +40,7 @@ set tmargin at screen .85
 # set logscale z
 
 ########## Ranges ##############################################################
-set xrange [-Xrange:Xrange]
+#set xrange [-Xrange:Xrange]
 set yrange [-Yrange:Yrange]
 set cbrange [1.-cb_scale:1.+2.*cb_scale]
 

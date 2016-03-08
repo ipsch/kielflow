@@ -12,9 +12,9 @@
 
 axis_FoSiSt::axis_FoSiSt(const double &l0_, const double &L_, const double &N_, const double &m_)
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("axis_FoSiSt");
-	log << "axis_FoSiSt(const double &l0_, const double &L_, const int &N_, const int &m_)";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("axis_FoSiSt");
+	my_log << "axis_FoSiSt(const double &l0_, const double &L_, const int &N_, const int &m_)";
    #endif
 	l0 = l0_;
 	L = L_;
@@ -26,9 +26,9 @@ axis_FoSiSt::axis_FoSiSt(const double &l0_, const double &L_, const double &N_, 
 
 axis_FoSiSt::axis_FoSiSt(const axis_FoSiSt &that)
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("axis_FoSiSt");
-	log << "axis_FoSiSt(const axis_FoSiSt &that)";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("axis_FoSiSt");
+	my_log << "axis_FoSiSt(const axis_FoSiSt &that)";
    #endif
 	l0 = that.l0;
 	L = that.L;
@@ -39,9 +39,9 @@ axis_FoSiSt::axis_FoSiSt(const axis_FoSiSt &that)
 
 axis_FoSiSt::~axis_FoSiSt()
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("axis_FoSiSt");
-	log << "~axis_FoSiSt()";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("axis_FoSiSt");
+	my_log << "~axis_FoSiSt()";
    #endif
 }
 
@@ -49,18 +49,18 @@ axis_FoSiSt::~axis_FoSiSt()
 
 axis * axis_FoSiSt::clone () const
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("axis_FoSiSt");
-	log << "clone() const";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("axis_FoSiSt");
+	my_log << "clone() const";
    #endif
 	return new axis_FoSiSt(*this);
 }
 
 axis * axis_FoSiSt::create_reciprocal() const
 {
-  #ifdef _MY_VERBOSE_MORE
-	logger log("axis_FoSiSt");
-	log << "create_reciprocal()";
+  #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("axis_FoSiSt");
+	my_log << "create_reciprocal()";
    #endif
 
 	return new axis_CoSiSt(l0,L,N,m);
@@ -75,10 +75,10 @@ double axis_FoSiSt::val_at(const int &index) const
 
 int axis_FoSiSt::index_at(const double &val) const
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("axis_FoSiSt");
-	log << "index_at(const double &val) const";
-	log << "ERROR";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("axis_FoSiSt");
+	my_log << "index_at(const double &val) const";
+	my_log << "ERROR";
    #endif
 	std::cout << "Nicht implementiert: ";
 	std::cout << "axis_FoSiSt::index_at(const double &val) const \n";

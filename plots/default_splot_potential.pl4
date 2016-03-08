@@ -6,7 +6,7 @@
 
 ########## quick Options #######################################################
 if (!exists("filename")) filename="./data/splot_data.dat"
-cb_scale = 0.0015
+cb_scale = 0.005
 Xrange = 6.
 Yrange = 6.
 
@@ -41,8 +41,8 @@ set format cb "%1.e"
 # set logscale z
 
 ########## Ranges ##############################################################
-set xrange [-Xrange:Xrange]
-set yrange [-Yrange:Yrange]
+#set xrange [-Xrange:Xrange]
+#set yrange [-Yrange:Yrange]
 set cbrange [cb_scale:-cb_scale]
 
 ########## Labels #############################################################

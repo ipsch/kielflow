@@ -15,7 +15,7 @@ set xzeroaxis
 set yzeroaxis
 
 ########## Ranges #############################################################
-set xrange[-Xrange:Xrange]
+#set xrange[-Xrange:Xrange]
 set yrange[1.-Yscale:1.+Yscale]
 set y2range[1.-Y2scale:1.+Y2scale]
 

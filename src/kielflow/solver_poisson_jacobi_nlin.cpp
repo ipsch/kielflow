@@ -2,9 +2,6 @@
 
 int solver_poisson_jacobi_nlin::iterations_total = 0;
 
-
-
-
 static const int width = 20;
 
 void show_percent(int i) {
@@ -69,13 +66,12 @@ void solver_poisson_jacobi_nlin::solve(field_real &Phi_IO, field_real &rho)
    #if defined(_MY_VERBOSE) ||  defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	logger my_log("solver_poisson_jacobi_nlin::solve(..)");
 	my_log << "start";
+   #endif
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	std::cout << "NLJ Nmax " << max_iterations << " ";
 	std::cout << "Norm(M/S) " << limit_max;
 	std::cout << "/" << limit_sum << "\n";
    #endif
-   #endif
-
 
 
 
@@ -105,7 +101,8 @@ void solver_poisson_jacobi_nlin::solve(field_real &Phi_IO, field_real &rho)
 					Phi_IO(i,j,k) = val_H(x,y,z);
 				}
 
-				if((i==0) || (j==0) || (k==0))
+				//if((i==0) || (j==0) || (k==0))
+				if((j==0) || (k==0))
 				{
 					Phi_IO(i,j,k) = 0.;
 				}
@@ -214,36 +211,37 @@ void solver_poisson_jacobi_nlin::iteration_loop(const field_real &in, field_real
 				Hz = get_HXX(in.my_grid->z_axis, k, hzp, hzm, hzmm);
 				int index = out.my_grid->index_at(i,j,k);
 
-				if( (H(x,y,z)==0.) && (i!=0) && (j!=0) && (k!=0) )
-				{ // if not within boundary layer : calculate new potential
-					//std::cout << i << "\t" << j << "\t" << k <<  std::endl;
+				if( H(x,y,z)==0. )
+				{
+					// if not within boundary layer : calculate new potential
 					double rho_ijk = rho(i,j,k);
 					out.val[index] = newton(i,j,k,in,rho_ijk);
-
-
-
-				} // END if (mask)
-				else
-				{ // if within boundary layer : keep boundary value
-					out.val[index] = in.val[index];
-					//std::cout << x << "\t" << y << "\t" << z << "\t" << in.val[index] << std::endl;
 				}
-
+				else
+				{
+					// if within boundary layer : keep boundary value
+					out.val[index] = in.val[index];
+				}
 			} // enf loop over k
 		} // end loop over j
 	} // end loop over i
 
-/*
-	subdim my_dim;
-	my_dim.default_xpos = out.Nx/2;
-	my_dim.default_ypos = out.Ny/2;
-	my_dim.default_zpos = out.Nz/2;
-	my_dim.default_direction = 0;
-	my_dim.default_plane = 2;
 
-	std::string filename = "./data/nlj_" + ConvertToString<int>(iterations_total) + ".dat";
-	save_2d(out,out,out,rho_ges,out,my_dim,filename);
-*/
+
+	/*
+	subdim my_dim;
+	my_dim.xpos = out.Nx/2;
+	my_dim.ypos = out.Ny/2;
+	my_dim.zpos = out.Nz/2;
+	my_dim.direction = 0;
+	my_dim.plane = 2;
+
+	std::string filenameOne = "./data/nlj_rho_" + ConvertToString<int>(iterations_total) + ".dat";
+	std::string filenameTwo = "./data/nlj_phi_" + ConvertToString<int>(iterations_total) + ".dat";
+	save_2d(rho,my_dim,filenameOne);
+	save_2d(out,my_dim,filenameTwo);
+    */
+
 	iterations_total++;
 
    #if defined(MY_VERBOSE_MORE) || defined(MY_VERBOSE_TEDIOUS)
@@ -315,41 +313,41 @@ double solver_poisson_jacobi_nlin::newton(const int &i, const int j, const int k
 	}
 
    #if  defined(_MY_VERBOSE_LESS) || defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
-	logger log("solver_poisson_jacobi_nlin::newton(..)");
+	logger my_log("solver_poisson_jacobi_nlin::newton(..)");
 	std::stringstream out_stream;
 	std::string out_line;
 	out_stream << "WARNING@ (" << i << "," << j << "," << k << ")";
 	out_line = out_stream.str();
-	log << out_line;
-	log << "Phi: ";
-	log << get_PG(Phi,i,j,k);
-	log << get_PG(Phi,i+1,j,k);
-	log << get_PG(Phi,i-1,j,k);
-	log << get_PG(Phi,i,j+1,k);
-	log << get_PG(Phi,i,j-1,k);
-	log << get_PG(Phi,i,j,k+1);
-	log << get_PG(Phi,i,j,k-1);
-	log << "hxp/hxm/hyp/hym/hzp/hzm: ";
-	log << hxp;
-	log << hxm;
-	log << hyp;
-	log << hym;
-	log << hzp;
-	log << hzm;
-	log << "rho_ijk: ";
-	log << rho_ijk;
-	log << "history newton : ";
+	my_log << out_line;
+	my_log << "Phi: ";
+	my_log << get_PG(Phi,i,j,k);
+	my_log << get_PG(Phi,i+1,j,k);
+	my_log << get_PG(Phi,i-1,j,k);
+	my_log << get_PG(Phi,i,j+1,k);
+	my_log << get_PG(Phi,i,j-1,k);
+	my_log << get_PG(Phi,i,j,k+1);
+	my_log << get_PG(Phi,i,j,k-1);
+	my_log << "hxp/hxm/hyp/hym/hzp/hzm: ";
+	my_log << hxp;
+	my_log << hxm;
+	my_log << hyp;
+	my_log << hym;
+	my_log << hzp;
+	my_log << hzm;
+	my_log << "rho_ijk: ";
+	my_log << rho_ijk;
+	my_log << "history newton : ";
 	for(int iter=0; iter<max_iter; ++iter)
 	{
-		log << dx_history[iter];
+		my_log << dx_history[iter];
 	}
-	log << ":-(";
+	my_log << ":-(";
    #endif
 
 	if(dx_history[0]>dx_history[max_iter])
 		return x_ip1;
 
-	log << "error was fatal";
+	my_log << "error was fatal";
 
 	throw("newton_method: maximum number of iterations exceeded");
 	return x_i;
