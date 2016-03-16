@@ -22,7 +22,7 @@
 #include "field_integrate.hpp"
 
 
-
+/*
 
  #define POISSON
  #define ADVECTION
@@ -35,8 +35,9 @@
  //#define DEALAISING_MORE
  #define SPECTRAL_VISCOSITY
 #define COMBINED
+#define SAVE_TOTAL
 
-
+*/
 
 
 
@@ -586,6 +587,7 @@ int main(int argc, char *argv[])
 		Uz_total.val[i] += out.val[i];
    #endif
 
+#if defined(SAVE_TOTAL)
 	save_2d(Ux_total, save_opt, "./data/splot_TOTAL_Ux.dat");
 	save_1d(Ux_total, save_opt, "./data/plot_TOTAL_Ux.dat");
 
@@ -594,21 +596,18 @@ int main(int argc, char *argv[])
 
 	save_2d(Uz_total, save_opt, "./data/splot_TOTAL_Uz.dat");
 	save_1d(Uz_total, save_opt, "./data/plot_TOTAL_Uz.dat");
+#endif
 
-
+	/*
 	field_integrate IntO(*Ux.my_grid);
-
 	double V_ges = 0;
-
-
 	for(int i=0; i<Ux.N; ++i)
 	{
 		V_ges += IntO.V[i];
 	}
 		std::cout << IntO.execute(Ux);
-
 	std::cout << "V_ges" << V_ges << "\n";
-
+	*/
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	my_log << "done. backend terminated";

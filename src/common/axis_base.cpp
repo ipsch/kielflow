@@ -2,9 +2,9 @@
 
 axis::axis()
 {
-   #ifdef _MY_VERBOSE_TEDIOUS
-	logger log("axis");
-	log << "axis()";
+   #if defined (_MY_VERBOSE_TEDIOUS)
+	logger my_log("axis");
+	my_log << "axis()";
    #endif
 	e_i = e_x;
 	type_id = -1;

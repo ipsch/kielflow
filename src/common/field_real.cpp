@@ -157,6 +157,13 @@ return val[N];
 }
 
 
+double field_real::operator() (const double &x, const double &y, const double &z) const
+{
+	int i = my_grid->x_axis->index_at(x); // index_at returns nearest int
+	int j = my_grid->y_axis->index_at(y);
+	int k = my_grid->z_axis->index_at(z);
+	return val[my_grid->index_at(i,j,k)];
+}
 
 
 

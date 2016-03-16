@@ -95,6 +95,7 @@ void OP_hto2h(const field_real &in, field_real &out)
 
 
 void OP_2htoh_lvl0(const field_real &in, field_real &out)
+/* truncation of a field to another field with half the resolution */
 {
 	if( (in.Nx<4) || (in.Ny<4) || (in.Nz<4))
 		throw("system too small");
@@ -123,6 +124,7 @@ void OP_2htoh_lvl0(const field_real &in, field_real &out)
 }
 
 void OP_2htoh_lvl1(const field_real &in, field_real &out)
+/* interpolation of a field onto another with double the resolution */
 {
 	if( (in.Nx<4) || (in.Ny<4) || (in.Nz<4))
 		throw("system too small");
@@ -131,12 +133,7 @@ void OP_2htoh_lvl1(const field_real &in, field_real &out)
 		throw("Feld Groesse ungerade");
 
 	out.resize(in.Nx/2, in.Ny/2, in.Nz/2);
-
 	field_real tmp(*in.my_grid);
-
-
-
-
 
 	for(int i=1; i<tmp.Nx-1; i++)
 	{
@@ -154,7 +151,6 @@ void OP_2htoh_lvl1(const field_real &in, field_real &out)
 		}
 	}
 
-
 	// Direkt
 	for(int i=1; i<tmp.Nx-1; i++)
 	{
@@ -167,7 +163,6 @@ void OP_2htoh_lvl1(const field_real &in, field_real &out)
 			}
 		}
 	}
-
 
 	// x-shift +1
 	for(int i=0; i<tmp.Nx-1; i++)
@@ -199,7 +194,6 @@ void OP_2htoh_lvl1(const field_real &in, field_real &out)
 		}
 	}
 
-
 	// y-shift +1
 	for(int i=0; i<tmp.Nx; i++)
 	{
@@ -230,7 +224,6 @@ void OP_2htoh_lvl1(const field_real &in, field_real &out)
 		}
 	}
 
-
 	// z-shift +1
 	for(int i=0; i<tmp.Nx; i++)
 	{
@@ -245,7 +238,6 @@ void OP_2htoh_lvl1(const field_real &in, field_real &out)
 			}
 		}
 	}
-
 
 	// z-shift -1
 	for(int i=0; i<tmp.Nx; i++)
@@ -276,7 +268,88 @@ void OP_2htoh_lvl1(const field_real &in, field_real &out)
 		}
 	}
 
+	return;
+}
 
+void OP_XhtoYh_lvl1(const field_real &in, field_real &out, const int type, const double &cvalue)
+/* interpolation of a field with arbitrary resolution onto another field
+ * with a different arbitrary resolution */
+{
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("OP_XhtoYh_lvl1(const field_real &in, field_real &out, const int type)");
+	my_log << "start";
+   #endif
+
+	switch(type)
+	{
+		case 0 :
+		for(int i=0; i<out.Nx; ++i)
+		{
+			double x = out.my_grid->x_axis->val_at(i);
+			for(int j=0; j<out.Ny; ++j)
+			{
+				double y = out.my_grid->y_axis->val_at(j);
+				for(int k=0; k<out.Nz; ++k)
+				{
+					double z = out.my_grid->z_axis->val_at(k);
+					out(i,j,k) = in(x,y,z);
+		           #if defined(_MY_VERBOSE_TEDIOUS)
+					std::stringstream sstr;
+					std::string msg;
+					sstr << "(" << i << "," << j << "," << k << ") ";
+					sstr << "(" << x << "," << y << "," << z << ") ";
+		            sstr << in(x,y,z);
+		            msg = sstr.str();
+		            my_log << msg;
+	               #endif
+				}
+			}
+		}
+		break;
+
+		case 1 :
+			double xmin = in.my_grid->x_axis->l0;
+			double xmax = xmin + in.my_grid->x_axis->L;
+			double ymin = in.my_grid->y_axis->l0;
+			double ymax = xmin + in.my_grid->y_axis->L;
+			double zmin = in.my_grid->z_axis->l0;
+			double zmax = xmin + in.my_grid->z_axis->L;
+			for(int i=0; i<out.Nx; ++i)
+			{
+				double x = out.my_grid->x_axis->val_at(i);
+				for(int j=0; j<out.Ny; ++j)
+				{
+					double y = out.my_grid->y_axis->val_at(j);
+					for(int k=0; k<out.Nz; ++k)
+					{
+						double z = out.my_grid->z_axis->val_at(k);
+						out(i,j,k) = cvalue;
+						if( ((xmin <= x) && (x <xmax)) &&
+							((ymin <= y) && (y <ymax)) &&
+							((zmin <= z) && (z <zmax)) )
+						{
+							out(i,j,k) = in(x,y,z);
+						}
+			           #if defined(_MY_VERBOSE_TEDIOUS)
+						std::stringstream sstr;
+						std::string msg;
+						sstr << "(" << i << "," << j << "," << k << ") ";
+						sstr << "(" << x << "," << y << "," << z << ") ";
+			            sstr << in(x,y,z);
+			            msg = sstr.str();
+			            my_log << msg;
+		               #endif
+					}
+				}
+			}
+		break;
+
+
+	}
+
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	my_log << "done";
+   #endif
 	return;
 }
 

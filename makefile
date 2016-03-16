@@ -129,7 +129,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(SRC_EXT)
 	@mkdir -p $(BUILD_DIR)/kielflow
 	@mkdir -p $(BUILD_DIR)/backend
 	@mkdir -p $(BUILD_DIR)/frontend
-	$(CXX) $(CXX_FLAGS) $(DEF_FLAGS) $(INC) -c -o $@ $<
+	$(CXX) $(CXX_FLAGS) $(DEF_FLAGS) $(INC) -c -o $@ $< -fopenmp -lm
 
 
 windows :  $(OBJS)

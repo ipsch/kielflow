@@ -34,7 +34,7 @@ public :
 
 
 	virtual ~grid();
-	virtual  int index_at(const int &i, const int &j, const int &k) const = 0 ;
+	virtual int index_at(const int &i, const int &j, const int &k) const = 0 ;
 	virtual void ijk_at(const int &index, int &i, int &j, int &k) const = 0;
 	virtual grid * clone() const = 0;
 

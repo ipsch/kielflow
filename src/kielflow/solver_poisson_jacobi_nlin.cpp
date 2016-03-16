@@ -179,7 +179,6 @@ double solver_poisson_jacobi_nlin::get_PG(const field_real &in, int i, int j, in
 
 
 
-
 void solver_poisson_jacobi_nlin::iteration_loop(const field_real &in, field_real &out, const field_real &rho)
 {
    #if defined(MY_VERBOSE_MORE) || defined(MY_VERBOSE_TEDIOUS)
@@ -187,9 +186,10 @@ void solver_poisson_jacobi_nlin::iteration_loop(const field_real &in, field_real
 	my_log << "iteration_loop";
    #endif
 
+
 	double x, y, z;
 	double hxp, hxm, hyp, hym, hzp, hzm;
-
+	int tid;
 
 	for(int i=0; i < out.Nx; ++i)
 	{
@@ -199,9 +199,9 @@ void solver_poisson_jacobi_nlin::iteration_loop(const field_real &in, field_real
 		{
 			y = in.my_grid->y_axis->val_at(j);
 
-           #pragma omp parallel shared(i,j,H,rho,in,out) private(k)
+
 			{ // begin of parallel section
-               #pragma omp for schedule(dynamic)
+               #pragma omp parallel for shared(in, out, rho)
 				for(int k=0; k<out.Nz; ++k)
 				{ // begin loop over k
 					z = in.my_grid->z_axis->val_at(k);
@@ -395,81 +395,4 @@ double solver_poisson_jacobi_nlin::f_df(const double &x,
 }
 
 
-
-// ToDO : Obsolete, but try to recycle
-/*
-void solver_poisson_jacobi_nlin::check_convergence(const field_real &field_new, const field_real &field_old)
-{
-	double norm_maximum = 0.;
-	double norm_sum_total = 0.;
-	double norm_sum_i = 0.;
-	double norm_sum_j = 0.;
-	double norm_sum_k = 0.;
-
-
-	double * YZ = new double[field_new.Ny*field_new.Nz];
-	double * XY = new double[field_new.Nx*field_new.Ny];
-	double * XZ = new double[field_new.Nx*field_new.Nz];
-
-	for(int i=0; i< field_new.Ny*field_new.Nz; ++i)
-		YZ[i] = 0.;
-
-	for(int i=0; i< field_new.Nx*field_new.Ny; ++i)
-		XY[i] = 0.;
-
-	for(int i=0; i< field_new.Nx*field_new.Nz; ++i)
-		XZ[i] = 0.;
-
-	for(int i=0; i<field_new.Nx; ++i)
-		for(int j=0; j<field_new.Ny; ++j)
-			for(int k=0; k<field_new.Nz; ++k)
-			{
-				double delta = fabs(field_new(i,j,k) - field_old(i,j,k) );
-
-				norm_maximum = max<double>(norm_maximum,delta);
-				norm_sum_total += delta;
-
-				YZ[k + j*field_new.Nz] += delta/field_new.Nx;
-				XY[j + i*field_new.Ny] += delta/field_new.Nz;
-				XZ[k + i*field_new.Nz] += delta/field_new.Ny;
-
-			}
-
-	norm_sum_total = norm_sum_total/(field_new.Nx*field_new.Ny*field_new.Nz);
-
-	for(int i=0; i< field_new.Ny*field_new.Nz; ++i)
-		norm_sum_i = max<double>(norm_sum_i,YZ[i]);
-
-	for(int i=0; i< field_new.Nx*field_new.Ny; ++i)
-		norm_sum_j = max<double>(norm_sum_j,XY[i]);
-
-	for(int i=0; i< field_new.Nx*field_new.Nz; ++i)
-		norm_sum_k = max<double>(norm_sum_k,XZ[i]);
-
-
-	std::stringstream status;
-
-	status << invocations << "\t";
-	status << iteration << "\t";
-	status << norm_maximum << "\t";
-	status << norm_sum_total << "\t";
-	status << norm_sum_i << "\t";
-	status << norm_sum_j << "\t";
-	status << norm_sum_k << "\n";
-
-
-
-	std::ofstream output_stream("./diagnostics/relaxation.log", std::ofstream::app);
-	output_stream << status.str();
-	output_stream.close();
-
-
-
-	delete[] YZ;
-	delete[] XY;
-	delete[] XZ;
-
-	return;
-}
-*/
 
