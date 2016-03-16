@@ -19,6 +19,7 @@ public :
 
 	double& operator() (const int &ix, const int &iy, const int &iz); // Subscript operators often come in pairs
 	double  operator() (const int &ix, const int &iy, const int &iz) const; // Subscript operators often come in pairs
+	double  operator() (const double &x, const double &y, const double &z) const;
 	double& operator() (int N); // Subscript operators often come in pairs
 	//double  operator() (int N) const; // Subscript operators often come in pairs
 

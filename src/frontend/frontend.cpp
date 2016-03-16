@@ -32,6 +32,7 @@
 //#include "particle.hpp"
 #include "field.hpp"
 #include "field_integrate.hpp"
+#include "field_interpolation.hpp"
 #include "masks.hpp"
 #include "init_cond.hpp"
 #include "subdim.hpp"
@@ -48,23 +49,75 @@
 #include "logger.hpp"
 #endif
 
+
+double pi = acos(-1.);
 // number of grid-points
 // in different space directions
-
-int Nx = 256;
+int Nx = 384;
 int Ny = 192;
 int Nz = 192;
-
-double Lx = 18.;
+// Box dimensions
+double Lx = 24.;
 double Ly = 12.;
 double Lz = 12.;
-
+// physical parameters
 double M = 0.5;
 double tau = 0.1;
 double theta = 30.;
 double mu = 0.;
 double beta = 0.0;
 
+
+
+void create_input_from_old_data(field_real &Ux, field_real &Uy, field_real &Uz, field_real &ni, field_real &Ph)
+{
+   #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("create_input_from_old_data(..)");
+	my_log << "start";
+   #endif
+
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	my_log << "load old data (in fourier space)";
+   #endif
+	field_imag FUx = load_field_imag("Ux", "./data/input1.h5");
+	field_imag FUy = load_field_imag("Uy", "./data/input1.h5");
+	field_imag FUz = load_field_imag("Uz", "./data/input1.h5");
+	field_imag Fni = load_field_imag("ni", "./data/input1.h5");
+	field_imag FPh = load_field_imag("Ph", "./data/input1.h5");
+
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	my_log << "allocate memory for old data in real space ";
+   #endif
+	field_real AUx(*FUx.my_grid);
+	field_real AUy(*FUx.my_grid);
+	field_real AUz(*FUx.my_grid);
+	field_real Ani(*FUx.my_grid);
+	field_real APh(*FUx.my_grid);
+
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	my_log << "transform fourier space data to real space";
+   #endif
+	iFFT(FUx,AUx);
+	iFFT(FUy,AUy);
+	iFFT(FUz,AUz);
+	iFFT(Fni,Ani);
+	iFFT(FPh,APh);
+
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	my_log << "interpolate old data onto new grids";
+   #endif
+	OP_XhtoYh_lvl1(AUx,Ux,1,0.);
+	OP_XhtoYh_lvl1(AUy,Uy,1,0.);
+	OP_XhtoYh_lvl1(AUz,Uz,1,0.);
+	OP_XhtoYh_lvl1(Ani,ni,1,0.);
+	OP_XhtoYh_lvl1(APh,Ph,1,0.);
+
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	my_log << "done";// number of grid-points
+	// in different space directions
+   #endif
+	return;
+}
 
 
 // main #######################################################################
@@ -76,7 +129,7 @@ int main(void)
 	my_log << VERSION_STRING;
    #endif
 
-	double pi = acos(-1.);
+
 
 	axis_CoSiSt x_axis(-0.5*Lx, Lx, Nx, Lx*(1.-0.25)/(2*pi) );
 	axis_CoSiSt y_axis(-0.5*Ly, Ly, Ny, Ly*(1.-0.25)/(2*pi) );
@@ -96,23 +149,10 @@ int main(void)
 	*/
 
 
+
 	grid_Co Omega(x_axis,y_axis,z_axis);
 	parameters Params(M,tau,theta,mu,beta);
 
-
-	subdim my_dim;
-	my_dim.xpos = Nx/2.;
-	my_dim.ypos = Ny/2.;
-	my_dim.zpos = Nz/2.;
-	my_dim.direction = 0;
-	my_dim.plane = 2;
-
-
-
-   #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
-	my_log << "create parameters ";
-   #endif
-	double v0 = M/tau;
 
    #if defined(_MY_VERBOSE)
 	my_log << "init fields";
@@ -142,6 +182,14 @@ int main(void)
 	fkt3d_Gauss dust_3d_fkt(-5.,0.15,0.15,0.15);
 	//fkt3d_shift H_3d_shifted_fkt(dust_3d_fkt, shift, 0., 0.);
 	nd.fill(dust_3d_fkt);
+
+	// ##### Output Dust #####
+	subdim my_dim;
+	my_dim.xpos = Nx/2.;
+	my_dim.ypos = Ny/2.;
+	my_dim.zpos = Nz/2.;
+	my_dim.direction = 0;
+	my_dim.plane = 2;
 	save_2d(nd, my_dim, "./data/nd2d.dat");
 	save_1d(nd, my_dim, "./data/nd1d.dat");
 
@@ -169,13 +217,15 @@ int main(void)
 	    //    \/
 	} // configure done
 
-	MG.solve(Ph,nd);
+	//MG.solve(Ph,nd);
 
 	for(int i=0; i<ni.N; ++i)
 	{
 		ni.val[i] = exp(-theta*Ph.val[i]);
 	}
 
+
+	create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
 
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)

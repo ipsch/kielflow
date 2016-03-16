@@ -106,12 +106,18 @@ double axis_CoSiSt::val_at(const int &index) const
 
 int axis_CoSiSt::index_at(const double &val) const
 {
-	// ToDo : shift wenn val out of range
-	std::cout << "WARNING: not tested yet:" << std::endl;
-	std::cout << "int axis_CoSiSt::index_at(const double &val) const" << std::endl;
+	double xtmp = val;
+
+	while(xtmp<l0)
+		xtmp += L;
+	while(xtmp >= l0+L)
+		xtmp -= L;
+
 	double x_eq;
-	x_eq = bisect(l0,l0+L,val);
+	x_eq = bisect(l0,l0+L,xtmp);
 	int r_int = nearbyint(N*(x_eq-l0)/L);
+	if(r_int==N)
+		r_int = 0;
 	return r_int;
 }
 
@@ -150,13 +156,18 @@ double axis_CoSiSt::operator() (const int &i) const
 
 int axis_CoSiSt::operator() (const double &x) const
 {
-	// ToDo : shift wenn val out of range
-	std::cout << "WARNING: not tested yet:" << std::endl;
-	std::cout << "axis_CoSiSt::operator() (const double &x) const" << std::endl;
+	double xtmp = x;
+
+	while(xtmp<l0)
+		xtmp += L;
+	while(xtmp >= l0+L)
+		xtmp -= L;
 
 	double x_eq;
-	x_eq = bisect(l0,l0+L,x);
+	x_eq = bisect(l0,l0+L,xtmp);
 	int r_int = nearbyint(N*(x_eq-l0)/L);
+	if(r_int==N) // ToDo : This step is missing in all other axis types
+		r_int = 0;
 	return r_int;
 }
 
