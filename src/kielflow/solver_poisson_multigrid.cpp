@@ -11,7 +11,14 @@ solver_poisson_multigrid::solver_poisson_multigrid()
 
 	ptr_relaxation_method = 0L;
 
+	I_xto2x = &OP_xto2x;
+	I_yto2y = &OP_yto2y;
+	I_zto2z = &OP_zto2z;
 	I_hto2h = &OP_hto2h;
+
+	I_2xtox = &OP_2xtox;
+	I_2ytoy = &OP_2ytoy;
+	I_2ztoz = &OP_2ztoz;
 	I_2htoh = &OP_2htoh_lvl0;
 
 	my_cascades = 0;
@@ -33,7 +40,14 @@ solver_poisson_multigrid::solver_poisson_multigrid(interface_relaxation_solver &
 
 	ptr_relaxation_method = &method;
 
+	I_xto2x = &OP_xto2x;
+	I_yto2y = &OP_yto2y;
+	I_zto2z = &OP_zto2z;
 	I_hto2h = &OP_hto2h;
+
+	I_2xtox = &OP_2xtox;
+	I_2ytoy = &OP_2ytoy;
+	I_2ztoz = &OP_2ztoz;
 	I_2htoh = &OP_2htoh_lvl0;
 
 	my_cascades = 0;
@@ -50,7 +64,7 @@ solver_poisson_multigrid::~solver_poisson_multigrid()
 {
    #if defined(_MY_VERBOSE_TEDIOUS)
 	logger my_log("solver_poisson_multigrid::~solver_poisson_multigrid()");
-	my_log << "start";
+	my_log << "~solver_poisson_multigrid()";
    #endif
 }
 
@@ -77,10 +91,23 @@ void solver_poisson_multigrid::set_level_control(const int &N, int * lvl_steps, 
 		my_lvl[cascade] = lvl_C[cascade];
 
 		// following stuff is for to avoid input errors
+		if(my_lvl[cascade]==lvl_up_x)
+			lvl_current++;
+		if(my_lvl[cascade]==lvl_up_y)
+			lvl_current++;
+		if(my_lvl[cascade]==lvl_up_z)
+			lvl_current++;
 		if(my_lvl[cascade]==lvl_up)
 			lvl_current++;
+		if(my_lvl[cascade]==lvl_down_x)
+			lvl_current--;
+		if(my_lvl[cascade]==lvl_down_y)
+			lvl_current--;
+		if(my_lvl[cascade]==lvl_down_z)
+			lvl_current--;
 		if(my_lvl[cascade]==lvl_down)
 			lvl_current--;
+
 		if(lvl_current>0)
 		{
 			std::stringstream error_msg;
@@ -102,6 +129,48 @@ void solver_poisson_multigrid::set_level_control(const int &N, int * lvl_steps, 
 }
 
 
+int solver_poisson_multigrid::refine_mesh(const MG_lvl_control &step, const field_real &in, field_real &out)
+{
+	switch(step)
+
+	{
+	// actions that refine the grid in all three space directions
+    case lvl_keep :
+    	out = in;        // just copy the input
+        return 0;
+	case lvl_up :
+		I_hto2h(in,out);
+		return 1;
+	case lvl_down :
+		I_2htoh(in,out); // average potential on current mesh
+		return -1;       // to coarser mesh if cycle[i]=0
+	// actions that apply only to one direction in space
+	case lvl_up_x :
+		I_xto2x(in,out);
+		return 1;
+	case lvl_up_y :
+		I_yto2y(in,out);
+		return 1;
+	case lvl_up_z :
+		I_zto2z(in,out);
+		 return 1;
+	case lvl_down_x :
+		I_2xtox(in,out);
+		return -1;
+	case lvl_down_y :
+		I_2ytoy(in,out);
+		return -1;
+	case lvl_down_z :
+		I_2ztoz(in,out);
+		return -1;
+	default :
+		throw("no instruction to handle MG");
+		break;
+	} // end of switch
+
+	return 0;
+}
+
 void solver_poisson_multigrid::solve(field_real &Phi_IO, field_real &rho)
 {
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
@@ -115,80 +184,70 @@ void solver_poisson_multigrid::solve(field_real &Phi_IO, field_real &rho)
 	field_real rho_n(*rho.my_grid);
 	rho_n = rho; // only important for the first run per call
 
+   #if defined (_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+    std::stringstream IO_stream;
+    std::string IO_string;
+    IO_stream << "MG cascade " << (cascade_current+1) << "/" << my_cascades;
+    IO_stream << " level " << lvl_current;
+    IO_string = IO_stream.str();
+    std::cout << IO_string << std::endl;
+    my_log << IO_string;
+#endif
+
 	for(cascade_current=0; cascade_current<my_cascades; ++cascade_current)
 	{
-		if(my_lvl[cascade_current]==lvl_keep)
-		{
-			Phi_n = Phi_IO; // just copy the input
-		}
+		// refine mesh for the Potential according to given plan saved in my_lvl
+		refine_mesh(my_lvl[cascade_current],Phi_IO,Phi_n);
 
-		if(my_lvl[cascade_current]==lvl_down)
-		{
-           #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
-			my_log << "moving Phi_n to coarse grid";
-		   #endif
-			// average potential on current mesh
-			// to coarser mesh if cycle[i]=0
-			I_2htoh(Phi_IO,Phi_n);
-			lvl_current--;
-		}
+		// important note :
+		// charge density on a mesh can never be recovered from coarser grid.
+		// Therefore the density has to be derived
+		// from the highest level of resolution down to the current level
 
-		if(my_lvl[cascade_current]==lvl_up)
-		{
-           #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
-	        my_log << "moving Phi_n to fine grid";
-           #endif
-			// interpolate potential on current mesh
-			// to finer mesh if cycle[i]=1
-			I_hto2h(Phi_IO,Phi_n);
-			lvl_current++;
-		}
-
-       #if defined (_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
-		std::stringstream IO_stream;
-		std::string IO_string;
-		IO_stream << "MG cascade " << (cascade_current+1) << "/" << my_cascades;
-		IO_stream << " level " << lvl_current;
-		IO_string = IO_stream.str();
-		std::cout << IO_string << std::endl;
-	    my_log << IO_string;
-       #endif
-
-		/*
-		 * charge-density on finer mesh can never be recovered from
-		 * coarse grid. Therefore the density has to be derived
-		 * from the highest level of resolution down to the current level
-		 */
-
-		if(rho_n.N != Phi_n.N)
+		// check if current grid of Phi is equal to grid of charge density
+		// otherwise return to finest grid for charge density
+		if( (rho_n.Nx != Phi_n.Nx) || (rho_n.Ny != Phi_n.Ny) || (rho_n.Nz != Phi_n.Nz) )
 		{
 		   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 			my_log << "moving rho_n to original grid";
 		   #endif
-			// check if current level is the highest level of resoultion
 			rho_n.resize(rho.Nx,rho.Ny,rho.Nz);
 			rho_n = rho;
 		}
 
-		while(rho_n.N != Phi_n.N)
+		while( (rho_n.Nx != Phi_n.Nx) &&
+			   (rho_n.Ny != Phi_n.Ny) &&
+			   (rho_n.Nz != Phi_n.Nz) )
 		{
-           #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
-			my_log << "moving rho_n to coarse grid";
-           #endif
-			// average density on current mesh
-			// to coarser mesh until
-			// resolution of potential and density
-			// are equal
 			field_real bc(*rho_n.my_grid);
 			bc = rho_n;
 			I_2htoh(bc,rho_n);
-		};
+		}
+
+		while( (rho_n.Nx != Phi_n.Nx) )
+		{
+			field_real bc(*rho_n.my_grid);
+			bc = rho_n;
+			I_2xtox(bc,rho_n);
+		}
+
+		while( (rho_n.Ny != Phi_n.Ny) )
+		{
+			field_real bc(*rho_n.my_grid);
+			bc = rho_n;
+			I_2ytoy(bc,rho_n);
+		}
+
+		while( (rho_n.Nx != Phi_n.Nx) )
+		{
+			field_real bc(*rho_n.my_grid);
+			bc = rho_n;
+			I_2ytoy(bc,rho_n);
+		}
 
 		// run relaxation solver on current level
 		ptr_relaxation_method->set_max_iterations(my_steps[cascade_current]);
 		ptr_relaxation_method->solve(Phi_n,rho_n);
-
-
 
 		// ToDo : Fast Forward code zum überspringen von Kaskaden.
 		/*

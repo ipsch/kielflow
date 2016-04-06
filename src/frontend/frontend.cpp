@@ -54,14 +54,14 @@ double pi = acos(-1.);
 // number of grid-points
 // in different space directions
 int Nx = 384;
-int Ny = 192;
-int Nz = 192;
+int Ny = 128;
+int Nz = 128;
 // Box dimensions
 double Lx = 24.;
-double Ly = 12.;
-double Lz = 12.;
+double Ly = 8.;
+double Lz = 8.;
 // physical parameters
-double M = 0.5;
+double M = 0.7;
 double tau = 0.1;
 double theta = 30.;
 double mu = 0.;
@@ -109,7 +109,7 @@ void create_input_from_old_data(field_real &Ux, field_real &Uy, field_real &Uz, 
 	OP_XhtoYh_lvl1(AUx,Ux,1,0.);
 	OP_XhtoYh_lvl1(AUy,Uy,1,0.);
 	OP_XhtoYh_lvl1(AUz,Uz,1,0.);
-	OP_XhtoYh_lvl1(Ani,ni,1,0.);
+	OP_XhtoYh_lvl1(Ani,ni,1,1.);
 	OP_XhtoYh_lvl1(APh,Ph,1,0.);
 
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
@@ -179,7 +179,7 @@ int main(void)
 	//theta_fkt dust_1d_fkt(R, Q);
 	//smooth_rectangle dust_1d_fkt(nd0, 56, -.8);
 	// Option C
-	fkt3d_Gauss dust_3d_fkt(-5.,0.15,0.15,0.15);
+	fkt3d_Gauss dust_3d_fkt(-5.*5.,0.15,0.15,0.15);
 	//fkt3d_shift H_3d_shifted_fkt(dust_3d_fkt, shift, 0., 0.);
 	nd.fill(dust_3d_fkt);
 
@@ -193,23 +193,34 @@ int main(void)
 	save_2d(nd, my_dim, "./data/nd2d.dat");
 	save_1d(nd, my_dim, "./data/nd1d.dat");
 
+
 	// ##### RELAXATIONS-SOLVER #####
+
+
+	double TTX = 10;
+	double x = 0.01;
+	auto numerator = [Params] (const double &x) -> double { return exp(-x*theta) - exp(x); }; // Zähler
+	auto denominator = [Params] (const double &x) -> double { return -theta*exp(-x*theta) - exp(x); }; // Nenner
+
 	fkt3d_const boundary_shape(0.); // there are no additional boundarys (except Domain borders)
 	fkt3d_const boundary_value(0.); // the value of the boundarys is always zero
-	double SOR = .9; // Overrelaxation parameter
+	double SOR = .8; // Overrelaxation parameter
 	solver_poisson_jacobi_nlin NLJ(boundary_shape, boundary_value, SOR);
 	NLJ.set_max_iterations(80);
 	NLJ.limit_max = 1.e-5;
 	NLJ.limit_sum = 1.e-7;
 
+	std::cout << numerator(x) << std::endl;
+	std::cout << denominator(x) << std::endl;
+
 	// ##### MULTIGRID #####
 	solver_poisson_multigrid MG(NLJ);
 	{ // setup MG-cycle
-		const int MG_N = 6;
+		const int MG_N = 8;
 		int * MG_steps_sizes = new int[MG_N]
-                  {1,1,1,-1,-1,-1};
+                  {1,1,1,1,-1,-1,-1,-1};
 	    MG_lvl_control * cycle_shape = new MG_lvl_control[MG_N]
-			      {lvl_keep, lvl_down, lvl_keep, lvl_down, lvl_up, lvl_up};
+			      {lvl_keep, lvl_down, lvl_keep, lvl_down, lvl_down_x, lvl_up_x, lvl_up, lvl_up};
 	    MG.set_level_control(MG_N, MG_steps_sizes, cycle_shape);
 	    // Sketch of cycle:
 	    // _

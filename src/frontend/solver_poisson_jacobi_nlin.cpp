@@ -3,7 +3,7 @@
 int solver_poisson_jacobi_nlin::iterations_total = 0;
 
 
-
+// #define OUTPUT_ACTIVITY
 
 static const int width = 20;
 
@@ -226,17 +226,20 @@ void solver_poisson_jacobi_nlin::iteration_loop(const field_real &in, field_real
 		} // end loop over j
 	} // end loop over i
 
-/*
+   #if defined(OUTPUT_ACTIVITY)
 	subdim my_dim;
-	my_dim.default_xpos = out.Nx/2;
-	my_dim.default_ypos = out.Ny/2;
-	my_dim.default_zpos = out.Nz/2;
-	my_dim.default_direction = 0;
-	my_dim.default_plane = 2;
+	my_dim.xpos = out.Nx/2;
+	my_dim.ypos = out.Ny/2;
+	my_dim.zpos = out.Nz/2;
+	my_dim.direction = 0;
+	my_dim.plane = 2;
 
-	std::string filename = "./data/nlj_" + ConvertToString<int>(iterations_total) + ".dat";
-	save_2d(out,out,out,rho_ges,out,my_dim,filename);
-*/
+	std::string filename_rho = "./data/nlj_rho_" + ConvertToString<int>(iterations_total) + ".dat";
+	std::string filename_phi = "./data/nlj_Phi_" + ConvertToString<int>(iterations_total) + ".dat";
+	save_2d(out,my_dim,filename_phi);
+	save_2d(rho,my_dim,filename_rho);
+   #endif
+
 	iterations_total++;
 
    #if defined(MY_VERBOSE_MORE) || defined(MY_VERBOSE_TEDIOUS)
@@ -381,7 +384,7 @@ double solver_poisson_jacobi_nlin::f_df(const double &x,
 
 	f = 2.*f;
 
-	f += rho_ijk - exp(x) + exp(-10.*x);
+	f += rho_ijk - exp(x) + exp(-50.*x);
 
 	// Nenner
 	double df = 0.;

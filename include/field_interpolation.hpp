@@ -10,7 +10,17 @@
 #include <string>
 #endif
 
+
+// interpolations Operatoren
+void OP_xto2x(const field_real &in, field_real &out);
+void OP_yto2y(const field_real &in, field_real &out);
+void OP_zto2z(const field_real &in, field_real &out);
 void OP_hto2h(const field_real &in, field_real &out);
+
+//
+void OP_2xtox(const field_real &in, field_real &out);
+void OP_2ytoy(const field_real &in, field_real &out);
+void OP_2ztoz(const field_real &in, field_real &out);
 void OP_2htoh_lvl0(const field_real &in, field_real &out);
 // ToDo : lvl1 ist eigentlich falsch, reparieren
 void OP_2htoh_lvl1(const field_real &in, field_real &out);

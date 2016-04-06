@@ -1,6 +1,60 @@
 #include "field_interpolation.hpp"
 
 
+
+void OP_xto2x(const field_real &in, field_real &out)
+{
+	out.resize(2*in.Nx, in.Ny, in.Nz);
+
+	// fill every second plain in x-direction with already
+	// existing data from "in"
+	for(int i=0; i<in.Nx; i++)
+	{
+		for(int j=0; j<in.Ny; j++)
+		{
+			for(int k=0; k<in.Nz; k++)
+			{
+				int index_in  = in.my_grid->index_at(  i,  j,  k);
+				int index_out = out.my_grid->index_at(2*i,j,k);
+				out.val[index_out] = in.val[index_in];
+			}
+		}
+	}
+
+	// fill every other plain (the ones missing from the first step
+	// with data interpolated from the two neighbouring plains
+	for(int i=1; i<out.Nx; i+=2)
+	{
+		double x1 = out.my_grid->x_axis->val_at(i-1);
+		double x2 = out.my_grid->x_axis->val_at(i+1);
+		double x  = out.my_grid->x_axis->val_at(i);
+		double gamma_x = (x-x1)/(x2-x1);
+
+		for(int j=0; j<out.Ny; j+=1)
+		{
+			for(int k=0; k<out.Nz; k+=1)
+			{
+				out(i, j, k) = (1.-gamma_x)*out(i-1,j,k) + gamma_x*out(i+1,j,k);
+			}
+		}
+	}
+	return;
+}
+
+void OP_yto2y(const field_real &in, field_real &out)
+{
+	// ToDo : implement OP_yto2y
+	throw("OP_yto2y not implemented yet");
+	return;
+}
+
+void OP_zto2z(const field_real &in, field_real &out)
+{
+	// ToDo : implement OP_zto2z
+	throw("OP_yto2y not implemented yet");
+	return;
+}
+
 void OP_hto2h(const field_real &in, field_real &out)
 // level 2 interpolation Operator
 {
@@ -8,6 +62,8 @@ void OP_hto2h(const field_real &in, field_real &out)
 	out.resize(2*in.Nx, 2*in.Ny, 2*in.Nz);
 
 
+	// ToDo : delete this after testing
+	/*
 	for(int i=0; i<out.Nx; i++)
 	{
 		for(int j=0; j<out.Ny; j++)
@@ -19,6 +75,7 @@ void OP_hto2h(const field_real &in, field_real &out)
 			}
 		}
 	}
+	*/
 
 
 	for(int i=0; i<in.Nx; i++)
@@ -94,6 +151,88 @@ void OP_hto2h(const field_real &in, field_real &out)
 
 
 
+void OP_2xtox(const field_real &in, field_real &out)
+{
+	if( (in.Nx<4) || (in.Ny<2) || (in.Nz<2))
+		throw("system too small");
+
+	if( (in.Nx % 2)!=0 )
+		throw("Feld Groesse ungerade");
+
+	out.resize(in.Nx/2, in.Ny, in.Nz);
+
+	for(int i=0; i<out.Nx; i++)
+	{
+		for(int j=0; j<out.Ny; j++)
+		{
+			for(int k=0; k<out.Nz; k++)
+			{
+				int index_in  = in.my_grid->index_at(2*i, j, k);
+				int index_out = out.my_grid->index_at(i, j, k);
+
+				out.val[index_out] = in.val[index_in];
+			}
+		}
+	}
+
+	return;
+}
+
+void OP_2ytoy(const field_real &in, field_real &out)
+{
+	if( (in.Nx<2) || (in.Ny<4) || (in.Nz<2))
+		throw("system too small");
+
+	if( (in.Ny % 2)!=0 )
+		throw("Feld Groesse ungerade");
+
+	out.resize(in.Nx, in.Ny/2, in.Nz);
+
+	for(int i=0; i<out.Nx; i++)
+	{
+		for(int j=0; j<out.Ny; j++)
+		{
+			for(int k=0; k<out.Nz; k++)
+			{
+				int index_in  = in.my_grid->index_at(i, 2*j, k);
+				int index_out = out.my_grid->index_at(i, j, k);
+
+				out.val[index_out] = in.val[index_in];
+			}
+		}
+	}
+
+	return;
+}
+
+void OP_2ztoz(const field_real &in, field_real &out)
+{
+	if( (in.Nx<2) || (in.Ny<2) || (in.Nz<4))
+		throw("system too small");
+
+	if( (in.Nz % 2)!=0 )
+		throw("Feld Groesse ungerade");
+
+	out.resize(in.Nx, in.Ny, in.Nz/2);
+
+	for(int i=0; i<out.Nx; i++)
+	{
+		for(int j=0; j<out.Ny; j++)
+		{
+			for(int k=0; k<out.Nz; k++)
+			{
+				int index_in  = in.my_grid->index_at(i, j, 2*k);
+				int index_out = out.my_grid->index_at(i, j, k);
+
+				out.val[index_out] = in.val[index_in];
+			}
+		}
+	}
+
+	return;
+}
+
+
 void OP_2htoh_lvl0(const field_real &in, field_real &out)
 /* truncation of a field to another field with half the resolution */
 {
@@ -118,7 +257,6 @@ void OP_2htoh_lvl0(const field_real &in, field_real &out)
 			}
 		}
 	}
-
 
 	return;
 }

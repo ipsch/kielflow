@@ -194,7 +194,6 @@ void solver_poisson_jacobi_nlin::iteration_loop(const field_real &in, field_real
 	for(int i=0; i < out.Nx; ++i)
 	{
 		x = in.my_grid->x_axis->val_at(i);
-
 		for(int j=0; j<out.Ny; ++j)
 		{
 			y = in.my_grid->y_axis->val_at(j);
@@ -225,8 +224,8 @@ void solver_poisson_jacobi_nlin::iteration_loop(const field_real &in, field_real
 	} // end loop over i
 
 
-
-	/*
+  // #define EVOLUTION_LOGGING
+   #if defined(EVOLUTION_LOGGING)
 	subdim my_dim;
 	my_dim.xpos = out.Nx/2;
 	my_dim.ypos = out.Ny/2;
@@ -238,7 +237,7 @@ void solver_poisson_jacobi_nlin::iteration_loop(const field_real &in, field_real
 	std::string filenameTwo = "./data/nlj_phi_" + ConvertToString<int>(iterations_total) + ".dat";
 	save_2d(rho,my_dim,filenameOne);
 	save_2d(out,my_dim,filenameTwo);
-    */
+   #endif
 
 	iterations_total++;
 
@@ -262,6 +261,7 @@ void solver_poisson_jacobi_nlin::check_Norms(const field_real &field_new, const 
 	norm_max = 0.;
 	norm_sum = 0.;
 
+
 	for(int i=0; i<field_new.N; ++i)
 	{
 		double delta = fabs(field_new.val[i] - field_old.val[i] );
@@ -277,6 +277,7 @@ void solver_poisson_jacobi_nlin::check_Norms(const field_real &field_new, const 
 	status << iteration << "\t";
 	status << norm_max << "\t";
 	status << norm_sum << "\n";
+
 
 	std::ofstream output_stream(my_logfile, std::ofstream::app);
 	output_stream << status.str();

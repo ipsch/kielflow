@@ -25,6 +25,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <functional>
 
 #if defined(_MY_VERBOSE)  || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TIDEOUS)
 #include "logger.hpp"
@@ -57,6 +58,7 @@ private :
 
 	//void   check_convergence(const field_real &field_new, const field_real &field_old);
 	void check_Norms(const field_real &field_new, const field_real &field_old);
+
 
 
 	double norm_max;

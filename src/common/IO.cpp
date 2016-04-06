@@ -1115,6 +1115,7 @@ void save_frame(const grid_Co &Omega,
 			output_stream << std::scientific << std::setprecision(3);
 			output_stream << Omega.x_axis->val_at(i) << "\t";
 			output_stream << Omega.y_axis->val_at(j) << "\t";
+			output_stream << "N/A" << "\t";
 			output_stream << std::scientific << std::setprecision(6);
 			int index = j + Omega.Ny*i;
 			output_stream << Ux[index] << "\t";
