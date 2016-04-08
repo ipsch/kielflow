@@ -53,6 +53,7 @@
 double pi = acos(-1.);
 // number of grid-points
 // in different space directions
+
 int Nx = 384;
 int Ny = 128;
 int Nz = 128;
