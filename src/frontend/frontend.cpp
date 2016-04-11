@@ -54,9 +54,9 @@ double pi = acos(-1.);
 // number of grid-points
 // in different space directions
 
-int Nx = 384;
-int Ny = 128;
-int Nz = 128;
+int Nx = 480;
+int Ny = 160;
+int Nz = 160;
 // Box dimensions
 double Lx = 24.;
 double Ly = 8.;
@@ -120,6 +120,74 @@ void create_input_from_old_data(field_real &Ux, field_real &Uy, field_real &Uz, 
 	return;
 }
 
+void create_input_from_MGsolver(field_real &Ux, field_real &Uy, field_real &Uz, field_real &ni, field_real &Ph)
+{
+	Ux.fill(&set_zero);
+	Uy.fill(&set_zero);
+	Uz.fill(&set_zero);
+
+	// ##### DUST #####
+	field_real nd(*ni.my_grid);
+	double Rd = 0.1183;
+	double nd0 = -11.940;
+	double shift = 0;
+	// Option A
+	//fkt1d_theta dust_1d_fkt(Rd, nd0, 0.);
+	//fkt1d_theta dust_1d_fkt(0.1, 1, 0.);
+	//fkt3d_from_fkt1d dust_3d_fkt(dust_1d_fkt);
+	// Option B
+	//Gauss_1d_fkt dust_1d_fkt(Q, 10000);
+	//theta_fkt dust_1d_fkt(R, Q);
+	//smooth_rectangle dust_1d_fkt(nd0, 56, -.8);
+	// Option C
+	fkt3d_Gauss dust_3d_fkt(-5.*5.,0.15,0.15,0.15);
+	//fkt3d_shift H_3d_shifted_fkt(dust_3d_fkt, shift, 0., 0.);
+	nd.fill(dust_3d_fkt);
+
+	// ##### Output Dust #####
+	subdim my_dim;
+	my_dim.xpos = Nx/2.;
+	my_dim.ypos = Ny/2.;
+	my_dim.zpos = Nz/2.;
+	my_dim.direction = 0;
+	my_dim.plane = 2;
+	save_2d(nd, my_dim, "./data/nd2d.dat");
+	save_1d(nd, my_dim, "./data/nd1d.dat");
+
+
+	// ##### RELAXATIONS-SOLVER #####
+	fkt3d_const boundary_shape(0.); // there are no additional boundarys (except Domain borders)
+	fkt3d_const boundary_value(0.); // the value of the boundarys is always zero
+	double SOR = .8; // Overrelaxation parameter
+	solver_poisson_jacobi_nlin NLJ(boundary_shape, boundary_value, SOR);
+	NLJ.set_max_iterations(80);
+	NLJ.limit_max = 1.e-5;
+	NLJ.limit_sum = 1.e-7;
+
+	// ##### MULTIGRID #####
+	solver_poisson_multigrid MG(NLJ);
+	{ // setup MG-cycle
+		const int MG_N = 8;
+		int * MG_steps_sizes = new int[MG_N]
+                  {1,1,1,1,-1,-1,-1,-1};
+	    MG_lvl_control * cycle_shape = new MG_lvl_control[MG_N]
+			      {lvl_keep, lvl_down, lvl_keep, lvl_down, lvl_down_x, lvl_up_x, lvl_up, lvl_up};
+	    MG.set_level_control(MG_N, MG_steps_sizes, cycle_shape);
+	    // Sketch of cycle:
+	    // _
+	    //  \_  /
+	    //    \/
+	} // configure done
+
+	MG.solve(Ph,nd);
+
+	for(int i=0; i<ni.N; ++i)
+	{
+		ni.val[i] = exp(-theta*Ph.val[i]);
+	}
+	return;
+}
+
 
 // main #######################################################################
 int main(void)
@@ -159,84 +227,21 @@ int main(void)
 	my_log << "init fields";
    #endif
 	field_real Ux(Omega), Uy(Omega), Uz(Omega);
-	field_real ni(Omega), nd(Omega);
+	field_real ni(Omega);
 	field_real Ph(Omega);
 
-	Ux.fill(&set_zero);
-	Uy.fill(&set_zero);
-	Uz.fill(&set_zero);
 
-
-	// ##### DUST #####
-	double Rd = 0.1183;
-	double nd0 = -11.940;
-	double shift = 0;
-	// Option A
-	//fkt1d_theta dust_1d_fkt(Rd, nd0, 0.);
-	//fkt1d_theta dust_1d_fkt(0.1, 1, 0.);
-	//fkt3d_from_fkt1d dust_3d_fkt(dust_1d_fkt);
-	// Option B
-	//Gauss_1d_fkt dust_1d_fkt(Q, 10000);
-	//theta_fkt dust_1d_fkt(R, Q);
-	//smooth_rectangle dust_1d_fkt(nd0, 56, -.8);
-	// Option C
-	fkt3d_Gauss dust_3d_fkt(-5.*5.,0.15,0.15,0.15);
-	//fkt3d_shift H_3d_shifted_fkt(dust_3d_fkt, shift, 0., 0.);
-	nd.fill(dust_3d_fkt);
-
-	// ##### Output Dust #####
-	subdim my_dim;
-	my_dim.xpos = Nx/2.;
-	my_dim.ypos = Ny/2.;
-	my_dim.zpos = Nz/2.;
-	my_dim.direction = 0;
-	my_dim.plane = 2;
-	save_2d(nd, my_dim, "./data/nd2d.dat");
-	save_1d(nd, my_dim, "./data/nd1d.dat");
-
-
-	// ##### RELAXATIONS-SOLVER #####
-
-
+/*
 	double TTX = 10;
 	double x = 0.01;
 	auto numerator = [Params] (const double &x) -> double { return exp(-x*theta) - exp(x); }; // Zähler
 	auto denominator = [Params] (const double &x) -> double { return -theta*exp(-x*theta) - exp(x); }; // Nenner
 
-	fkt3d_const boundary_shape(0.); // there are no additional boundarys (except Domain borders)
-	fkt3d_const boundary_value(0.); // the value of the boundarys is always zero
-	double SOR = .8; // Overrelaxation parameter
-	solver_poisson_jacobi_nlin NLJ(boundary_shape, boundary_value, SOR);
-	NLJ.set_max_iterations(80);
-	NLJ.limit_max = 1.e-5;
-	NLJ.limit_sum = 1.e-7;
-
 	std::cout << numerator(x) << std::endl;
 	std::cout << denominator(x) << std::endl;
+*/
 
-	// ##### MULTIGRID #####
-	solver_poisson_multigrid MG(NLJ);
-	{ // setup MG-cycle
-		const int MG_N = 8;
-		int * MG_steps_sizes = new int[MG_N]
-                  {1,1,1,1,-1,-1,-1,-1};
-	    MG_lvl_control * cycle_shape = new MG_lvl_control[MG_N]
-			      {lvl_keep, lvl_down, lvl_keep, lvl_down, lvl_down_x, lvl_up_x, lvl_up, lvl_up};
-	    MG.set_level_control(MG_N, MG_steps_sizes, cycle_shape);
-	    // Sketch of cycle:
-	    // _
-	    //  \_  /
-	    //    \/
-	} // configure done
-
-	//MG.solve(Ph,nd);
-
-	for(int i=0; i<ni.N; ++i)
-	{
-		ni.val[i] = exp(-theta*Ph.val[i]);
-	}
-
-
+	//create_input_from_MGsolver(Ux, Uy, Uz, ni, Ph);
 	create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
 
 

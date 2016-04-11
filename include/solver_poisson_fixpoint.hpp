@@ -1,9 +1,0 @@
-#ifndef SOLVER_POISSON_FIXPOINT_HPP_
-#define SOLVER_POISSON_FIXPOINT_HPP_
-
-
-
-
-
-
-#endif

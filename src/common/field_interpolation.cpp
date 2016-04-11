@@ -1,6 +1,6 @@
 #include "field_interpolation.hpp"
 
-
+#define _MY_VERBOSE_TEDIOUS
 
 void OP_xto2x(const field_real &in, field_real &out)
 {
@@ -420,38 +420,43 @@ void OP_XhtoYh_lvl1(const field_real &in, field_real &out, const int type, const
 
 	switch(type)
 	{
+
+
 		case 0 :
-		for(int i=0; i<out.Nx; ++i)
-		{
-			double x = out.my_grid->x_axis->val_at(i);
-			for(int j=0; j<out.Ny; ++j)
+			std::cout << "case 0" << std::endl;
+			for(int i=0; i<out.Nx; ++i)
 			{
-				double y = out.my_grid->y_axis->val_at(j);
-				for(int k=0; k<out.Nz; ++k)
+				double x = out.my_grid->x_axis->val_at(i);
+				for(int j=0; j<out.Ny; ++j)
 				{
-					double z = out.my_grid->z_axis->val_at(k);
-					out(i,j,k) = in(x,y,z);
-		           #if defined(_MY_VERBOSE_TEDIOUS)
-					std::stringstream sstr;
-					std::string msg;
-					sstr << "(" << i << "," << j << "," << k << ") ";
-					sstr << "(" << x << "," << y << "," << z << ") ";
-		            sstr << in(x,y,z);
-		            msg = sstr.str();
-		            my_log << msg;
-	               #endif
+					double y = out.my_grid->y_axis->val_at(j);
+					for(int k=0; k<out.Nz; ++k)
+					{
+						double z = out.my_grid->z_axis->val_at(k);
+						out(i,j,k) = in(x,y,z);
+		               #if defined(_MY_VERBOSE_TEDIOUS)
+				    	std::stringstream sstr;
+				    	std::string msg;
+				    	sstr << "(" << i << "," << j << "," << k << ") ";
+				    	sstr << "(" << x << "," << y << "," << z << ") ";
+		            	sstr << in(x,y,z);
+		            	msg = sstr.str();
+		            	my_log << msg;
+	                   #endif
+					}
 				}
 			}
-		}
-		break;
+			break;
 
 		case 1 :
+			std::cout << "case 1" << std::endl;
 			double xmin = in.my_grid->x_axis->l0;
 			double xmax = xmin + in.my_grid->x_axis->L;
 			double ymin = in.my_grid->y_axis->l0;
-			double ymax = xmin + in.my_grid->y_axis->L;
+			double ymax = ymin + in.my_grid->y_axis->L;
 			double zmin = in.my_grid->z_axis->l0;
-			double zmax = xmin + in.my_grid->z_axis->L;
+			double zmax = zmin + in.my_grid->z_axis->L;
+
 			for(int i=0; i<out.Nx; ++i)
 			{
 				double x = out.my_grid->x_axis->val_at(i);
@@ -468,6 +473,7 @@ void OP_XhtoYh_lvl1(const field_real &in, field_real &out, const int type, const
 						{
 							out(i,j,k) = in(x,y,z);
 						}
+
 			           #if defined(_MY_VERBOSE_TEDIOUS)
 						std::stringstream sstr;
 						std::string msg;
