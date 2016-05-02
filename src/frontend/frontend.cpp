@@ -54,17 +54,17 @@ double pi = acos(-1.);
 // number of grid-points
 // in different space directions
 
-int Nx = 480;
-int Ny = 160;
-int Nz = 160;
+int Nx = 384;
+int Ny = 128;
+int Nz = 128;
 // Box dimensions
 double Lx = 24.;
 double Ly = 8.;
 double Lz = 8.;
 // physical parameters
-double M = 0.7;
+double M = 0.2;
 double tau = 0.1;
-double theta = 30.;
+double theta = 50.;
 double mu = 0.;
 double beta = 0.0;
 
@@ -131,17 +131,18 @@ void create_input_from_MGsolver(field_real &Ux, field_real &Uy, field_real &Uz, 
 	double Rd = 0.1183;
 	double nd0 = -11.940;
 	double shift = 0;
+	double Q = 10000;
 	// Option A
 	//fkt1d_theta dust_1d_fkt(Rd, nd0, 0.);
-	//fkt1d_theta dust_1d_fkt(0.1, 1, 0.);
+	//fkt1d_theta dust_1d_fkt(1, 1, 0.);
 	//fkt3d_from_fkt1d dust_3d_fkt(dust_1d_fkt);
 	// Option B
 	//Gauss_1d_fkt dust_1d_fkt(Q, 10000);
 	//theta_fkt dust_1d_fkt(R, Q);
 	//smooth_rectangle dust_1d_fkt(nd0, 56, -.8);
 	// Option C
-	fkt3d_Gauss dust_3d_fkt(-5.*5.,0.15,0.15,0.15);
-	//fkt3d_shift H_3d_shifted_fkt(dust_3d_fkt, shift, 0., 0.);
+	fkt3d_Gauss dust_3d_fkt(-1.,0.15,0.15,0.15);
+	fkt3d_shift H_3d_shifted_fkt(dust_3d_fkt, shift, 0., 0.);
 	nd.fill(dust_3d_fkt);
 
 	// ##### Output Dust #####
@@ -154,6 +155,9 @@ void create_input_from_MGsolver(field_real &Ux, field_real &Uy, field_real &Uz, 
 	save_2d(nd, my_dim, "./data/nd2d.dat");
 	save_1d(nd, my_dim, "./data/nd1d.dat");
 
+	field_integrate Integrator(*nd.my_grid);
+	double Qges=Integrator.execute(nd);
+	std::cout << "Qges= " << Qges << std::endl;
 
 	// ##### RELAXATIONS-SOLVER #####
 	fkt3d_const boundary_shape(0.); // there are no additional boundarys (except Domain borders)
@@ -185,6 +189,10 @@ void create_input_from_MGsolver(field_real &Ux, field_real &Uy, field_real &Uz, 
 	{
 		ni.val[i] = exp(-theta*Ph.val[i]);
 	}
+
+
+
+
 	return;
 }
 
@@ -241,8 +249,8 @@ int main(void)
 	std::cout << denominator(x) << std::endl;
 */
 
-	//create_input_from_MGsolver(Ux, Uy, Uz, ni, Ph);
-	create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
+	create_input_from_MGsolver(Ux, Uy, Uz, ni, Ph);
+	//create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
 
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)

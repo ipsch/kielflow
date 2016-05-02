@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     	} // END SWITCH
 
 
-
+    std::cout << "backend: input: " << file_name_h5 << std::endl;
 
 
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TIDEOUS)
@@ -198,18 +198,6 @@ int main(int argc, char *argv[])
 
 
 
-	density_plot PL_density(ni,Params);
-	PL_density.auto_set(ni);
-	PL_density.save();
-
-
-	potential_plot PL_potential(Ph,Params);
-	PL_potential.auto_set(Ph);
-	PL_potential.save();
-
-
-	velocity_plot PL_velocity(Ux,Uy,Uz,Params);
-	PL_velocity.save();
 
 
 

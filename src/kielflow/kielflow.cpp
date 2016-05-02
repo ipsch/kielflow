@@ -104,8 +104,9 @@ int main(void)
 
 
 	// ##### DUST #####
+	double Q = 10000;
 	field_real nd(*FPh.my_grid);
-	fkt3d_Gauss dust_3d_fkt(-5.,0.15,0.15,0.15);
+	fkt3d_Gauss dust_3d_fkt(-Q/2299.7,0.15,0.15,0.15);
 	nd.fill(dust_3d_fkt);
 
 	field_real Hd(*FPh.my_grid);
