@@ -40,6 +40,7 @@ solver_poisson_jacobi_nlin::solver_poisson_jacobi_nlin(interface_3d_fkt &boundar
 	iteration = 0;
 	invocations = 0;
 	max_iterations = 50;
+	converged_ = false;
 
 	output_stream << "s" << "\t";
 	output_stream << "i" << "\t";
@@ -71,7 +72,7 @@ void solver_poisson_jacobi_nlin::solve(field_real &Phi_IO, field_real &rho)
 
 
 
-
+    converged_ = false;
 	field_real Phi_n(*Phi_IO.my_grid);
 
 	// Abbruch Bedingungen
@@ -127,8 +128,9 @@ void solver_poisson_jacobi_nlin::solve(field_real &Phi_IO, field_real &rho)
 
 		if(ESC_max && ESC_sum)
 		{
+			converged_ = true;
 		   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
-			my_log << "done";
+			my_log << "done (converged)";
 		   #endif
 			return;
 		}
@@ -136,7 +138,7 @@ void solver_poisson_jacobi_nlin::solve(field_real &Phi_IO, field_real &rho)
 	} while (ESC_iter || ESC_auto);
 
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
-	my_log << "done";
+	my_log << "done (max iterations reached)";
    #endif
 
 	return;

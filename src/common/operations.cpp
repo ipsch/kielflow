@@ -88,9 +88,11 @@ void handle_dealiasing(field_imag &DEST)
 	my_log << "handle_dealiasing(field_imag &DEST)";
    #endif
 
+
 	double kx_max = DEST.my_grid->x_axis->val_at(DEST.Nx/2);
 	double ky_max = DEST.my_grid->y_axis->val_at(DEST.Ny/2);
 	double kz_max = DEST.my_grid->z_axis->val_at(DEST.Nz/2);
+
 
 	for(int i=0;i<DEST.Nx; ++i)
 	{

@@ -49,24 +49,11 @@
 
 
 
-
-
-
-
-
 #include <omp.h>
 //double omp_get_wtime(void);
 
 
 
-
-double charge(const double t)
-{
-	double val = -0.55*0.5*t;
-	if(val < -0.55)
-		return -0.55;
-	return val;
-}
 
 
 
@@ -104,7 +91,7 @@ int main(void)
 
 
 	// ##### DUST #####
-	double Q = 10000;
+	double Q = 11498.5;
 	field_real nd(*FPh.my_grid);
 	fkt3d_Gauss dust_3d_fkt(-Q/2299.7,0.15,0.15,0.15);
 	nd.fill(dust_3d_fkt);
@@ -120,8 +107,8 @@ int main(void)
 	double SOR = .9; // Overrelaxation parameter
 	solver_poisson_jacobi_nlin NLJ(boundary_shape, boundary_value, SOR);
 	NLJ.set_max_iterations(80);
-	NLJ.limit_max = 1.e-5;
-	NLJ.limit_sum = 1.e-7;
+	NLJ.limit_max = 1.e-4;
+	NLJ.limit_sum = 1.e-6;
 
 
 	// ##### MULTIGRID #####
@@ -129,15 +116,16 @@ int main(void)
 	{ // setup MG-cycle
 		const int MG_N = 6;
 		int * MG_steps_sizes = new int[MG_N]
-                  {1,1,1,-1,-1,-1};
+                  {3,1,1,-1,-1,-1};
 	    MG_lvl_control * cycle_shape = new MG_lvl_control[MG_N]
 				  {lvl_keep, lvl_down, lvl_keep, lvl_down, lvl_up, lvl_up};
 	    MG.set_level_control(MG_N, MG_steps_sizes, cycle_shape);
 	    // Sketch of cycle:
 	    // _
-	    //  \_     /
-	    //    \_  /
-	    //      \/
+	    //  \_  /
+	    //    \/
+	    delete[] MG_steps_sizes;
+	    delete[] cycle_shape;
 	} // configure done
 
 
@@ -246,6 +234,9 @@ int main(void)
 	save_all(particle_list, Omega, t_total, Params, FUx, FUy, FUz, Fni, FPh);
 
 	// ##### DONE #####
+
+
+
 	std::cout  << "finished - kielflow terminated" << std::endl;
    #if defined (_MY_VERBOSE) || defined (_MY_VERBOSE_MORE) || defined (_MY_VERBOSE_TEDIOUS)
 	my_log << "done";

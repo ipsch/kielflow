@@ -62,9 +62,9 @@ double Lx = 24.;
 double Ly = 8.;
 double Lz = 8.;
 // physical parameters
-double M = 0.2;
+double M = 1.;
 double tau = 0.1;
-double theta = 50.;
+double theta = 70.;
 double mu = 0.;
 double beta = 0.0;
 
@@ -107,16 +107,22 @@ void create_input_from_old_data(field_real &Ux, field_real &Uy, field_real &Uz, 
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	my_log << "interpolate old data onto new grids";
    #endif
-	OP_XhtoYh_lvl1(AUx,Ux,1,0.);
-	OP_XhtoYh_lvl1(AUy,Uy,1,0.);
-	OP_XhtoYh_lvl1(AUz,Uz,1,0.);
-	OP_XhtoYh_lvl1(Ani,ni,1,1.);
-	OP_XhtoYh_lvl1(APh,Ph,1,0.);
+	OP_XhtoYh_lvl1(AUx,Ux,2,0.,-3.);
+	OP_XhtoYh_lvl1(AUy,Uy,2,0.,-3.);
+	OP_XhtoYh_lvl1(AUz,Uz,2,0.,-3.);
+	OP_XhtoYh_lvl1(Ani,ni,2,1.,-3.);
+	OP_XhtoYh_lvl1(APh,Ph,2,0.,-3.);
+
+	OP_smoothing_lvl2(Ux,Ux);
+	OP_smoothing_lvl2(Uy,Uy);
+	OP_smoothing_lvl2(Uz,Uz);
+	OP_smoothing_lvl2(ni,ni);
 
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	my_log << "done";// number of grid-points
 	// in different space directions
    #endif
+
 	return;
 }
 
@@ -128,21 +134,11 @@ void create_input_from_MGsolver(field_real &Ux, field_real &Uy, field_real &Uz, 
 
 	// ##### DUST #####
 	field_real nd(*ni.my_grid);
-	double Rd = 0.1183;
-	double nd0 = -11.940;
-	double shift = 0;
-	double Q = 10000;
-	// Option A
-	//fkt1d_theta dust_1d_fkt(Rd, nd0, 0.);
-	//fkt1d_theta dust_1d_fkt(1, 1, 0.);
-	//fkt3d_from_fkt1d dust_3d_fkt(dust_1d_fkt);
-	// Option B
-	//Gauss_1d_fkt dust_1d_fkt(Q, 10000);
-	//theta_fkt dust_1d_fkt(R, Q);
-	//smooth_rectangle dust_1d_fkt(nd0, 56, -.8);
-	// Option C
-	fkt3d_Gauss dust_3d_fkt(-1.,0.15,0.15,0.15);
-	fkt3d_shift H_3d_shifted_fkt(dust_3d_fkt, shift, 0., 0.);
+	//double Rd = 0.1183;
+	double Q = 11498.5;
+	//double shift = 0;
+	fkt3d_Gauss dust_3d_fkt(-Q/2299.7,0.15,0.15,0.15);
+	//fkt3d_shift H_3d_shifted_fkt(dust_3d_fkt, shift, 0., 0.);
 	nd.fill(dust_3d_fkt);
 
 	// ##### Output Dust #####
@@ -181,6 +177,8 @@ void create_input_from_MGsolver(field_real &Ux, field_real &Uy, field_real &Uz, 
 	    // _
 	    //  \_  /
 	    //    \/
+	    delete[] MG_steps_sizes;
+	    delete[] cycle_shape;
 	} // configure done
 
 	MG.solve(Ph,nd);
@@ -226,7 +224,6 @@ int main(void)
 	*/
 
 
-
 	grid_Co Omega(x_axis,y_axis,z_axis);
 	parameters Params(M,tau,theta,mu,beta);
 
@@ -249,8 +246,8 @@ int main(void)
 	std::cout << denominator(x) << std::endl;
 */
 
-	create_input_from_MGsolver(Ux, Uy, Uz, ni, Ph);
-	//create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
+	//create_input_from_MGsolver(Ux, Uy, Uz, ni, Ph);
+	create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
 
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)

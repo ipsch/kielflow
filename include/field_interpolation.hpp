@@ -26,9 +26,9 @@ void OP_2htoh_lvl0(const field_real &in, field_real &out);
 // ToDo : lvl1 ist eigentlich falsch, reparieren
 void OP_2htoh_lvl1(const field_real &in, field_real &out);
 void OP_XhtoYh_lvl1(const field_real &in, field_real &out,
-		            const int type = 0, const double &cvalue = 0.);
+		            const int type = 0, const double &c1value = 0., const double &c2value= -2.);
 void OP_smoothing(const field_real &in, field_real &out);
-
+void OP_smoothing_lvl2(const field_real &in, field_real &out);
 
 
 

@@ -44,6 +44,7 @@ class solver_poisson_jacobi_nlin : public interface_relaxation_solver
 public :
 	solver_poisson_jacobi_nlin(interface_3d_fkt &boundary, interface_3d_fkt &val_boundary, const double &w = 1.);
 	void solve(field_real &Phi_IO, field_real &rho);
+	bool converged(void) const {return converged_;}
 	void set_max_iterations(const int &iter) {max_iterations = iter;}
 
 	double limit_max;
@@ -76,6 +77,7 @@ private :
 	int invocations;
 	int max_iterations;
 	static int iterations_total;
+	bool converged_;
 
 	// ToDo : move newton-method to own header (make it stand-alone)
 	double newton(const int &i, const int j, const int k,\

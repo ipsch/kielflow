@@ -45,6 +45,8 @@
 void help(void)
 {
 	std::cout << "backend to kielflow v0.1" << std::endl;
+	std::cout << "o | output : path to output." << std::endl;
+	std::cout << "    filename will be appended with data type" << std::endl;
 }
 
 
@@ -57,74 +59,107 @@ int main(int argc, char *argv[])
    #endif
 
 
-	std::string file_name_h5 = "./data/fields.h5";
-	int slice_flag = 0;
+	std::string file_input = "./data/fields.h5";
+	std::string file_output_1d = "./data/plot_data.dat";
+	std::string file_output_2d = "./data/splot_data.dat";
+	bool slice_flag = false;
+	bool output_local = false;
 
 
 	int switch_opt;
 
     opterr = 0;
 
-    while ((switch_opt = getopt (argc, argv, "hf:s")) != -1)
+    while ((switch_opt = getopt (argc, argv, "hlsf:o:")) != -1)
     	switch (switch_opt)
     	{
 
-    	case 'h':
-        help();
-        return 0;
-          break;
+        case 'f': {
+        	file_input = optarg;
+        	break;
+    	}
 
-        case 'f':
-        file_name_h5 = optarg;
-          break;
+    	case 'h': {
+    		help();
+    		return 0;
+    		break;
+    	}
 
-        case 's':
-        slice_flag = 1;
-          break;
 
-        case '?':
-        if (optopt == 'f')
-        {
-        	std::cout << "Option" << optopt << " requires an argument.\n";
-        }
-        else if (isprint (optopt))
-        {
-        	std::cout << "Unknown option" << optopt << ".\n";
-        }
-        else
-        {
-        	fprintf (stderr,
+    	case 'l' : {
+    		output_local = true;
+    		break;
+    	}
+
+    	case 'o' : {
+    		std::string t_dir_ = ExtractDirectory(optarg);
+    		std::string t_fileName_ = ExtractFilename(optarg);
+    		file_output_1d = t_dir_+"plot_data "+t_fileName_;
+    		file_output_2d = t_dir_+"splot_data "+t_fileName_;
+    		break;
+    	}
+
+    	case 's': {
+    		slice_flag = true;
+    		break;
+    	}
+
+        case '?': {
+        	if (optopt == 'f')
+        	{
+        		std::cout << "Option" << optopt << " requires an argument.\n";
+        		break;
+        	}
+        	else if (isprint (optopt))
+        	{
+        		std::cout << "Unknown option" << optopt << ".\n";
+        	}
+        	else
+        	{
+        		fprintf (stderr,
         			"Unknown option character `\\x%x'.\n",
                      optopt);
+        	}
+        	return 1;
+        	break;
         }
-        return 1;
-          break;
 
-        default:
-        abort ();
-          break;
+        default: {
+        	abort ();
+        	break;
+        }
 
     	} // END SWITCH
 
+    // set output files to be located in same
+    // directory as input files
+    if(output_local)
+    {
+    	std::string t_dir_;
+    	std::string t_file_;
+    	t_dir_ = ExtractDirectory(file_input);
+    	t_file_ = ExtractFilename(file_input);
+		t_file_ = ChangeFileExtension(t_file_, ".dat");
+		file_output_1d = t_dir_ + "plot_data " + t_file_;
+		file_output_2d = t_dir_ + "splot_data " + t_file_;
+    }
 
-    std::cout << "backend: input: " << file_name_h5 << std::endl;
-
-
-   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TIDEOUS)
-	my_log << "load domain";
-   #endif
-	grid_Co Omega = load_grid(file_name_h5);
-	parameters Params = load_parameters(file_name_h5);
+    // lad parameters and domain
+	grid_Co Omega = load_grid(file_input);
+	parameters Params = load_parameters(file_input);
 	//particle::load();
 
 
+    // status msg to console
+    std::cout << "backend: input: " << file_input << std::endl;
+    std::cout << "backend: output: " << file_output_1d << std::endl;
+    std::cout << "                 " << file_output_2d << std::endl;
 
 
-
-
+	// set backend to process sliced data (2d instead of 3d data-files)
 	if(slice_flag==true)
 	{
-	   #ifdef _MY_VERBOSE
+	   #if defined (_MY_VERBOSE_MORE) || defined (_MY_VERBOSE_TEDIOUS)
 		my_log << "slice_flag==true";
 	   #endif
 
@@ -134,34 +169,31 @@ int main(int argc, char *argv[])
 		double * ni = new double [Omega.Nx*Omega.Ny];
 		double * Ph = new double [Omega.Nx*Omega.Ny];
 
-		load_slice("Ux", Ux,file_name_h5);
-		load_slice("Uy", Uy,file_name_h5);
-		load_slice("Uz", Uz,file_name_h5);
-		load_slice("ni", ni,file_name_h5);
-		load_slice("Ph", Ph,file_name_h5);
+		load_slice("Ux", Ux,file_input);
+		load_slice("Uy", Uy,file_input);
+		load_slice("Uz", Uz,file_input);
+		load_slice("ni", ni,file_input);
+		load_slice("Ph", Ph,file_input);
 
-		std::string file_name_dat = ChangeFileExtension(file_name_h5,".dat");
-		save_frame(Omega, Ux, Uy, Uz, ni, Ph, file_name_dat);
-		save_density_pl4 (Omega, Params, file_name_dat);
-		save_velocity_pl4(Omega, Params, file_name_dat);
+		save_frame(Omega, Ux, Uy, Uz, ni, Ph, file_output_2d);
 
-		std::cout << "done.";
-       #ifdef _MY_VERBOSE
+       #if defined (_MY_VERBOSE) || defined (_MY_VERBOSE_MORE) || defined (_MY_VERBOSE_TEDIOUS)
 		my_log << "done";
        #endif
+		std::cout << "done.";
 		return 0;
 	}
 
 
 	// Load fields (real-space) from file
-   #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE)
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	my_log << "load fields (real-space)";
    #endif
-	field_real Ux = load_field_real(file_name_h5,"Ux");
-	field_real Uy = load_field_real(file_name_h5,"Uy");
-	field_real Uz = load_field_real(file_name_h5,"Uz");
-	field_real ni = load_field_real(file_name_h5,"ni");
-	field_real Ph = load_field_real(file_name_h5,"Ph");
+	field_real Ux = load_field_real(file_input,"Ux");
+	field_real Uy = load_field_real(file_input,"Uy");
+	field_real Uz = load_field_real(file_input,"Uz");
+	field_real ni = load_field_real(file_input,"ni");
+	field_real Ph = load_field_real(file_input,"Ph");
 
 
 
@@ -188,11 +220,11 @@ int main(int argc, char *argv[])
 
 
 
-   #if defined(_MY_VERBOSE)
+   #if defined(_MY_VERBOSE_MORE) || defined (_MY_VERBOSE_TEDIOUS)
 	my_log << "saving 2D plot data";
    #endif
-	save_2d(Ux, Uy, Uz, ni, Ph, save_opt, "./data/splot_data.dat");
-	save_1d(Ux, Uy, Uz, ni, Ph, save_opt, "./data/plot_data.dat");
+	save_2d(Ux, Uy, Uz, ni, Ph, save_opt, file_output_2d);
+	save_1d(Ux, Uy, Uz, ni, Ph, save_opt, file_output_1d);
 
 
 
@@ -598,9 +630,9 @@ int main(int argc, char *argv[])
 	*/
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
-	my_log << "done. backend terminated";
+	my_log << "done";
    #endif
-	std::cout << "backend terminated" << std::endl;
+	std::cout << "done" << std::endl;
 
 	return 0;
 }

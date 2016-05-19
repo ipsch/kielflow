@@ -50,9 +50,9 @@ solver_poisson_multigrid::solver_poisson_multigrid(interface_relaxation_solver &
 	I_2ztoz = &OP_2ztoz;
 	I_2htoh = &OP_2htoh_lvl0;
 
-	my_cascades = 0;
-	my_lvl = new  MG_lvl_control{lvl_keep};
-	my_steps = new int{1};
+	my_cascades = 1;
+	my_lvl = new MG_lvl_control[my_cascades]{lvl_keep};
+	my_steps = new int[my_cascades] {1};
 
    #if defined(_MY_VERBOSE_TEDIOUS)
 	my_log << "done";
@@ -62,6 +62,9 @@ solver_poisson_multigrid::solver_poisson_multigrid(interface_relaxation_solver &
 
 solver_poisson_multigrid::~solver_poisson_multigrid()
 {
+	delete[] my_lvl;
+	delete[] my_steps;
+
    #if defined(_MY_VERBOSE_TEDIOUS)
 	logger my_log("solver_poisson_multigrid::~solver_poisson_multigrid()");
 	my_log << "~solver_poisson_multigrid()";

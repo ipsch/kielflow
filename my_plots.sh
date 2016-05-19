@@ -6,6 +6,7 @@
 filename=""
 filename_out=""
 script_name=""
+output_local=false
 
 function find_string () # with two different return values
 # $1 - search string
@@ -46,22 +47,23 @@ function plot_directive ()
 # $3 - output
 
 {
-echo "plot directive"
-echo "$1"
-echo "$2"
-echo "$3"
-
   local default_script="./plots/default_"$1".pl4"
   local custom_script="./plots/"$1".pl4"
   local custom_data=$2
   local default_data=""
   local plot_output=$3
   find_string $1 default_data
+  
   rm $custom_script
-  sed -e 's:"'$default_data'":"'$custom_data'":' $default_script >> $custom_script
+  sed -e 's:'"$default_data"':'"$custom_data"':' $default_script >> $custom_script
+  
   if [ "$filename_out" != "" ]; then
+    echo "my_plots: invoking plot4:"
+    echo "  plot4 $custom_script -o $plot_output"
     plot4 "$custom_script" -o "$plot_output"
   else
+    echo "my_plots: invoking plot4:"
+    echo "  plot4 $custom_script"
     plot4 "$custom_script"
   fi
 
@@ -70,7 +72,7 @@ echo "$3"
 
 ######## MAIN ########
 
-while getopts ":f:ho:p:" optname
+while getopts ":f:hlo:p:" optname
   do
     case "$optname" in
     
@@ -78,6 +80,10 @@ while getopts ":f:ho:p:" optname
         filename=$OPTARG
         ;;
     
+      l)
+	output_local=true
+	;;
+      
       o)
         filename_out=$OPTARG
         ;;
@@ -120,8 +126,24 @@ while getopts ":f:ho:p:" optname
     esac
 done    
 
-echo "my_plots input: " $filename
-echo "my_plots output: "$filename_out
+# set output .pdf file to be located in same
+# directory as .dat input files
+if [ $output_local == true ]; then
+  t_file_=$(basename "$filename")
+  t_dir_=$(dirname "$filename")
+  t_file_="${t_file_/.dat/.pdf}"
+  t_file_="$script_name $t_file_"
+  filename_out="$t_dir_/$t_file_"
+fi
+
+
+  #else
+
+  #fi
+
+echo "my_plots input: $filename"
+echo "my_plots output: $filename_out"
+echo "my_plots script: $script_name"
 
 plot_directive "$script_name" "$filename" "$filename_out"
 

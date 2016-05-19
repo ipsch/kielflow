@@ -50,9 +50,9 @@ solver_poisson_multigrid::solver_poisson_multigrid(interface_relaxation_solver &
 	I_2ztoz = &OP_2ztoz;
 	I_2htoh = &OP_2htoh_lvl0;
 
-	my_cascades = 0;
-	my_lvl = new  MG_lvl_control{lvl_keep};
-	my_steps = new int{1};
+	my_cascades = 1;
+	my_lvl = new MG_lvl_control[1]{lvl_keep};
+	my_steps = new int[1] {1};
 
    #if defined(_MY_VERBOSE_TEDIOUS)
 	my_log << "done";
@@ -62,6 +62,9 @@ solver_poisson_multigrid::solver_poisson_multigrid(interface_relaxation_solver &
 
 solver_poisson_multigrid::~solver_poisson_multigrid()
 {
+	delete[] my_lvl;
+	delete[] my_steps;
+
    #if defined(_MY_VERBOSE_TEDIOUS)
 	logger my_log("solver_poisson_multigrid::~solver_poisson_multigrid()");
 	my_log << "~solver_poisson_multigrid()";
@@ -249,8 +252,6 @@ void solver_poisson_multigrid::solve(field_real &Phi_IO, field_real &rho)
 		ptr_relaxation_method->set_max_iterations(my_steps[cascade_current]);
 		ptr_relaxation_method->solve(Phi_n,rho_n);
 
-		// ToDo : Fast Forward code zum überspringen von Kaskaden.
-		/*
 		// code zum fast forwarden: Die Rechnung auf einem gröberen Gitter kann
 		// übersprungen werden, wenn:
 		// - die Relaxation auf diesem Gitter bereits konvergiert ist
@@ -273,11 +274,17 @@ void solver_poisson_multigrid::solve(field_real &Phi_IO, field_real &rho)
 
 			} while(lvl_change!=0);
 
-			my_lvl[cascade_current+cascade_skips] = lvl_keep;
-			cascade_current = cascade_current+cascade_skips-1;
+			//my_lvl[cascade_current+cascade_skips] = lvl_keep;
+			//cascade_current = cascade_current+cascade_skips-1;
+
+			//my_lvl[cascade_current+cascade_skips] = lvl_keep;
+           #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	        my_log << "skipping cascades:";
+	        my_log << cascade_skips;
+           #endif
+			cascade_current = cascade_current+cascade_skips;
 
 		}
-		*/
 
 		Phi_IO.resize(Phi_n.Nx, Phi_n.Ny, Phi_n.Nz);
 		Phi_IO = Phi_n;

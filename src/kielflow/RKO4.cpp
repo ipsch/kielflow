@@ -151,7 +151,7 @@ void Runge_kutta_O4::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, fi
 
 	// Alle Rungekutta-Koeffizienten zu iteriertem Schritt zusammen bauen
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_TEDIOUS)
-	log << "evaluating sum";
+	my_log << "evaluating sum";
    #endif
 	for(int i=0; i<FUx.N; ++i)
 	{

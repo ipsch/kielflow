@@ -190,8 +190,8 @@ void save_grid(const grid_Co &Target, const std::string &path)
 grid_Co load_grid(const std::string &path)
 {
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
-	logger my_log("IO");
-	my_log << "load_grid(const std::string &path)";
+	logger my_log("grid_Co load_grid(const std::string &path)");
+	my_log << "start";
 	std::string status_text = "path: " + path;
 	my_log << status_text;
    #endif
@@ -205,6 +205,9 @@ grid_Co load_grid(const std::string &path)
 	load_axis("y", path, y_axis);
 	load_axis("z", path, z_axis);
 
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	my_log << "creating grid";
+   #endif
     grid_Co Omega(*x_axis, *y_axis , *z_axis);
 
    #if defined(_MY_VERBOSE_TEDIOUS)
@@ -225,6 +228,9 @@ grid_Co load_grid(const std::string &path)
 	my_log << "done";
    #endif
 
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	my_log << "free memory";
+   #endif
 	delete x_axis;
 	delete y_axis;
 	delete z_axis;
@@ -382,13 +388,21 @@ field_real load_field_real(const std::string &path, const std::string &data_set)
 //void load_field_real(double * ptr_data, const std::string &data_set, const std::string &path)
 {
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
-	logger my_log("IO");
-	my_log << "load_field_real(const std::string &path, const std::string &data_set)";
+	logger my_log("load_field_real(..)");
+	my_log << "start";
 	std::string status_text = "path: " + path + " data_set " + data_set;
 	my_log << status_text;
    #endif
 
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	my_log << "loading grid";
+   #endif
+
 	grid_Co Omega = load_grid(path);
+
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	my_log << "done loading grid";
+   #endif
 
 	field_real Target = field_real(Omega);
 	long unsigned int Nx_ = static_cast<int>(Target.Nx);
@@ -402,12 +416,17 @@ field_real load_field_real(const std::string &path, const std::string &data_set)
 	echelon::multi_array<double> conversion_array({Nx_ ,Ny_ ,Nz_ }, 0.);
     echelon::auto_reshape(conversion_array) <<= ds;
 
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	my_log << "copy data";
+   #endif
 	for( int i=0; i<Target.Nx; ++i)
 		for( int j=0; j<Target.Ny; ++j)
 			for( int k=0; k<Target.Nz; ++k)
+			{
 				Target.val[Target.my_grid->index_at(i,j,k)] = conversion_array(i,j,k);
+			}
 
-   #if defined(_MY_VERBOSE_TEDIOUS)
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	my_log << "done";
    #endif
 	return Target;
