@@ -39,14 +39,16 @@ public :
 	void solve(field_real &Phi_IO, field_real &rho);
 	// my own methods
 	void set_method(interface_relaxation_solver &method) {ptr_relaxation_method = &method;}
-	void set_level_control(const int &N, int * lvl_steps, MG_lvl_control * lvl_C);
+	void set_level_control(const int &N, int * lvl_steps, MG_lvl_control * lvl_C,
+			double * lvl_tol);
 private :
 	solver_poisson_multigrid();
 	int refine_mesh(const MG_lvl_control &step, const field_real &in, field_real &out);
 
 	interface_relaxation_solver * ptr_relaxation_method; // Method used for soving
 	int my_cascades;                                     // Number of cascades (big steps) in the MG-cycle
-	int * my_steps;                                      // Array with number of sub-steps per cascade
+	int * my_steps;                                      // Array with number of sub-steps per cascade								 // Array of tollerances
+	double * my_tolerance;
 	void (*I_hto2h)(const field_real&, field_real&);     // Interpolation Operator
 	void (*I_2htoh)(const field_real&, field_real&);     // Averageing Operator
 	void (*I_xto2x)(const field_real&, field_real&);     // Interpolation Operator

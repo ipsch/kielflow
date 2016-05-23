@@ -46,6 +46,7 @@ public :
 	void solve(field_real &Phi_IO, field_real &rho);
 	bool converged(void) const {return converged_;}
 	void set_max_iterations(const int &iter) {max_iterations = iter;}
+	void set_tolerance(const double &tolerance){limit_max = tolerance;};
 
 	double limit_max;
 	double limit_sum;
@@ -53,31 +54,35 @@ public :
 private :
 	void main_loop(void);
 	void iteration_loop(const field_real &in, field_real &out, const field_real &rho);
-
-	double get_PG(const field_real &in, int i, int j, int k) const;
-	void get_HXX(const axis * const A, const int &i, double &hp, double &hm) const;
-
-	//void   check_convergence(const field_real &field_new, const field_real &field_old);
-	void check_Norms(const field_real &field_new, const field_real &field_old);
+    void save_evolution(const field_real &Phi, const field_real &rho) const;
 
 
 
 	double norm_max;
 	double norm_sum;
+	double supremum;
+	double infinum;
 
 	interface_3d_fkt &H;
 	interface_3d_fkt &val_H;
 
+	double * HX;
+	double * HY;
+	double * HZ;
+	void H_create(const grid_Co &Omega);
+	void H_delete();
 
 	std::string my_logfile;
 
 	const double omega_SOR; // Successive Over-Relaxation parameter
+    const double omega_NEWTON;
 
 	int iteration;
-	int invocations;
+	int invocation;
 	int max_iterations;
 	static int iterations_total;
 	bool converged_;
+	bool use_boundary_;
 
 	// ToDo : move newton-method to own header (make it stand-alone)
 	double newton(const int &i, const int j, const int k,\

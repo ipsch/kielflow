@@ -119,31 +119,28 @@ void field_real::mulitply(const double &lambda)
 
 
 
+double field_real::val_at(int ix, int iy, int iz) const
+{
+	while(ix<0) ix+=Nx;
+	while(ix>Nx-1) ix-=Nx;
+	while(iy<0) iy+=Ny;
+	while(iy>Ny-1) iy-=Ny;
+	while(iz<0) iz+=Nz;
+	while(iz>Nz-1) iz-=Nz;
+	return val[my_grid->index_at(ix, iy, iz)];
+}
 
 //inline
 double& field_real::operator() (const int &ix, const int &iy, const int &iz)
 {
-	// ToDo: Fehler abfangen
-	//if (row >= rows_ || col >= cols_)
-	//throw BadIndex("Matrix subscript out of bounds");
-	// ToDo : secure als Flag einbauen
-
-
-	return val[my_grid->index_at(ix % Nx,iy % Ny,iz % Nz)];
-	//return val[my_grid->index_at(ix,iy,iz)];
+	return val[my_grid->index_at(ix, iy, iz)];
 }
 
 
 //inline
 double field_real::operator() (const int &ix, const int &iy, const int &iz) const
 {
-	// ToDO: Fehler abfangen
-	//if (row >= rows_ || col >= cols_)
-	//throw BadIndex("const Matrix subscript out of bounds");
-	// ToDo : secure als Flag einbauen
-
-	return val[my_grid->index_at(ix % Nx,iy % Ny,iz % Nz)];
-	//return val[my_grid->index_at(ix,iy,iz)];
+	return val[my_grid->index_at(ix, iy, iz)];
 }
 
 

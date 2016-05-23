@@ -34,7 +34,7 @@ void OP_xto2x(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<out.Nz; k+=1)
 			{
-				out(i, j, k) = (1.-gamma_x)*out(i-1,j,k) + gamma_x*out(i+1,j,k);
+				out(i, j, k) = (1.-gamma_x)*out.val_at(i-1,j,k) + gamma_x*out.val_at(i+1,j,k);
 			}
 		}
 	}
@@ -104,7 +104,7 @@ void OP_hto2h(const field_real &in, field_real &out)
 				double z  = out.my_grid->z_axis->val_at(k);
 				double gamma_z = (z-z1)/(z2-z1);
 
-				out(i, j, k) = (1.-gamma_z)*out(i,j,k-1) + gamma_z*out(i,j,k+1);
+				out(i, j, k) = (1.-gamma_z)*out.val_at(i,j,k-1) + gamma_z*out.val_at(i,j,k+1);
 			}
 		}
 	}
@@ -121,7 +121,7 @@ void OP_hto2h(const field_real &in, field_real &out)
 
 			for(int k=0; k<out.Nz; k+=1)
 			{
-				out(i, j, k) = (1.-gamma_y)*out(i,j-1,k) + gamma_y*out(i,j+1,k);
+				out(i, j, k) = (1.-gamma_y)*out.val_at(i,j-1,k) + gamma_y*out.val_at(i,j+1,k);
 
 			}
 		}
@@ -140,7 +140,7 @@ void OP_hto2h(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<out.Nz; k+=1)
 			{
-				out(i, j, k) = (1.-gamma_x)*out(i-1,j,k) + gamma_x*out(i+1,j,k);
+				out(i, j, k) = (1.-gamma_x)*out.val_at(i-1,j,k) + gamma_x*out.val_at(i+1,j,k);
 			}
 		}
 	}

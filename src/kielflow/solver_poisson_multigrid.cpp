@@ -24,6 +24,7 @@ solver_poisson_multigrid::solver_poisson_multigrid()
 	my_cascades = 0;
 	my_lvl = 0L;
 	my_steps = 0L;
+	my_tolerance = 0L;
 
    #if defined(_MY_VERBOSE_TEDIOUS)
 	my_log << "done";
@@ -53,6 +54,7 @@ solver_poisson_multigrid::solver_poisson_multigrid(interface_relaxation_solver &
 	my_cascades = 1;
 	my_lvl = new MG_lvl_control[1]{lvl_keep};
 	my_steps = new int[1] {1};
+	my_tolerance = new double[1] {1};
 
    #if defined(_MY_VERBOSE_TEDIOUS)
 	my_log << "done";
@@ -64,6 +66,7 @@ solver_poisson_multigrid::~solver_poisson_multigrid()
 {
 	delete[] my_lvl;
 	delete[] my_steps;
+	delete[] my_tolerance;
 
    #if defined(_MY_VERBOSE_TEDIOUS)
 	logger my_log("solver_poisson_multigrid::~solver_poisson_multigrid()");
@@ -72,7 +75,8 @@ solver_poisson_multigrid::~solver_poisson_multigrid()
 }
 
 
-void solver_poisson_multigrid::set_level_control(const int &N, int * lvl_steps, MG_lvl_control * lvl_C)
+void solver_poisson_multigrid::set_level_control(const int &N, int * lvl_steps, MG_lvl_control * lvl_C,
+		double * lvl_tol)
 {
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	logger my_log("solver_poisson_multigrid::set_level_control(..)");
@@ -81,10 +85,12 @@ void solver_poisson_multigrid::set_level_control(const int &N, int * lvl_steps, 
 
 	delete[] my_lvl;
 	delete[] my_steps;
+	delete[] my_tolerance;
 
 	my_cascades = N;
 	my_steps = new int[my_cascades];
 	my_lvl = new MG_lvl_control[my_cascades];
+	my_tolerance = new double[my_cascades];
 
 	int lvl_current = 0;
 
@@ -92,6 +98,7 @@ void solver_poisson_multigrid::set_level_control(const int &N, int * lvl_steps, 
 	{ // copy cycle shape
 		my_steps[cascade] = lvl_steps[cascade];
 		my_lvl[cascade] = lvl_C[cascade];
+		my_tolerance[cascade] = lvl_tol[cascade];
 
 		// following stuff is for to avoid input errors
 		if(my_lvl[cascade]==lvl_up_x)
@@ -250,8 +257,11 @@ void solver_poisson_multigrid::solve(field_real &Phi_IO, field_real &rho)
 
 		// run relaxation solver on current level
 		ptr_relaxation_method->set_max_iterations(my_steps[cascade_current]);
+		ptr_relaxation_method->set_tolerance(my_tolerance[cascade_current]);
 		ptr_relaxation_method->solve(Phi_n,rho_n);
 
+		/*
+		 * ToDo : why didn't is work properly
 		// code zum fast forwarden: Die Rechnung auf einem gröberen Gitter kann
 		// übersprungen werden, wenn:
 		// - die Relaxation auf diesem Gitter bereits konvergiert ist
@@ -283,8 +293,8 @@ void solver_poisson_multigrid::solve(field_real &Phi_IO, field_real &rho)
 	        my_log << cascade_skips;
            #endif
 			cascade_current = cascade_current+cascade_skips;
-
 		}
+		*/
 
 		Phi_IO.resize(Phi_n.Nx, Phi_n.Ny, Phi_n.Nz);
 		Phi_IO = Phi_n;

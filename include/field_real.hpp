@@ -17,6 +17,8 @@ public :
 	void add(double (*fill_fkt)(const double &,const double &, const double &)) const;
 	void mulitply(const double &lambda);
 
+	double val_at(int ix, int iy, int iz) const;
+
 	double& operator() (const int &ix, const int &iy, const int &iz); // Subscript operators often come in pairs
 	double  operator() (const int &ix, const int &iy, const int &iz) const; // Subscript operators often come in pairs
 	double  operator() (const double &x, const double &y, const double &z) const;

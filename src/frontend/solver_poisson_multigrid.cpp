@@ -134,6 +134,10 @@ void solver_poisson_multigrid::set_level_control(const int &N, int * lvl_steps, 
 
 int solver_poisson_multigrid::refine_mesh(const MG_lvl_control &step, const field_real &in, field_real &out)
 {
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("solver_poisson_multigrid::refine_mesh(..)");
+	my_log << "start";
+   #endif
 	switch(step)
 
 	{
@@ -250,6 +254,7 @@ void solver_poisson_multigrid::solve(field_real &Phi_IO, field_real &rho)
 
 		// run relaxation solver on current level
 		ptr_relaxation_method->set_max_iterations(my_steps[cascade_current]);
+		ptr_relaxation_method->set_tolerance(my_eps[cascade_current]);
 		ptr_relaxation_method->solve(Phi_n,rho_n);
 
 		// ToDo : Fast Forward code zum überspringen von Kaskaden.

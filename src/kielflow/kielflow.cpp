@@ -107,8 +107,8 @@ int main(void)
 	double SOR = .9; // Overrelaxation parameter
 	solver_poisson_jacobi_nlin NLJ(boundary_shape, boundary_value, SOR);
 	NLJ.set_max_iterations(80);
-	NLJ.limit_max = 1.e-4;
-	NLJ.limit_sum = 1.e-6;
+	NLJ.limit_max = .5e-5; // precision in percent of amplitude
+	NLJ.limit_sum = .5e-7;
 
 
 	// ##### MULTIGRID #####
@@ -116,17 +116,21 @@ int main(void)
 	{ // setup MG-cycle
 		const int MG_N = 6;
 		int * MG_steps_sizes = new int[MG_N]
-                  {3,1,1,-1,-1,-1};
+                  {1,1,1,-1,-1,-1};
 	    MG_lvl_control * cycle_shape = new MG_lvl_control[MG_N]
 				  {lvl_keep, lvl_down, lvl_keep, lvl_down, lvl_up, lvl_up};
-	    MG.set_level_control(MG_N, MG_steps_sizes, cycle_shape);
+	    double * MG_error = new double[MG_N]
+									   {.01,.01,0.01,2.e-5,5.e-5,1.e-4};
+	    MG.set_level_control(MG_N, MG_steps_sizes, cycle_shape, MG_error);
 	    // Sketch of cycle:
 	    // _
 	    //  \_  /
 	    //    \/
 	    delete[] MG_steps_sizes;
+	    delete[] MG_error;
 	    delete[] cycle_shape;
 	} // configure done
+
 
 
 	// ##### RHS #####
