@@ -9,6 +9,7 @@ class parameters
 public :
 	parameters(double M_, double tau_, double theta_, double mu_, double beta_);
 	parameters(const parameters &that);
+	parameters();
 	double pi;  // Kreiszahl [1]
 	double M;   // Mach-Number
 	double tau;

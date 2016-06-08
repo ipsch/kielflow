@@ -8,6 +8,7 @@
 if (!exists("filename")) filename="./data/plot_data.dat"
 Xrange = 6.
 Yrange = .04
+Phi_mV(Phi) = 2.6026*1000*Phi # potential in mV
 
 ########### PLOT Options ######################################################
 set xzeroaxis
@@ -16,10 +17,12 @@ set yzeroaxis
 ########## Ranges #############################################################
 #set xrange[-Xrange:Xrange]
 set yrange[-Yrange:Yrange]
+set y2range [Phi_mV(-Yrange):Phi_mV(Yrange)]
+#set autoscale y2
 
 ########## Labels #############################################################
 set xlabel 'x in $\lambda_{De}$' offset  0, .6
-set ylabel 'Potential in $unit$' offset   1.8,0
+set ylabel "Potential in $\\frac{q_i}{k_b T_e}$" offset   1.8,0
 set y2label 'Potential in mV'    offset  -1.6,0
 set title 'Potential $\Phi$'     offset  0,-.8
 
@@ -42,7 +45,7 @@ set style line 4 linetype 1 linewidth 5 linecolor rgb '#777777'
 set style line 5 ps 0 linetype 1 linewidth 0.5 lc rgb "#ff7777"
 
 ########## Plot ###############################################################
-plot filename using 1:8 with line ls 1 notitle, \
-     filename using 1:8 with line ls 1 notitle
+plot filename using 1:8 with line ls 1 axes x1y1 notitle, \
+     filename using 1:(Phi_mV($8)) with line ls 1 axis x1y2 notitle
 
      

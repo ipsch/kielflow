@@ -8,7 +8,7 @@ class interface_rhs
 {
 public :
 	virtual ~interface_rhs() { };
-	virtual void solve(field_imag &FUx, field_imag &FUy, field_imag &FUz,
+	virtual void solve(const double &t, field_imag &FUx, field_imag &FUy, field_imag &FUz,
 			field_imag &Fni) = 0;
 protected :
 	interface_rhs() { };

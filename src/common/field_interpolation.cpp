@@ -1,7 +1,5 @@
 #include "field_interpolation.hpp"
 
-#define _MY_VERBOSE_TEDIOUS
-
 void OP_xto2x(const field_real &in, field_real &out)
 {
 	out.resize(2*in.Nx, in.Ny, in.Nz);

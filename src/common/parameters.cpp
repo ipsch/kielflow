@@ -1,7 +1,9 @@
 #include "parameters.hpp"
 
 
-
+parameters::parameters() :
+		pi(acos(-1)), M(0.), tau(0.), theta(0.), mu(0.), beta(0.)
+{	}
 
 parameters::parameters(double M_, double tau_, double theta_, double mu_, double beta_) :
 		pi(acos(-1)), M(M_), tau(tau_), theta(theta_), mu(mu_), beta(beta_)

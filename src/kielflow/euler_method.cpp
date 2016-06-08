@@ -10,7 +10,7 @@ my_rhs(rhs), t_(0.), dt_(dt)
 }
 
 
-void euler_method::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, field_imag &Fni)
+void euler_method::solve(const double &t, field_imag &FUx, field_imag &FUy, field_imag &FUz, field_imag &Fni)
 {
    #ifdef _MY_VERBOSE
 	logger log("RK-method");
@@ -59,7 +59,7 @@ void euler_method::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, fiel
    #ifdef _MY_VERBOSE
 	log << "evaluating 1.coefficient";
    #endif
-	my_rhs.solve(RK0_FUx, RK0_FUy, RK0_FUz, RK0_Fni); // 1. Koeff
+	my_rhs.solve(t_, RK0_FUx, RK0_FUy, RK0_FUz, RK0_Fni); // 1. Koeff
 
 
 	// Alle Rungekutta-Koeffizienten zu iteriertem Schritt zusammen bauen

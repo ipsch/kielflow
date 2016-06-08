@@ -122,7 +122,9 @@ void save_slice(const int &step,
 
 
 
-void save_frame(const grid_Co &Omega, double* Ux, double* Uy, double* Uz, double* ni, double* Ph, const std::string &path);
+void save_frame_1d(const grid_Co &Omega, double* Ux, double* Uy, double* Uz, double* ni, double* Ph, const std::string &path);
+void save_frame_2d(const grid_Co &Omega, double* Ux, double* Uy, double* Uz, double* ni, double* Ph, const std::string &path);
+
 
 std::string I4(int number);
 

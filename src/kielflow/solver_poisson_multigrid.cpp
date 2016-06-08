@@ -141,38 +141,78 @@ void solver_poisson_multigrid::set_level_control(const int &N, int * lvl_steps, 
 
 int solver_poisson_multigrid::refine_mesh(const MG_lvl_control &step, const field_real &in, field_real &out)
 {
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("solver_poisson_multigrid::refine_mesh(..)");
+	my_log << "start";
+   #endif
 	switch(step)
 
 	{
 	// actions that refine the grid in all three space directions
     case lvl_keep :
     	out = in;        // just copy the input
+       #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+        my_log << "lvl_keep";
+       #endif
         return 0;
+
 	case lvl_up :
 		I_hto2h(in,out);
+       #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+        my_log << "lvl_up";
+       #endif
 		return 1;
+
 	case lvl_down :
 		I_2htoh(in,out); // average potential on current mesh
+       #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+        my_log << "lvl_down";
+       #endif
 		return -1;       // to coarser mesh if cycle[i]=0
+
 	// actions that apply only to one direction in space
 	case lvl_up_x :
 		I_xto2x(in,out);
+       #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+        my_log << "lvl_up_x";
+       #endif
 		return 1;
+
 	case lvl_up_y :
 		I_yto2y(in,out);
+       #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+        my_log << "lvl_up_y";
+       #endif
 		return 1;
+
 	case lvl_up_z :
 		I_zto2z(in,out);
+       #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+        my_log << "lvl_up_z";
+       #endif
 		 return 1;
+
 	case lvl_down_x :
 		I_2xtox(in,out);
+       #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+        my_log << "lvl_down_x";
+       #endif
 		return -1;
+
 	case lvl_down_y :
 		I_2ytoy(in,out);
+       #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+        my_log << "lvl_down_y";
+       #endif
 		return -1;
+
 	case lvl_down_z :
 		I_2ztoz(in,out);
+       #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+        my_log << "lvl_down_z";
+       #endif
 		return -1;
+
 	default :
 		throw("no instruction to handle MG");
 		break;
@@ -206,6 +246,11 @@ void solver_poisson_multigrid::solve(field_real &Phi_IO, field_real &rho)
 
 	for(cascade_current=0; cascade_current<my_cascades; ++cascade_current)
 	{
+       #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+		std::stringstream msg;
+		msg << "cascade: " << cascade_current;
+	    my_log << msg.str();
+       #endif
 		// refine mesh for the Potential according to given plan saved in my_lvl
 		refine_mesh(my_lvl[cascade_current],Phi_IO,Phi_n);
 
@@ -229,6 +274,9 @@ void solver_poisson_multigrid::solve(field_real &Phi_IO, field_real &rho)
 			   (rho_n.Ny != Phi_n.Ny) &&
 			   (rho_n.Nz != Phi_n.Nz) )
 		{
+           #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	        my_log << "reduce rho_n in all directions";
+           #endif
 			field_real bc(*rho_n.my_grid);
 			bc = rho_n;
 			I_2htoh(bc,rho_n);
@@ -236,6 +284,9 @@ void solver_poisson_multigrid::solve(field_real &Phi_IO, field_real &rho)
 
 		while( (rho_n.Nx != Phi_n.Nx) )
 		{
+           #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+            my_log << "reduce rho_n in x-directions";
+           #endif
 			field_real bc(*rho_n.my_grid);
 			bc = rho_n;
 			I_2xtox(bc,rho_n);
@@ -243,16 +294,22 @@ void solver_poisson_multigrid::solve(field_real &Phi_IO, field_real &rho)
 
 		while( (rho_n.Ny != Phi_n.Ny) )
 		{
+           #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+            my_log << "reduce rho_n in x-directions";
+           #endif
 			field_real bc(*rho_n.my_grid);
 			bc = rho_n;
 			I_2ytoy(bc,rho_n);
 		}
 
-		while( (rho_n.Nx != Phi_n.Nx) )
+		while( (rho_n.Nz != Phi_n.Nz) )
 		{
+           #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+            my_log << "reduce rho_n in z-directions";
+           #endif
 			field_real bc(*rho_n.my_grid);
 			bc = rho_n;
-			I_2ytoy(bc,rho_n);
+			I_2ztoz(bc,rho_n);
 		}
 
 		// run relaxation solver on current level

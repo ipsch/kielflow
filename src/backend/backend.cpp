@@ -63,21 +63,21 @@ int main(int argc, char *argv[])
 	std::string file_output_1d = "./data/plot_data.dat";
 	std::string file_output_2d = "./data/splot_data.dat";
 	bool slice_flag = false;
-	bool output_local = false;
+	bool use_target_dir = false;
+	std::string target_dir = "./data/";
 
+	int N_files = 1;
+	std::string * files_in = new std::string[1] {"./data/fields.h5"};
 
 	int switch_opt;
-
+	int opt_indent;
     opterr = 0;
 
-    while ((switch_opt = getopt (argc, argv, "hlsf:o:")) != -1)
+    while ((switch_opt = getopt (argc, argv, "hsd:")) != -1)
+    {
+
     	switch (switch_opt)
     	{
-
-        case 'f': {
-        	file_input = optarg;
-        	break;
-    	}
 
     	case 'h': {
     		help();
@@ -85,22 +85,16 @@ int main(int argc, char *argv[])
     		break;
     	}
 
-
-    	case 'l' : {
-    		output_local = true;
-    		break;
-    	}
-
-    	case 'o' : {
-    		std::string t_dir_ = ExtractDirectory(optarg);
-    		std::string t_fileName_ = ExtractFilename(optarg);
-    		file_output_1d = t_dir_+"plot_data "+t_fileName_;
-    		file_output_2d = t_dir_+"splot_data "+t_fileName_;
+    	case 'd' : {
+    		use_target_dir = true;
+    		target_dir = optarg;
+    		opt_indent+=2;
     		break;
     	}
 
     	case 's': {
     		slice_flag = true;
+    		opt_indent+=1;
     		break;
     	}
 
@@ -130,106 +124,122 @@ int main(int argc, char *argv[])
         }
 
     	} // END SWITCH
+	} // END WHILE
 
-    // set output files to be located in same
-    // directory as input files
-    if(output_local)
+    if(opt_indent+1<argc)
     {
+    	delete[] files_in;
+    	N_files = argc-(opt_indent+1);
+    	files_in = new std::string[N_files];
+        for(int i=0; i<N_files; ++i)
+        	files_in[i] = argv[opt_indent+1+i];
+    }
+
+
+
+    for(int i=0; i<N_files; ++i)
+    {
+    	file_input = files_in[i];
+
     	std::string t_dir_;
     	std::string t_file_;
     	t_dir_ = ExtractDirectory(file_input);
     	t_file_ = ExtractFilename(file_input);
 		t_file_ = ChangeFileExtension(t_file_, ".dat");
-		file_output_1d = t_dir_ + "plot_data " + t_file_;
-		file_output_2d = t_dir_ + "splot_data " + t_file_;
-    }
 
-    // lad parameters and domain
-	grid_Co Omega = load_grid(file_input);
-	parameters Params = load_parameters(file_input);
-	//particle::load();
+		if(use_target_dir)
+		{
+			file_output_1d = target_dir + "plot_data " + t_file_;
+			file_output_2d = target_dir + "splot_data " + t_file_;
+		}
+		else
+		{
+			file_output_1d = t_dir_ + "plot_data " + t_file_;
+			file_output_2d = t_dir_ + "splot_data " + t_file_;
+		}
 
+	    // status msg to console
+	    std::cout << "backend: input: " << file_input << std::endl;
+	    std::cout << "backend: output: " << file_output_1d << std::endl;
+	    std::cout << "                 " << file_output_2d << std::endl;
 
-    // status msg to console
-    std::cout << "backend: input: " << file_input << std::endl;
-    std::cout << "backend: output: " << file_output_1d << std::endl;
-    std::cout << "                 " << file_output_2d << std::endl;
+	    // load parameters and domain
+		grid_Co Omega = load_grid(file_input);
+		parameters Params = load_parameters(file_input);
+		//particle::load();
 
+		// set backend to process sliced data (2d instead of 3d data-files)
+		if(slice_flag==true)
+		{
+			std::cout << "do slie " << std::endl;
+		   #if defined (_MY_VERBOSE_MORE) || defined (_MY_VERBOSE_TEDIOUS)
+			my_log << "slice_flag==true";
+		   #endif
 
-	// set backend to process sliced data (2d instead of 3d data-files)
-	if(slice_flag==true)
-	{
-	   #if defined (_MY_VERBOSE_MORE) || defined (_MY_VERBOSE_TEDIOUS)
-		my_log << "slice_flag==true";
-	   #endif
+			double * Ux = new double [Omega.Nx*Omega.Ny];
+			double * Uy = new double [Omega.Nx*Omega.Ny];
+			double * Uz = new double [Omega.Nx*Omega.Ny];
+			double * ni = new double [Omega.Nx*Omega.Ny];
+			double * Ph = new double [Omega.Nx*Omega.Ny];
 
-		double * Ux = new double [Omega.Nx*Omega.Ny];
-		double * Uy = new double [Omega.Nx*Omega.Ny];
-		double * Uz = new double [Omega.Nx*Omega.Ny];
-		double * ni = new double [Omega.Nx*Omega.Ny];
-		double * Ph = new double [Omega.Nx*Omega.Ny];
+			load_slice("Ux", Ux,file_input);
+			load_slice("Uy", Uy,file_input);
+			load_slice("Uz", Uz,file_input);
+			load_slice("ni", ni,file_input);
+			load_slice("Ph", Ph,file_input);
 
-		load_slice("Ux", Ux,file_input);
-		load_slice("Uy", Uy,file_input);
-		load_slice("Uz", Uz,file_input);
-		load_slice("ni", ni,file_input);
-		load_slice("Ph", Ph,file_input);
+			save_frame_1d(Omega, Ux, Uy, Uz, ni, Ph, file_output_1d);
+			save_frame_2d(Omega, Ux, Uy, Uz, ni, Ph, file_output_2d);
 
-		save_frame(Omega, Ux, Uy, Uz, ni, Ph, file_output_2d);
+			delete[] Ux;
+			delete[] Uy;
+			delete[] Uz;
+			delete[] ni;
+			delete[] Ph;
+		} // end processing 2d (slice) data
 
-       #if defined (_MY_VERBOSE) || defined (_MY_VERBOSE_MORE) || defined (_MY_VERBOSE_TEDIOUS)
-		my_log << "done";
-       #endif
-		std::cout << "done.";
-		return 0;
-	}
+		if(slice_flag==false)
+		{
+			// Load fields (real-space) from file
+		   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+			my_log << "load fields (real-space)";
+		   #endif
 
+			// ToDo : probably memory leak in following block
+			field_real Ux = load_field_real(file_input,"Ux");
+			field_real Uy = load_field_real(file_input,"Uy");
+			field_real Uz = load_field_real(file_input,"Uz");
+			field_real ni = load_field_real(file_input,"ni");
+			field_real Ph = load_field_real(file_input,"Ph");
 
-	// Load fields (real-space) from file
-   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
-	my_log << "load fields (real-space)";
-   #endif
-	field_real Ux = load_field_real(file_input,"Ux");
-	field_real Uy = load_field_real(file_input,"Uy");
-	field_real Uz = load_field_real(file_input,"Uz");
-	field_real ni = load_field_real(file_input,"ni");
-	field_real Ph = load_field_real(file_input,"Ph");
-
-
-
-	plot_2d::default_plane = 2;       // 0=x-fixed; 1=y fixed; 2 = z fixed
-	plot_2d::default_direction = 0;   // along x-axis (0), y-axis(1), z-axis(2)
-	plot_2d::default_xpos = Omega.x_axis->index_at(0.0);
-	plot_2d::default_ypos = Omega.y_axis->index_at(0.0);
-	plot_2d::default_zpos = Omega.z_axis->index_at(0.0);
-
-
-	subdim save_opt;
-
-	save_opt.plane = plot_2d::default_plane;
-	save_opt.direction = plot_2d::default_direction;
-	save_opt.xpos = plot_2d::default_xpos;
-	save_opt.ypos = plot_2d::default_ypos;
-	save_opt.zpos = plot_2d::default_zpos;
-
-	save_opt.Nx = Omega.x_axis->N;
-	save_opt.Ny = Omega.y_axis->N;
-	save_opt.Nz = Omega.z_axis->N;
-	save_opt.set();
+			plot_2d::default_plane = 2;       // 0=x-fixed; 1=y fixed; 2 = z fixed
+			plot_2d::default_direction = 0;   // along x-axis (0), y-axis(1), z-axis(2)
+			plot_2d::default_xpos = Omega.x_axis->index_at(0.0);
+			plot_2d::default_ypos = Omega.y_axis->index_at(0.0);
+			plot_2d::default_zpos = Omega.z_axis->index_at(0.0);
 
 
+			subdim save_opt;
 
+			save_opt.plane = plot_2d::default_plane;
+			save_opt.direction = plot_2d::default_direction;
+			save_opt.xpos = plot_2d::default_xpos;
+			save_opt.ypos = plot_2d::default_ypos;
+			save_opt.zpos = plot_2d::default_zpos;
 
-   #if defined(_MY_VERBOSE_MORE) || defined (_MY_VERBOSE_TEDIOUS)
-	my_log << "saving 2D plot data";
-   #endif
-	save_2d(Ux, Uy, Uz, ni, Ph, save_opt, file_output_2d);
-	save_1d(Ux, Uy, Uz, ni, Ph, save_opt, file_output_1d);
+			save_opt.Nx = Omega.x_axis->N;
+			save_opt.Ny = Omega.y_axis->N;
+			save_opt.Nz = Omega.z_axis->N;
+			save_opt.set();
 
+		   #if defined(_MY_VERBOSE_MORE) || defined (_MY_VERBOSE_TEDIOUS)
+			my_log << "saving 2D plot data";
+		   #endif
+			save_2d(Ux, Uy, Uz, ni, Ph, save_opt, file_output_2d);
+			save_1d(Ux, Uy, Uz, ni, Ph, save_opt, file_output_1d);
+		} // End processing 3d data
 
-
-
-
+    } // END loop over file list
 
 
 

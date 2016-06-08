@@ -330,12 +330,13 @@ class fkt3d_Gauss : public interface_3d_fkt
 {
 public :
 	fkt3d_Gauss(const double & amplitude = 1., const double &varianz_x = 1., const double &varianz_y = 1., const double &varianz_z = 1.) :
-		A(amplitude), Vx(varianz_x), Vy(varianz_y), Vz(varianz_z)
+		A((amplitude/(pow(sqrt(pi),3.)*varianz_x*varianz_y*varianz_z))), Vx(varianz_x), Vy(varianz_y), Vz(varianz_z)
 		{ }
 	~fkt3d_Gauss() { }
 	double operator()(const double &x, const double &y, const double &z) const
 	{return A*exp(-pow(x/Vx,2.) - pow(y/Vy,2.) - pow(z/Vz,2.));}
 private :
+	const double pi = acos(-1.);
 	const double A;
 	const double Vx;
 	const double Vy;

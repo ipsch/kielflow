@@ -30,7 +30,7 @@ my_solids(solid_mask)
    #endif
 }
 
-void rhs_standard::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, field_imag &Fni)
+void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, field_imag &FUz, field_imag &Fni)
 // The Right-Hand-Side of the PDE is evaluated.
 {
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)

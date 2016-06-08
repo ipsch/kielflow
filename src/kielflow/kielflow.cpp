@@ -61,13 +61,89 @@
 
 // main #######################################################################
 
-int main(void)
+int main(int argc,char **argv)
 {
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	logger my_log("main");
 	my_log << "running version";
 	my_log << VERSION_STRING;
    #endif
+
+
+    bool override_M = false;
+    double default_Q = -11498.5;
+    bool override_theta = false;
+    bool override_tau = false;
+    bool override_beta = false;
+    parameters override_Params;
+    std::string IO_file = "./data/fields.h5";
+
+
+	int switch_opt;
+	int opt_indent = 0;
+    opterr = 0;
+    while ((switch_opt = getopt (argc, argv, "hM:Q:T:t:b:")) != -1)
+    {
+    	opt_indent+=2;
+    	switch (switch_opt)
+    	{
+
+        case 'M':
+        	override_M = true;
+        	override_Params.M = std::atof(optarg);
+        	break;
+
+        case 'Q':
+        	default_Q = std::atof(optarg);
+        	break;
+
+        case 'T':
+        	override_theta = true;
+        	override_Params.theta = std::atof(optarg);
+        	break;
+
+        case 't':
+        	override_tau = true;
+        	override_Params.tau = std::atof(optarg);
+        	break;
+
+        case 'b':
+        	override_beta = true;
+        	override_Params.beta = std::atof(optarg);
+        	break;
+
+    	case 'h':
+    		// ToDo : write help fkt
+    		//help();
+    		return 0;
+    		break;
+
+        case '?':
+        	if (optopt == 'f')
+        	{
+        		std::cout << "Option" << optopt << " requires an argument.\n";
+        		break;
+        	}
+        	else if (isprint (optopt))
+        	{
+        		std::cout << "Unknown option" << optopt << ".\n";
+        	}
+        	else
+        	{
+        		fprintf (stderr, "Unknown option character `\\x%x'.\n", optopt);
+        	}
+        	return 1;
+        	break;
+
+        default:
+        	abort ();
+        	break;
+
+    	} // END SWITCH
+    } // END WHILE
+
+    for(int i=opt_indent+1; i<argc; ++i)
+    	IO_file = argv[i];
 
 	counter iteration(5000);   // set counter for how many iterations are allowed
 	counter i_output(1);
@@ -77,23 +153,27 @@ int main(void)
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	my_log << "loading input";
    #endif
-	grid_Co Omega     = load_grid("./data/fields.h5");
-	double t_total    = load_time("./data/fields.h5");
-	parameters Params = load_parameters("./data/fields.h5");
-	field_imag FUx    = load_field_imag("Ux", "./data/fields.h5");
-	field_imag FUy    = load_field_imag("Uy", "./data/fields.h5");
-	field_imag FUz    = load_field_imag("Uz", "./data/fields.h5");
-	field_imag Fni    = load_field_imag("ni", "./data/fields.h5");
-	field_imag FPh    = load_field_imag("Ph", "./data/fields.h5");
+	grid_Co Omega     = load_grid(IO_file);
+	double t_total    = load_time(IO_file);
+	parameters Params = load_parameters(IO_file);
+	field_imag FUx    = load_field_imag("Ux", IO_file);
+	field_imag FUy    = load_field_imag("Uy", IO_file);
+	field_imag FUz    = load_field_imag("Uz", IO_file);
+	field_imag Fni    = load_field_imag("ni", IO_file);
+	field_imag FPh    = load_field_imag("Ph", IO_file);
 	std::vector<particle> particle_list;
 	load_particles(particle_list, "./config/particles.dat");
 
+	if(override_M) Params.M = override_Params.M;
+	if(override_theta) Params.theta = override_Params.theta;
+	if(override_tau) Params.tau = override_Params.tau;
+	if(override_beta) Params.beta = override_Params.beta;
 
 
 	// ##### DUST #####
-	double Q = 11498.5;
+	double scale_Q = 8.1720e-06; // umrechnungsfaktor auf dimensionslose Einheiten
 	field_real nd(*FPh.my_grid);
-	fkt3d_Gauss dust_3d_fkt(-Q/2299.7,0.15,0.15,0.15);
+	fkt3d_Gauss dust_3d_fkt(default_Q*scale_Q,0.15,0.15,0.15);
 	nd.fill(dust_3d_fkt);
 
 	field_real Hd(*FPh.my_grid);
@@ -104,7 +184,7 @@ int main(void)
 	// ##### RELAXATIONS-SOLVER #####
 	fkt3d_const boundary_shape(0.); // there are no additional boundarys (except Domain borders)
 	fkt3d_const boundary_value(0.); // the potential at the boundary is zero
-	double SOR = .9; // Overrelaxation parameter
+	double SOR = .8; // Overrelaxation parameter
 	solver_poisson_jacobi_nlin NLJ(boundary_shape, boundary_value, SOR);
 	NLJ.set_max_iterations(80);
 	NLJ.limit_max = .5e-5; // precision in percent of amplitude
@@ -120,7 +200,7 @@ int main(void)
 	    MG_lvl_control * cycle_shape = new MG_lvl_control[MG_N]
 				  {lvl_keep, lvl_down, lvl_keep, lvl_down, lvl_up, lvl_up};
 	    double * MG_error = new double[MG_N]
-									   {.01,.01,0.01,2.e-5,5.e-5,1.e-4};
+				  {.01,.01,0.01,2.e-5,5.e-5,1.e-4};
 	    MG.set_level_control(MG_N, MG_steps_sizes, cycle_shape, MG_error);
 	    // Sketch of cycle:
 	    // _
@@ -219,23 +299,23 @@ int main(void)
 		// ##### BACKUP OUTPUT #####
 		if(!i_backup.good())
 		{
+			// ToDo : also overwrite fields.h5
            #if defined (_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	        sstr << "step(time) (iteration: " << (iteration.show()) << ") saving step to file.";
 	        my_log << sstr.str();
            #endif
+	        save_all(particle_list, Omega, t_total, Params, FUx, FUy, FUz, Fni, FPh, "./data/fields.h5");
 	        sstr.str(std::string());
 			sstr << "./data/backup_at_" << (iteration.show()) << ".h5";
 			save_all(particle_list, Omega, t_total, Params, FUx, FUy, FUz, Fni, FPh, sstr.str());
 			i_backup.reset();
 		}
 
-		save_all(particle_list, Omega, t_total, Params, FUx, FUy, FUz, Fni, FPh);
-
 		t_total += t_delta;
 	}
    #endif // KILL_MAIN_LOOP
 
-	save_all(particle_list, Omega, t_total, Params, FUx, FUy, FUz, Fni, FPh);
+	save_all(particle_list, Omega, t_total, Params, FUx, FUy, FUz, Fni, FPh, IO_file);
 
 	// ##### DONE #####
 

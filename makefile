@@ -161,6 +161,9 @@ run_LINUX :
 clean :
 	$(RMV) -r -f $(BUILD_DIR)/*
 
+tools :
+	g++ ./src/tools/MinMaxFinder.cpp -o ./bin/MinMaxFinder
+
 -PHONY : konsole
 konsole :
 	konsole --noclose

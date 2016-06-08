@@ -61,7 +61,7 @@ void Runge_kutta_O4::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, fi
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_TEDIOUS)
 	my_log << "evaluating 1.coefficient";
    #endif
-	my_rhs.solve(RK1_FUx, RK1_FUy, RK1_FUz, RK1_Fni); // 1. Koeff
+	my_rhs.solve(t_,RK1_FUx, RK1_FUy, RK1_FUz, RK1_Fni); // 1. Koeff
 
 
 	{//ToDo : Testweise diagnose
@@ -107,7 +107,7 @@ void Runge_kutta_O4::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, fi
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_TEDIOUS)
 	my_log << "evaluating 2.coefficient";
    #endif
-	my_rhs.solve(RK2_FUx, RK2_FUy, RK2_FUz, RK2_Fni); // 2. Koeff
+	my_rhs.solve(t_+0.5*dt_, RK2_FUx, RK2_FUy, RK2_FUz, RK2_Fni); // 2. Koeff
 
 	for(int i=0; i<FUx.N; ++i)
 	{
@@ -127,7 +127,7 @@ void Runge_kutta_O4::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, fi
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_TEDIOUS)
 	my_log << "evaluating 3.coefficient";
    #endif
-	my_rhs.solve(RK3_FUx, RK3_FUy, RK3_FUz, RK3_Fni); // 3. Koeff
+	my_rhs.solve(t_+0.5*dt_, RK3_FUx, RK3_FUy, RK3_FUz, RK3_Fni); // 3. Koeff
 
 	for(int i=0; i<FUx.N; ++i)
 	{
@@ -147,7 +147,7 @@ void Runge_kutta_O4::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, fi
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_TEDIOUS)
 	my_log << "evaluating 4.coefficient";
    #endif
-	my_rhs.solve(RK4_FUx, RK4_FUy, RK4_FUz, RK4_Fni); // 4. Koeff
+	my_rhs.solve(t_+1.0*dt_, RK4_FUx, RK4_FUy, RK4_FUz, RK4_Fni); // 4. Koeff
 
 	// Alle Rungekutta-Koeffizienten zu iteriertem Schritt zusammen bauen
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_TEDIOUS)

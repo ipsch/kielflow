@@ -22,12 +22,11 @@ void show_percent(int i) {
 
 
 solver_poisson_jacobi_nlin::solver_poisson_jacobi_nlin(interface_3d_fkt &boundary, interface_3d_fkt &val_boundary, const double &w) :
-	H(boundary), val_H(val_boundary), eps(0.0001), omega_NEWTON(w), omega_SOR(0.99)
+	H(boundary), val_H(val_boundary), eps(0.0001), omega_NEWTON(w), omega_SOR(1.)
 {
-
-
 	//limit_max = 2.3e-05;
 	//limit_sum = 3.0e-07;
+	norm_sum_old = -1.;
 	limit_max = 1.45e-06;
 	limit_sum = 7.9e-08;
 	norm_max = 0.;
@@ -76,6 +75,8 @@ void solver_poisson_jacobi_nlin::solve(field_real &Phi_IO, field_real &rho)
 	invocation++;
 	iteration=0;
 	converged_=false;
+	omega_SOR = 1.;
+	norm_sum_old = -1.;
 	field_real Phi_n(*Phi_IO.my_grid);
 	H_create(*Phi_IO.my_grid);
 
@@ -85,8 +86,9 @@ void solver_poisson_jacobi_nlin::solve(field_real &Phi_IO, field_real &rho)
 	{
     	iteration++;
 		iteration_loop(Phi_IO, Phi_n, rho);
-		save_evolution(Phi_IO, rho);
+
 		Phi_IO = Phi_n;
+		save_evolution(Phi_IO, rho);
 	} while (!converged_&&(iteration<max_iterations));
 
     H_delete();
@@ -141,15 +143,33 @@ void solver_poisson_jacobi_nlin::iteration_loop(const field_real &in, field_real
 			for(int k=0; k<out.Nz; ++k)
 			{
 				double rho_ijk = rho(i,j,k);
+				double P_old = in(i,j,k);
 				double P_new = newton(i,j,k,in,rho_ijk);
 				double delta = fabs(P_new - in(i,j,k));
 				out(i,j,k) = P_new;
+				//out(i,j,k) = (1.-omega_SOR)*P_old + omega_SOR*P_new;
 
 				supremum = max<double>(supremum,P_new);
 				infinum = min<double>(infinum,P_new);
 				norm_max = max<double>(norm_max,delta);
 				norm_sum += delta;
 			}
+
+	// B. A. Carré :
+	// "The Determination of the Optimum Accelerating Factor for Successive Over-relaxation"
+	if(iteration>1) //
+	{
+		if(norm_sum<norm_sum_old)
+		{
+		double lambda = norm_sum/norm_sum_old;
+		omega_SOR = 2./(1.+sqrt(1.-pow(lambda+omega_SOR-1.,2.)/(lambda*pow(omega_SOR,2.))));
+		}
+		else
+		{
+			omega_SOR*=0.8;
+		}
+	}
+	norm_sum_old = norm_sum;
 
 	if(use_boundary_)
 		for(int i=0; i < out.Nx; ++i)
@@ -171,6 +191,8 @@ void solver_poisson_jacobi_nlin::iteration_loop(const field_real &in, field_real
 				}
 
 
+
+
 	norm_sum = norm_sum/(out.N);
 	if(norm_max/(supremum-infinum) <= limit_max)
 		converged_=true;
@@ -185,23 +207,32 @@ void solver_poisson_jacobi_nlin::iteration_loop(const field_real &in, field_real
 }
 
 
-
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
 
 
 double solver_poisson_jacobi_nlin::newton(const int &i, const int j, const int k,\
 		const field_real &Phi, const double &rho_ijk) const
 {
+	double omega = omega_NEWTON;
 	double x_ip1, x_i;
 	x_ip1 = x_i = Phi(i,j,k);
 	const int max_iter = 30;
 	double dx_history[max_iter];
+	double dx_alt = f_df(x_ip1,i,j,k,Phi,rho_ijk);
 
 	for(int iter=0; iter<max_iter; ++iter)
 	{
 		double dx = f_df(x_ip1,i,j,k,Phi,rho_ijk);
-		x_ip1 -= omega_NEWTON*dx;
+		x_ip1 -= omega*dx;
 		dx_history[iter] = dx;
 		if( fabs(dx) < eps  ) return x_ip1;
+
+		// reduce step length if going into divergent oscillation
+		if ( (fabs(dx)>fabs(dx_alt)) && (sgn<double>(dx)!= sgn<double>(dx_alt)))
+			omega*=0.8;
+		dx_alt = dx;
 	}
 
    #if  defined(_MY_VERBOSE_LESS) || defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
@@ -228,6 +259,10 @@ double solver_poisson_jacobi_nlin::newton(const int &i, const int j, const int k
 	my_log << HZ[k];
 	my_log << "rho_ijk: ";
 	my_log << rho_ijk;
+	my_log << "eps";
+	my_log << eps;
+	my_log << "omega";
+	my_log << omega;
 	my_log << "history newton : ";
 	for(int iter=0; iter<max_iter; ++iter)
 	{
@@ -236,11 +271,12 @@ double solver_poisson_jacobi_nlin::newton(const int &i, const int j, const int k
 	my_log << ":-(";
    #endif
 
-	if(dx_history[0]>dx_history[max_iter])
+	if(fabs(dx_history[0])>fabs(dx_history[max_iter]))
 		return x_ip1;
 
 	my_log << "error was fatal";
 
+	std::cout << "newton_method: maximum number of iterations exceeded" << std::endl;
 	throw("newton_method: maximum number of iterations exceeded");
 	return x_i;
 }
@@ -279,10 +315,13 @@ double solver_poisson_jacobi_nlin::f_df(const double &x,
 }
 
 
+
+
 void solver_poisson_jacobi_nlin::save_evolution(const field_real &Phi, const field_real &rho) const
 {
-/*
+
 	// #define EVOLUTION_LOGGING
+   #if defined(EVOLUTION_LOGGING)
 	subdim my_dim;
 	my_dim.xpos = Phi.Nx/2;
 	my_dim.ypos = Phi.Ny/2;
@@ -294,17 +333,23 @@ void solver_poisson_jacobi_nlin::save_evolution(const field_real &Phi, const fie
 	std::string filenameTwo = "./data/nlj_phi_" + ConvertToString<int>(iterations_total) + ".dat";
 	save_2d(rho,my_dim,filenameOne);
 	save_2d(Phi,my_dim,filenameTwo);
-*/
+   #endif
 
 
 	std::ofstream output_stream(my_logfile, std::ofstream::app);
 	output_stream << invocation << "\t";
 	output_stream << iteration << "\t";
 	output_stream << norm_max << "\t";
+	output_stream << norm_sum << "\t";
 	output_stream << supremum-infinum << "\t";
 	output_stream << norm_max/(supremum-infinum) << "\t";
-	output_stream << limit_max << std::endl;
+	output_stream << limit_max << "\t";
+	output_stream << omega_SOR << std::endl;
 	output_stream.close();
 
 	return;
 }
+
+
+
+

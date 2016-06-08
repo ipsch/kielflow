@@ -74,8 +74,10 @@ private :
 
 	std::string my_logfile;
 
-	const double omega_SOR; // Successive Over-Relaxation parameter
-    const double omega_NEWTON;
+	double omega_SOR; // Successive Over-Relaxation parameter
+    double omega_NEWTON;
+
+    double norm_sum_old;
 
 	int iteration;
 	int invocation;

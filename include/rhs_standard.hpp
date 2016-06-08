@@ -31,7 +31,7 @@ public :
 	rhs_standard(parameters &Params, interface_poisson_solver &Solver,
 			field_real &potential, field_real &density_dust,
 			field_real &solid_mask);
-	void solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, field_imag &Fni);
+	void solve(const double &t, field_imag &FUx, field_imag &FUy, field_imag &FUz, field_imag &Fni);
 	~rhs_standard() {	}
 
 protected :

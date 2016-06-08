@@ -1,5 +1,6 @@
 #include "IO.hpp"
 
+
 // function to read program execution path
 std::string get_selfpath()
 {
@@ -27,7 +28,7 @@ std::string get_header(const grid_Co &grid)
 	sstr << grid.Nx << "/";
 	sstr << grid.Ny << "/";
 	sstr << grid.Nz << "\n";
-	sstr << "x\ty\tz\tUx\tUy\tUz\tni\n\n";
+	sstr << "x\ty\tz\tUx\tUy\tUz\tni\tPhi\n\n";
 
 	return sstr.str();
 }
@@ -130,6 +131,10 @@ void load_axis(const std::string &C, const std::string &path, axis_Co * &A)
 	int type, N;
 	double l0, L, m;
 
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	my_log << "data sets";
+   #endif
+
     echelon::scalar_dataset ds_type = gr_domain["type_"+C];
     type <<= ds_type;
     echelon::scalar_dataset ds_m   = gr_domain["m_"+C];
@@ -140,6 +145,10 @@ void load_axis(const std::string &C, const std::string &path, axis_Co * &A)
     N <<= ds_N;
     echelon::scalar_dataset ds_L    = gr_domain["L_"+C];
     L <<= ds_L;
+
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	my_log << "axis type";
+   #endif
 
     switch(type)
     {
@@ -189,6 +198,7 @@ void save_grid(const grid_Co &Target, const std::string &path)
 
 grid_Co load_grid(const std::string &path)
 {
+
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	logger my_log("grid_Co load_grid(const std::string &path)");
 	my_log << "start";
@@ -875,19 +885,8 @@ void save_3d(const std::string &file_name , const field_real &Ux, const field_re
 	std::string path = "./data/"+file_name;
 	std::ofstream output_stream(path.c_str(), std::ofstream::trunc);
 
-	// write header to file (3-lines of header)
-	output_stream << "output from PFluidDy\n";
-	output_stream << "Domain: ";
-	output_stream << "Nx= " << Ux.my_grid->x_axis->N <<" ";
-	output_stream << "Ny= " << Ux.my_grid->y_axis->N <<" ";
-	output_stream << "Nz= " << Ux.my_grid->z_axis->N <<" ";
-	output_stream << "x0= " << Ux.my_grid->x_axis->l0 <<" ";
-	output_stream << "y0= " << Ux.my_grid->y_axis->l0 <<" ";
-	output_stream << "z0= " << Ux.my_grid->z_axis->l0 <<" ";
-	output_stream << "Lx= " << Ux.my_grid->x_axis->L <<" ";
-	output_stream << "Ly= " << Ux.my_grid->y_axis->L <<" ";
-	output_stream << "Lz= " << Ux.my_grid->z_axis->L <<"\n";
-	output_stream << "x\ty\tz\tUx\tUy\tUz\tni\n\n";
+	// write header to file
+	output_stream << get_header(*Ux.my_grid);
 
 	std::cout << "   save(): saving data to ";
 	std::cout << file_name;
@@ -1119,12 +1118,47 @@ void save_slice(const int &step,
 }
 
 
-void save_frame(const grid_Co &Omega,
+
+void save_frame_1d(const grid_Co &Omega,
 		        double* Ux, double* Uy, double* Uz, double* ni, double* Ph,
 			    const std::string &path = "./data/frame.dat"
 			    )
 {
 	std::ofstream output_stream(path.c_str(), std::ofstream::trunc);
+
+	// write header to file
+	output_stream << get_header(Omega);
+
+	// write data to file
+	for(int i=0; i<Omega.Nx; ++i)
+	{
+		int j= Omega.Ny/2;
+		output_stream << std::scientific << std::setprecision(3);
+		output_stream << Omega.x_axis->val_at(i) << "\t";
+		output_stream << Omega.y_axis->val_at(j) << "\t";
+		output_stream << "N/A" << "\t";
+		output_stream << std::scientific << std::setprecision(6);
+		int index = j + Omega.Ny*i;
+		output_stream << Ux[index] << "\t";
+		output_stream << Uy[index] << "\t";
+		output_stream << Uz[index] << "\t";
+		output_stream << ni[index] << "\t";
+		output_stream << Ph[index] << "\n";
+	}
+	output_stream.close();
+	std::cout << "   save(): success\n";
+	return;
+}
+
+void save_frame_2d(const grid_Co &Omega,
+		        double* Ux, double* Uy, double* Uz, double* ni, double* Ph,
+			    const std::string &path = "./data/frame.dat"
+			    )
+{
+	std::ofstream output_stream(path.c_str(), std::ofstream::trunc);
+
+	// write header to file
+	output_stream << get_header(Omega);
 
 	// write data to file
 	for(int i=0; i<Omega.Nx; ++i)
