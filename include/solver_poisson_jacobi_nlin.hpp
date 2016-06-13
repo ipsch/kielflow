@@ -78,6 +78,7 @@ private :
     double omega_NEWTON;
 
     double norm_sum_old;
+    double norm_max_old;
 
 	int iteration;
 	int invocation;

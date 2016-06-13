@@ -13,7 +13,10 @@ template <class T> const T& min (const T& a, const T& b)
   return !(b<a)?a:b;     // or: return !comp(b,a)?a:b; for version (2)
 }
 
-
+template <typename T> int sign(T val)
+{
+    return (T(0) < val) - (val < T(0));
+}
 
 
 

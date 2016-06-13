@@ -54,17 +54,17 @@ double pi = acos(-1.);
 // number of grid-points
 // in different space directions
 
-int Nx = 384;
+int Nx = 128;
 int Ny = 128;
 int Nz = 128;
 // Box dimensions
-double Lx = 24.;
+double Lx = 8.;
 double Ly = 8.;
 double Lz = 8.;
 // physical parameters
-double M = 1.;
+double M = .5;
 double tau = 0.1;
-double theta = 70.;
+double theta = 50.;
 double mu = 0.;
 double beta = 0.0;
 
@@ -135,9 +135,11 @@ void create_input_from_MGsolver(field_real &Ux, field_real &Uy, field_real &Uz, 
 	// ##### DUST #####
 	field_real nd(*ni.my_grid);
 	//double Rd = 0.1183;
-	double Q = 11498.5;
-	//double shift = 0;
-	fkt3d_Gauss dust_3d_fkt(-Q/2299.7,0.15,0.15,0.15);
+	double default_Q = -10000.;
+	double scale_Q = 8.1720e-06;
+	// -Q/2299.7
+	//fkt3d_Gauss dust_3d_fkt(Q*scale_Q,0.15,0.15,0.15);
+	fkt3d_Gauss dust_3d_fkt(default_Q*scale_Q,0.15,0.15,0.15);
 	//fkt3d_shift H_3d_shifted_fkt(dust_3d_fkt, shift, 0., 0.);
 	nd.fill(dust_3d_fkt);
 
@@ -167,12 +169,14 @@ void create_input_from_MGsolver(field_real &Ux, field_real &Uy, field_real &Uz, 
 	// ##### MULTIGRID #####
 	solver_poisson_multigrid MG(NLJ);
 	{ // setup MG-cycle
-		const int MG_N = 8;
+		const int MG_N = 6;
 		int * MG_steps_sizes = new int[MG_N]
-                  {1,1,1,1,-1,-1,-1,-1};
+                  {0,0,0,-1,-1,-1};
 	    MG_lvl_control * cycle_shape = new MG_lvl_control[MG_N]
-			      {lvl_keep, lvl_down, lvl_keep, lvl_down, lvl_down_x, lvl_up_x, lvl_up, lvl_up};
-	    MG.set_level_control(MG_N, MG_steps_sizes, cycle_shape);
+			      {lvl_keep, lvl_down, lvl_keep, lvl_down, lvl_up, lvl_up};
+	    double * MG_error = new double[MG_N]
+	   				  {.01,.01,.01,2.e-5,5.e-5,1.e-4};
+	    MG.set_level_control(MG_N, MG_steps_sizes, cycle_shape,MG_error);
 	    // Sketch of cycle:
 	    // _
 	    //  \_  /
@@ -203,6 +207,7 @@ int main(void)
 	my_log << "running version";
 	my_log << VERSION_STRING;
    #endif
+
 
 
 
@@ -246,8 +251,8 @@ int main(void)
 	std::cout << denominator(x) << std::endl;
 */
 
-	//create_input_from_MGsolver(Ux, Uy, Uz, ni, Ph);
-	create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
+	create_input_from_MGsolver(Ux, Uy, Uz, ni, Ph);
+	//create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
 
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
