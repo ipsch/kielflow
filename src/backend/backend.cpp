@@ -9,7 +9,6 @@
 #include "parameters.hpp"
 #include "grid.hpp"
 //#include "particle.hpp"
-#include "plot.hpp"
 #include "IO.hpp"
 #include "o_string.hpp"
 #include "subdim.hpp"
@@ -212,21 +211,13 @@ int main(int argc, char *argv[])
 			field_real ni = load_field_real(file_input,"ni");
 			field_real Ph = load_field_real(file_input,"Ph");
 
-			plot_2d::default_plane = 2;       // 0=x-fixed; 1=y fixed; 2 = z fixed
-			plot_2d::default_direction = 0;   // along x-axis (0), y-axis(1), z-axis(2)
-			plot_2d::default_xpos = Omega.x_axis->index_at(0.0);
-			plot_2d::default_ypos = Omega.y_axis->index_at(0.0);
-			plot_2d::default_zpos = Omega.z_axis->index_at(0.0);
-
-
 			subdim save_opt;
 
-			save_opt.plane = plot_2d::default_plane;
-			save_opt.direction = plot_2d::default_direction;
-			save_opt.xpos = plot_2d::default_xpos;
-			save_opt.ypos = plot_2d::default_ypos;
-			save_opt.zpos = plot_2d::default_zpos;
-
+			save_opt.plane = 2;
+			save_opt.direction = 0;
+			save_opt.xpos = Omega.x_axis->index_at(0.0);
+			save_opt.ypos = Omega.y_axis->index_at(0.0);
+			save_opt.zpos = Omega.z_axis->index_at(0.0);
 			save_opt.Nx = Omega.x_axis->N;
 			save_opt.Ny = Omega.y_axis->N;
 			save_opt.Nz = Omega.z_axis->N;

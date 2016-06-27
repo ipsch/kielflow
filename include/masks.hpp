@@ -288,6 +288,28 @@ private :
 };
 
 
+class fkt3d_barrier : public interface_3d_fkt
+{
+public :
+	fkt3d_barrier(const double &a, const double &b) : xi(a), xf(b), pi(acos(-1.)) {	}
+	~fkt3d_barrier() { }
+	double operator()(const double &x, const double &y, const double &z) const
+	  {
+		double x1 = xi+(1./3.)*(xf-xi);
+		double x2 = xi+(2./3.)*(xf-xi);
+
+		if ( x<xi ) return 0;
+		if ( (xi<=x) && (x<x1) ) return sin(.5*pi/(x1-xi)*(x-xi));
+		if ( (x1<=x) && (x<x2) ) return 1.;
+		if ( (x2<=x) && (x<xf) ) return sin(.5*pi/(xf-x2)*(x-x2)+0.5*pi);
+		return 0.;
+	  }
+private :
+	const double pi;
+	const double xi;
+	const double xf;
+};
+
 
 class fkt3d_const : public interface_3d_fkt
 {

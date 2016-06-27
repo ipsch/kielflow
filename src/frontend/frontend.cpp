@@ -34,7 +34,6 @@
 #include "field_integrate.hpp"
 #include "field_interpolation.hpp"
 #include "masks.hpp"
-#include "init_cond.hpp"
 #include "subdim.hpp"
 #include "solver_poisson_jacobi_lin.hpp"
 #include "solver_poisson_jacobi_nlin.hpp"
@@ -54,11 +53,11 @@ double pi = acos(-1.);
 // number of grid-points
 // in different space directions
 
-int Nx = 128;
+int Nx = 192;
 int Ny = 128;
 int Nz = 128;
 // Box dimensions
-double Lx = 8.;
+double Lx = 12.;
 double Ly = 8.;
 double Lz = 8.;
 // physical parameters
@@ -135,7 +134,7 @@ void create_input_from_MGsolver(field_real &Ux, field_real &Uy, field_real &Uz, 
 	// ##### DUST #####
 	field_real nd(*ni.my_grid);
 	//double Rd = 0.1183;
-	double default_Q = -10000.;
+	double default_Q = -11498.5;;
 	double scale_Q = 8.1720e-06;
 	// -Q/2299.7
 	//fkt3d_Gauss dust_3d_fkt(Q*scale_Q,0.15,0.15,0.15);
@@ -241,18 +240,11 @@ int main(void)
 	field_real Ph(Omega);
 
 
-/*
-	double TTX = 10;
-	double x = 0.01;
-	auto numerator = [Params] (const double &x) -> double { return exp(-x*theta) - exp(x); }; // Zähler
-	auto denominator = [Params] (const double &x) -> double { return -theta*exp(-x*theta) - exp(x); }; // Nenner
-
-	std::cout << numerator(x) << std::endl;
-	std::cout << denominator(x) << std::endl;
-*/
 
 	create_input_from_MGsolver(Ux, Uy, Uz, ni, Ph);
 	//create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
+
+
 
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)

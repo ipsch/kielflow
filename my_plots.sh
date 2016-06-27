@@ -5,7 +5,8 @@
 # Global vars
 filename=""
 filename_out=""
-script_name=""
+target_dir="./"
+script=""
 output_local=false
 
 function find_string () # with two different return values
@@ -52,53 +53,48 @@ function plot_directive ()
   local custom_data=$2
   local default_data=""
   local plot_output=$3
+  
   find_string $1 default_data
   
   rm $custom_script
   sed -e 's:'"$default_data"':'"$custom_data"':' $default_script >> $custom_script
   
-  if [ "$filename_out" != "" ]; then
-    echo "my_plots: invoking plot4:"
-    echo "  plot4 $custom_script -o $plot_output"
-    plot4 "$custom_script" -o "$plot_output"
-  else
-    echo "my_plots: invoking plot4:"
-    echo "  plot4 $custom_script"
-    plot4 "$custom_script"
-  fi
+
+  echo "my_plots: invoking plot4:"
+  echo "  plot4 $custom_script -o $plot_output"
+  plot4 "$custom_script" -o "$3"
+
 
 }
 
 
 ######## MAIN ########
 
-while getopts ":f:hlo:p:" optname
+while getopts ":d:hp:" optname
   do
     case "$optname" in
     
-      "f")
-        filename=$OPTARG
-        ;;
+
     
-      l)
-	output_local=true
-	;;
-      
-      o)
-        filename_out=$OPTARG
+
+ 
+      "d")
+        target_dir=$OPTARG
         ;;
+        
+
     
       "p")
         case "$OPTARG" in
-          "plot_Ux") script_name="plot_Ux" ;;  
-          "plot_density") script_name="plot_density" ;;
-          "plot_potential") script_name="plot_potential" ;;
-          "plot_force") script_name="plot_force" ;;  
+          "plot_Ux") script="plot_Ux" ;;  
+          "plot_density") script="plot_density" ;;
+          "plot_potential") script="plot_potential" ;;
+          "plot_force") script="plot_force" ;;  
           # 2d data
-          "splot_density") script_name="splot_density" ;;
-          "splot_potential") script_name="splot_potential" ;;
-          "splot_velocity") script_name="splot_velocity" ;;
-          "splot_force") script_name="splot_force" ;;
+          "splot_density") script="splot_density" ;;
+          "splot_potential") script="splot_potential" ;;
+          "splot_velocity") script="splot_velocity" ;;
+          "splot_force") script="splot_force" ;;
           "?")
             echo "unshiny"
             ;;
@@ -106,7 +102,6 @@ while getopts ":f:hlo:p:" optname
         ;;
         
       "h")
-        echo "-f | filename"
         echo "-o | outpit file"
         echo "-p | plot Ux/Uy/Uz/ni/Ph"
         ;;
@@ -126,26 +121,32 @@ while getopts ":f:hlo:p:" optname
     esac
 done    
 
-# set output .pdf file to be located in same
-# directory as .dat input files
-if [ $output_local == true ]; then
-  t_file_=$(basename "$filename")
-  t_dir_=$(dirname "$filename")
-  t_file_="${t_file_/.dat/.pdf}"
-  t_file_="$script_name $t_file_"
-  filename_out="$t_dir_/$t_file_"
-fi
+shift $(($OPTIND - 1))
 
+for file in "$@"; do  
+  echo "my_plots: processing: $file"
 
-  #else
+  # get filename from input
+  # dump directory
+  t_file_=$(basename "$file")
+  t_dir_=$(dirname "$file")
+  
+  # remove splot_data / plot_data substring
+  # from filename if exists
+  t_file_=${t_file_#splot_data *}
+  t_file_=${t_file_#plot_data *}
+  
+  # add target directory (if specified)
+  # append used scriptname to filename
+  # change file extension from whatever extension to pdf
+  target="$target_dir$script ${t_file_%.*}.pdf"
+  
+  echo "my_plots: target: $target"
+  echo "my_plots: script: $script"
 
-  #fi
-
-echo "my_plots input: $filename"
-echo "my_plots output: $filename_out"
-echo "my_plots script: $script_name"
-
-plot_directive "$script_name" "$filename" "$filename_out"
+  plot_directive "$script" "$file" "$target"
+  
+done
 
   
   

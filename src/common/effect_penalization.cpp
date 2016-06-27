@@ -4,6 +4,13 @@
 effect_penalization::effect_penalization(const double &eta, field_real &H, const double &boundary_value) :
 damping(eta), mask(H), fix_value(boundary_value)
 {
+	if(damping>0)
+	{
+		std::cout << "damping in penalization method is positiv;\n";
+		std::cout << "method would blow up - stopping\n";
+		throw("error in penalization method due to damping");
+	}
+
    #if defined(_MY_VERBOSE_TEDIOUS)
 	logger my_log("effect_penalization");
 	my_log <<"effect_penalization(...)";
@@ -18,23 +25,18 @@ void effect_penalization::execute(const field_imag &in, field_imag &out) const
 	my_log << "execute(const field_imag &in, field_imag &out) const";
    #endif
 
-	field_real  tmp(*in.my_grid);
-	field_imag Ftmp(*in.my_grid);
+	field_real f(*in.my_grid);
+	field_real u(*in.my_grid);
 
-	iFFT(in,tmp);
+	iFFT(in,u);
+	iFFT(out,f);
 
-	for(int i=0; i<tmp.N; ++i)
-		tmp.val[i] = (tmp.val[i]-fix_value)*mask.val[i];
+	for(int i=0; i<f.N; ++i)
+		f.val[i] = (1.-mask.val[i])*f.val[i] + mask.val[i]*damping*(u.val[i]-fix_value);
 
-	FFT(tmp,Ftmp);
+	FFT(f,out);
 
-	for(int i=0; i<out.N; ++i)
-	{
-		out.val[i][0] += -damping*Ftmp.val[i][0];
-		out.val[i][1] += -damping*Ftmp.val[i][1];
-	}
-
-   #ifdef _MY_VERBOSE
+   #if defined(_MY_VERBOSE_MORE)
 	my_log << "done";
    #endif
 

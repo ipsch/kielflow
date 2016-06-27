@@ -118,9 +118,8 @@ bin/backend : $(OBJ_COMMON) $(OBJ_BACKEND)
 
 
 plot4 :
-	cd ./data; plot4 splot_density.pl4
-	cd ./data; plot4 splot_velocity.pl4
-	cd ./data; plot4 splot_potential.pl4
+	./my_plots.sh -p splot_potential ./data/splot_data\ fields.dat
+	./my_plots.sh -p splot_density ./data/splot_data\ fields.dat
 
 
 # Objekt-Dateien erzeugen

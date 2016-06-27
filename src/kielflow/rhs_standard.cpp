@@ -6,7 +6,7 @@
    #define E_INT
    #define E_EXT
    #define DISSIPATION
-   //#define PENALIZATION_U
+   #define PENALIZATION_U
    #define CONTINUITY
    //#define DEALAISING_MORE
    #define SPECTRAL_VISCOSITY
@@ -145,13 +145,7 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 	VS.execute(FUz,Buffer_FUz);
    #endif
 
-   #if defined(PENALIZATION_U)
-	static effect_penalization Ux_penalization(0.1, my_solids, -.5);
-	static effect_penalization Ur_penalization(0.01, my_solids,  0. );
-	Ux_penalization.execute(FUx,Buffer_FUx);
-	Ur_penalization.execute(FUy,Buffer_FUy);
-	Ur_penalization.execute(FUz,Buffer_FUz);
-   #endif
+
 
 
 
@@ -163,6 +157,15 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 
    #if defined(E_EXT)
 	translation_Ex.execute(Fni, Buffer_Fni);
+   #endif
+
+   #if defined(PENALIZATION_U)
+	static effect_penalization UX_penalization(-.5, my_solids, 0.);
+	static effect_penalization ni_penalization(-.5, my_solids, 1.);
+	UX_penalization.execute(FUx,Buffer_FUx);
+	UX_penalization.execute(FUy,Buffer_FUy);
+	UX_penalization.execute(FUz,Buffer_FUz);
+	ni_penalization.execute(Fni,Buffer_Fni);
    #endif
 
 	// ToDo : penalization n

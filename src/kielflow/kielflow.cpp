@@ -214,9 +214,12 @@ int main(int argc,char **argv)
 
 
 	// ##### RHS #####
+	fkt3d_barrier Barrier_fkt(nd.my_grid->x_axis->val_at(0), -3.);
+	field_real Barrier(*FPh.my_grid);
+    Barrier.fill(Barrier_fkt);
 	field_real Ph(*FPh.my_grid);
 	iFFT(FPh, Ph);
-	rhs_standard rhs(Params, MG, Ph, nd, Hd);
+	rhs_standard rhs(Params, MG, Ph, nd, Barrier);
    #if defined(TEST_RHS)
 	//rhs.solve(FUx, FUy, FUz, Fni);
    #endif
