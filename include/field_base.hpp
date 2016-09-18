@@ -14,9 +14,22 @@
 class field
 {
 public :
-
+	int Nx;
+	int Ny;
+	int Nz;
+	int N;
+	grid my_grid;
+	field(const grid &domain, const double &Nx_, const double &Ny_, const double &Nz_) :
+		my_grid(domain), Nx(Nx_), Ny(Ny_), Nz(Nz_), N(Nx*Ny*Nz)
+		{	}
+	~field()
+		{	};
+	int index(const int &i, const int &j, const int &k) const
+		{return (k + Nz*(j + i*Ny));}
+private :
+	//grid my_grid_;
+protected :
 	field();
-	virtual ~field();
 };
 
 /*

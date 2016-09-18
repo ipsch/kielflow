@@ -24,6 +24,9 @@
 #include "field.hpp"
 #include "grid.hpp"
 #include "axis.hpp"
+#include "axis_EqSt.hpp"
+#include "axis_HySt.hpp"
+#include "axis_SiSt.hpp"
 #include "operations.hpp"
 #include "particle.hpp"
 #include "subdim.hpp"
@@ -64,9 +67,9 @@ void file_create(const std::string &path);
 
 
 
-void       save_grid      (const grid_Co &Target,
+void       save_grid      (const grid &Target,
 		                   const std::string &path = "./data/fields.h5");
-grid_Co    load_grid      (const std::string &path = "./data/fields.h5");
+grid       load_grid      (const std::string &path = "./data/fields.h5");
 
 
 
@@ -104,7 +107,7 @@ void save_particles(std::vector<particle> &particle_list,
 
 
 void save_all(std::vector<particle> &particle_list,
-		      const grid_Co &Omega,
+		      const grid &Omega,
 			  const double &Time,
 		      const parameters &Params,
 		      const field_imag &FUx, const field_imag &FUy, const field_imag &FUz,
@@ -114,7 +117,7 @@ void save_all(std::vector<particle> &particle_list,
 
 void save_slice(const int &step,
 		  std::vector<particle> &particle_list,
-	      const grid_Co &Omega,
+	      const grid &Omega,
 		  const double &Time,
 	      const parameters &Params,
 	      const field_imag &FUx, const field_imag &FUy, const field_imag &FUz,
@@ -122,8 +125,8 @@ void save_slice(const int &step,
 
 
 
-void save_frame_1d(const grid_Co &Omega, double* Ux, double* Uy, double* Uz, double* ni, double* Ph, const std::string &path);
-void save_frame_2d(const grid_Co &Omega, double* Ux, double* Uy, double* Uz, double* ni, double* Ph, const std::string &path);
+void save_frame_1d(const grid &Omega, double* Ux, double* Uy, double* Uz, double* ni, double* Ph, const std::string &path);
+void save_frame_2d(const grid &Omega, double* Ux, double* Uy, double* Uz, double* ni, double* Ph, const std::string &path);
 
 
 std::string I4(int number);

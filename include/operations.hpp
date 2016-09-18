@@ -7,27 +7,41 @@
 #include <iostream>
 #include <cmath>
 
+#include "OP_FFT.hpp"
+#include "OP_iFFT.hpp"
+
 #ifdef _MY_VERBOSE
 #include "logger.hpp"
 #endif
 
 void handle_dealiasing(field_imag &DEST);
-
-
+void dealaising_36er(field_imag &DEST);
+void dealaising_23rd(field_imag &DEST);
+void dealaising_theta(field_imag &DEST, const double &x = 0.66666);
 
 
 class OP_partial_derivative
 {
 public :
+	OP_partial_derivative(const grid &domain, const direction &e_i);
 	OP_partial_derivative(const field_real &field_caller, const direction &e_i);
 	OP_partial_derivative(const field_imag &field_caller, const direction &e_i);
 	~OP_partial_derivative();
-	void execute(const field_imag &in, field_imag &out);
+	void operator()(const field_imag &in, field_imag &out);
 private :
+	//OP_partial_derivative() {	}
 	bool IsLinear;
 	int my_i, my_j, my_k;
 	int * my_X;
 	const axis * my_axis; // which is really a "axis_Co"
+
+	OP_FFT my_FFT;
+	OP_iFFT my_iFFT;
+
+	field_real Buffer;
+
+	double * k_val;
+	double * dS_val;
 };
 
 

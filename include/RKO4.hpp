@@ -9,9 +9,12 @@
 
 #include "interface_ODE_solver.hpp"
 #include "interface_rhs.hpp"
+#include "field.hpp"
 #include "field_imag.hpp"
 #include "CFL.hpp"
 #include "operations.hpp"
+#include "subdim.hpp"
+#include "IO.hpp"
 
 #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 #include "logger.hpp"

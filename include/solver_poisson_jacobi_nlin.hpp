@@ -13,6 +13,7 @@
 #include "masks.hpp"
 #include "newton_method.hpp"
 
+
 // ToDo : These won't be necessary in final version
 #include "o_math.hpp"
 #include "o_string.hpp"
@@ -69,7 +70,7 @@ private :
 	double * HX;
 	double * HY;
 	double * HZ;
-	void H_create(const grid_Co &Omega);
+	void H_create(const grid &Omega);
 	void H_delete();
 
 	std::string my_logfile;

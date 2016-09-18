@@ -1,7 +1,6 @@
 #ifndef NEWTON_METHOD_HPP_
 #define NEWTON_METHOD_HPP_
 
-#define FAILSAVE
 
 #include <iostream>
 #include <cmath>
@@ -18,19 +17,17 @@ public :
 	double solve(double x, Func_f f, Func_df df)
 	{
 		double omega = 1.;
-		double g = 0.8;
+		double g = 0.3;
 		double dx = 0.;
 		double dx_alt = f(x)/df(x);
-       #if defined(FAILSAVE)
-		double x0 = x;
-       #endif
+
 
 		int i=0;
 		do
 		{
 			x -= omega*dx;
-
 			dx = f(x)/df(x);
+
 			omega = fabs(dx)>fabs(dx_alt) ?
 					g*omega : (1.-g)*omega + g*1.;
 			dx_alt = dx;
@@ -38,18 +35,25 @@ public :
 		} while ( fabs(dx)>eps && i<Nmax );
 
        #if defined(FAILSAVE)
+
     	if(fabs(dx)<eps) // everthing ok
     		return x-dx;
 
     	if(dx!=dx)
     	{
-    		std::cout << "WARNING: Newton-method went nan" << std::endl;
-    		return x;
+    		//std::cout << "ERROR: Newton-method went nan" << std::endl;
+    		//throw("ERROR: Newton-method went nan");
+    		return x0;
     	}
 
     	if(fabs(f(x0)/df(x0)) < fabs(f(x)/df(x)))
     	{
-    		std::cout << "WARNING: Newton-method diverged" << std::endl;
+
+    		std::cout.width(10);
+    		std::cout << "x_old" << "\t" << "x_new" << "\t";
+    		std::cout << "dx" << "\t" << "omega" << "\t";
+    		std::cout << "ERROR: Newton-method diverged" << std::endl;
+    		throw("ERROR: Newton-method diverged");
     		return x0;
     	}
 

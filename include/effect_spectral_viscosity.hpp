@@ -17,7 +17,7 @@
 class effect_spectral_viscosity : public effect
 {
 public :
-	effect_spectral_viscosity(const double &fraction, const grid_Fo &Omega);
+	effect_spectral_viscosity(const double &fraction, const grid &Omega);
 	void execute(const field_imag &in, field_imag &out) const;
 private :
 	effect_spectral_viscosity() : eps(0.), cutoff(0.), kx_max(0.), ky_max(0.), kz_max(0.) { }

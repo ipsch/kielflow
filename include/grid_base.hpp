@@ -15,29 +15,25 @@
 class grid
 {
 public :
-
-
-
-	int N;
-	int Nx;
-	int Ny;
-	int Nz;
-
 	axis * x_axis;
 	axis * y_axis;
 	axis * z_axis;
 
-	grid(const int &Nx_, const int &Ny_, const int &Nz_,
-			const axis &Ax, const axis &Ay, const axis &Az,
-			const ptr_axis_factory_fkt &factory_fkt);
+	grid(const axis &Ax, const axis &Ay, const axis &Az);
 	grid(const grid &that);
 
+	~grid();
 
-	virtual ~grid();
-	virtual int index_at(const int &i, const int &j, const int &k) const = 0 ;
-	virtual void ijk_at(const int &index, int &i, int &j, int &k) const = 0;
-	virtual grid * clone() const = 0;
+	const int &Nx;
+	const int &Ny;
+	const int &Nz;
 
+	void resize(const int &Nx, const int &Ny, const int &Nz)
+	{
+		x_axis->resize(Nx);
+		y_axis->resize(Ny);
+		z_axis->resize(Nz);
+	}
 
 };
 

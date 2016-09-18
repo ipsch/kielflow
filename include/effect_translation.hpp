@@ -11,11 +11,11 @@ class effect_translation : public effect
 // translates a field "u" with constant velocity "v"
 {
 public :
-	effect_translation(const double &v, const direction & e_i);
+	effect_translation(const double &v, OP_partial_derivative &Dx);
 	void execute(const field_imag &in, field_imag &out);
 private :
 	double my_velocity;
-	direction my_direction;
+	OP_partial_derivative &d_dx;
 
 };
 

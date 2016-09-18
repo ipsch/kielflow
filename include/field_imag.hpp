@@ -6,20 +6,19 @@
 class field_imag : public field
 {
 public :
-	field_imag(const grid_Fo &FOmega);
-	field_imag(const grid_Co &Omega);
+	field_imag(const grid &Omega);
 	field_imag(const field_imag &that);
 	~field_imag();
 
 	void fill_RE(double (*fill_fkt)(const double &, const double &, const double &)) const;
 	void fill_IM(double (*fill_fkt)(const double &, const double &, const double &)) const;
+	bool IsNan();
 
-	const grid_Fo * my_grid;
 	fftw_complex * val;
-	const int &N;
-	const int &Nx;
-	const int &Ny;
-	const int &Nz;
+
+	field_imag& operator+=(const field_imag& rhs);
+	field_imag& operator-=(const field_imag& rhs);
+
 
 	// ToDo : field_imag functoren implementieren
 	fftw_complex& operator() (int ix, int iy, int iz); // Subscript operators often come in pairs

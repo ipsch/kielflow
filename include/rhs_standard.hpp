@@ -15,7 +15,8 @@
 #include "operations.hpp"
 #include "effect.hpp"
 #include "masks.hpp"
-
+#include "OP_FFT.hpp"
+#include "OP_iFFT.hpp"
 
 #ifdef _MY_VERBOSE
 #include "logger.hpp"
@@ -23,14 +24,22 @@
 // magic stuff
 
 
-
+   #define _RHS_POISSON
+   #define _RHS_DISSIPATION
+   #define _RHS_ADVECTION
+   #define _RHS_DIFFUSION
+   #define _RHS_E_INT
+   #define _RHS_E_EXT
+   #define _RHS_CONTINUITY
+   //#define _RHS_PENALIZATION_U
+   //#define _RHS_SPECTRAL_VISCOSITY
 
 class rhs_standard : public interface_rhs
 {
 public :
 	rhs_standard(parameters &Params, interface_poisson_solver &Solver,
 			field_real &potential, field_real &density_dust,
-			field_real &solid_mask);
+			field_real &solid_mask, const grid &domain);
 	void solve(const double &t, field_imag &FUx, field_imag &FUy, field_imag &FUz, field_imag &Fni);
 	~rhs_standard() {	}
 
@@ -39,8 +48,43 @@ protected :
 	interface_poisson_solver &my_poisson_solver;
 	field_real &Phi;
 	field_real &nd;
-
 	field_real &my_solids;
+
+	field_imag Buffer_FUx;
+	field_imag Buffer_FUy;
+	field_imag Buffer_FUz;
+	field_imag Buffer_Fni;
+
+	field_real Ux;
+	field_real Uy;
+	field_real Uz;
+
+	field_imag dFUx_dx;
+	field_imag dFUy_dx;
+	field_imag dFUz_dx;
+
+	field_imag dFUx_dy;
+	field_imag dFUy_dy;
+	field_imag dFUz_dy;
+
+	field_imag dFUx_dz;
+	field_imag dFUy_dz;
+	field_imag dFUz_dz;
+
+	OP_FFT my_FFT;
+	OP_iFFT my_iFFT;
+
+	OP_partial_derivative d_dx;
+	OP_partial_derivative d_dy;
+	OP_partial_derivative d_dz;
+
+	field_real Buffer_1st;
+	field_real Buffer_2nd;
+
+	field_imag FBuffer_1st;
+	field_imag FBuffer_2nd;
+
+
 
 
 };
