@@ -25,8 +25,8 @@ void effect_penalization::execute(const field_imag &in, field_imag &out) const
 	my_log << "execute(const field_imag &in, field_imag &out) const";
    #endif
 
-	field_real f(*in.my_grid);
-	field_real u(*in.my_grid);
+	field_real f(in.my_grid);
+	field_real u(in.my_grid);
 
 	iFFT(in,u);
 	iFFT(out,f);
@@ -50,7 +50,7 @@ void effect_penalization::penalize_density(const field_imag &in, field_imag &out
 	my_log << "execute(const field_imag &in, field_imag &out) const";
    #endif
 
-	field_real  tmp(*in.my_grid);
+	field_real  tmp(in.my_grid);
 
 	iFFT(in,tmp);
 

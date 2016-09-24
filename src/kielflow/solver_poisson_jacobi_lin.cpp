@@ -49,18 +49,18 @@ void solver_poisson_jacobi_lin::solve(field_real &Phi_IO, field_real &rho)
 	iteration=0;
 	invocations++;
 
-	field_real Phi_n(*Phi_IO.my_grid);
+	field_real Phi_n(Phi_IO.my_grid);
 
 	// set boundaries anew (might have changed due FFT/iFFT)
 	for(int i=0; i<Phi_IO.Nx; ++i)
 	{
-		double x = Phi_IO.my_grid->x_axis->val_at(i);
+		double x = Phi_IO.my_grid.x_axis->val_at(i);
 		for(int j=0; j<Phi_IO.Ny; ++j)
 		{
-			double y = Phi_IO.my_grid->y_axis->val_at(j);
+			double y = Phi_IO.my_grid.y_axis->val_at(j);
 			for(int k=0; k<Phi_IO.Nz; ++k)
 			{
-				double z = Phi_IO.my_grid->z_axis->val_at(k);
+				double z = Phi_IO.my_grid.z_axis->val_at(k);
 				if(H(x,y,z)==1.)
 				{
 					Phi_IO(i,j,k) = val_H(x,y,z);
@@ -123,9 +123,9 @@ double solver_poisson_jacobi_lin::get_PG(const field_real &in, const int &i, con
 
 
 
-	double x = in.my_grid->x_axis->val_at(i);
-	double y = in.my_grid->y_axis->val_at(j);
-	double z = in.my_grid->z_axis->val_at(k);
+	double x = in.my_grid.x_axis->val_at(i);
+	double y = in.my_grid.y_axis->val_at(j);
+	double z = in.my_grid.z_axis->val_at(k);
 
 
 	if(i==0) return 0.;
@@ -172,18 +172,18 @@ void solver_poisson_jacobi_lin::iteration_loop(const field_real &in, field_real 
 
 	for(int i=0; i < out.Nx; ++i)
 	{
-		double Hx = get_HXX(in.my_grid->x_axis, i, hxp, hxm);
-		double x = in.my_grid->x_axis->val_at(i);
+		double Hx = get_HXX(in.my_grid.x_axis, i, hxp, hxm);
+		double x = in.my_grid.x_axis->val_at(i);
 		for(int j=0; j<out.Ny; ++j)
 		{
-			double Hy = get_HXX(in.my_grid->y_axis, j, hyp, hym);
-			double y = in.my_grid->y_axis->val_at(j);
+			double Hy = get_HXX(in.my_grid.y_axis, j, hyp, hym);
+			double y = in.my_grid.y_axis->val_at(j);
 			for(int k=0; k<out.Nz; ++k)
 			{
-				double Hz = get_HXX(in.my_grid->z_axis, k, hzp, hzm);
-				double z = in.my_grid->z_axis->val_at(k);
+				double Hz = get_HXX(in.my_grid.z_axis, k, hzp, hzm);
+				double z = in.my_grid.z_axis->val_at(k);
 
-				int index = out.my_grid->index_at(i,j,k);
+				int index = out.index(i,j,k);
 
 				if( (H(x,y,z)==0.) || (i==0) || (j==0) || (k==0) )
 				{ // if not within boundary layer : calculate new potential

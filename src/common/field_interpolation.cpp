@@ -12,8 +12,8 @@ void OP_xto2x(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<in.Nz; k++)
 			{
-				int index_in  = in.my_grid->index_at(  i,  j,  k);
-				int index_out = out.my_grid->index_at(2*i,j,k);
+				int index_in  = in.index(i,j,k);
+				int index_out = out.index(2*i,j,k);
 				out.val[index_out] = in.val[index_in];
 			}
 		}
@@ -23,9 +23,9 @@ void OP_xto2x(const field_real &in, field_real &out)
 	// with data interpolated from the two neighbouring plains
 	for(int i=1; i<out.Nx; i+=2)
 	{
-		double x1 = out.my_grid->x_axis->val_at(i-1);
-		double x2 = out.my_grid->x_axis->val_at(i+1);
-		double x  = out.my_grid->x_axis->val_at(i);
+		double x1 = out.my_grid.x_axis->val_at(i-1);
+		double x2 = out.my_grid.x_axis->val_at(i+1);
+		double x  = out.my_grid.x_axis->val_at(i);
 		double gamma_x = (x-x1)/(x2-x1);
 
 		for(int j=0; j<out.Ny; j+=1)
@@ -68,7 +68,7 @@ void OP_hto2h(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<out.Nz; k++)
 			{
-				int index_out = out.my_grid->index_at(i,j,k);
+				int index_out = out.my_grid.index_at(i,j,k);
 				out.val[index_out] = 0.;
 			}
 		}
@@ -82,8 +82,8 @@ void OP_hto2h(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<in.Nz; k++)
 			{
-				int index_in  = in.my_grid->index_at(  i,  j,  k);
-				int index_out = out.my_grid->index_at(2*i,2*j,2*k);
+				int index_in  = in.index(i,j,k);
+				int index_out = out.index(2*i,2*j,2*k);
 				out.val[index_out] = in.val[index_in];
 			}
 		}
@@ -97,9 +97,9 @@ void OP_hto2h(const field_real &in, field_real &out)
 		{
 			for(int k=1; k<out.Nz; k+=2)
 			{
-				double z1 = out.my_grid->z_axis->val_at(k-1);
-				double z2 = out.my_grid->z_axis->val_at(k+1);
-				double z  = out.my_grid->z_axis->val_at(k);
+				double z1 = out.my_grid.z_axis->val_at(k-1);
+				double z2 = out.my_grid.z_axis->val_at(k+1);
+				double z  = out.my_grid.z_axis->val_at(k);
 				double gamma_z = (z-z1)/(z2-z1);
 
 				out(i, j, k) = (1.-gamma_z)*out.val_at(i,j,k-1) + gamma_z*out.val_at(i,j,k+1);
@@ -112,15 +112,14 @@ void OP_hto2h(const field_real &in, field_real &out)
 	{
 		for(int j=1; j<out.Ny; j+=2)
 		{
-			double y1 = out.my_grid->y_axis->val_at(j-1);
-			double y2 = out.my_grid->y_axis->val_at(j+1);
-			double y  = out.my_grid->y_axis->val_at(j);
+			double y1 = out.my_grid.y_axis->val_at(j-1);
+			double y2 = out.my_grid.y_axis->val_at(j+1);
+			double y  = out.my_grid.y_axis->val_at(j);
 			double gamma_y = (y-y1)/(y2-y1);
 
 			for(int k=0; k<out.Nz; k+=1)
 			{
 				out(i, j, k) = (1.-gamma_y)*out.val_at(i,j-1,k) + gamma_y*out.val_at(i,j+1,k);
-
 			}
 		}
 	}
@@ -129,9 +128,9 @@ void OP_hto2h(const field_real &in, field_real &out)
 
 	for(int i=1; i<out.Nx; i+=2)
 	{
-		double x1 = out.my_grid->x_axis->val_at(i-1);
-		double x2 = out.my_grid->x_axis->val_at(i+1);
-		double x  = out.my_grid->x_axis->val_at(i);
+		double x1 = out.my_grid.x_axis->val_at(i-1);
+		double x2 = out.my_grid.x_axis->val_at(i+1);
+		double x  = out.my_grid.x_axis->val_at(i);
 		double gamma_x = (x-x1)/(x2-x1);
 
 		for(int j=0; j<out.Ny; j+=1)
@@ -165,8 +164,8 @@ void OP_2xtox(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<out.Nz; k++)
 			{
-				int index_in  = in.my_grid->index_at(2*i, j, k);
-				int index_out = out.my_grid->index_at(i, j, k);
+				int index_in  = in.index(2*i, j, k);
+				int index_out = out.index(i, j, k);
 
 				out.val[index_out] = in.val[index_in];
 			}
@@ -192,8 +191,8 @@ void OP_2ytoy(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<out.Nz; k++)
 			{
-				int index_in  = in.my_grid->index_at(i, 2*j, k);
-				int index_out = out.my_grid->index_at(i, j, k);
+				int index_in  = in.index(i, 2*j, k);
+				int index_out = out.index(i, j, k);
 
 				out.val[index_out] = in.val[index_in];
 			}
@@ -219,8 +218,8 @@ void OP_2ztoz(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<out.Nz; k++)
 			{
-				int index_in  = in.my_grid->index_at(i, j, 2*k);
-				int index_out = out.my_grid->index_at(i, j, k);
+				int index_in  = in.index(i, j, 2*k);
+				int index_out = out.index(i, j, k);
 
 				out.val[index_out] = in.val[index_in];
 			}
@@ -248,8 +247,8 @@ void OP_2htoh_lvl0(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<out.Nz; k++)
 			{
-				int index_in  = in.my_grid->index_at( 2*i, 2*j, 2*k);
-				int index_out = out.my_grid->index_at(   i,   j,   k);
+				int index_in  = in.index( 2*i, 2*j, 2*k);
+				int index_out = out.index(   i,   j,   k);
 
 				out.val[index_out] = in.val[index_in];
 			}
@@ -269,7 +268,7 @@ void OP_2htoh_lvl1(const field_real &in, field_real &out)
 		throw("Feld Groesse ungerade");
 
 	out.resize(in.Nx/2, in.Ny/2, in.Nz/2);
-	field_real tmp(*in.my_grid);
+	field_real tmp(in.my_grid);
 
 	for(int i=1; i<tmp.Nx-1; i++)
 	{
@@ -277,9 +276,9 @@ void OP_2htoh_lvl1(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<tmp.Nz; k++)
 			{
-				int index_zero = tmp.my_grid->index_at( i, j, k);
-				int index_plus = tmp.my_grid->index_at( i, j, k+1);
-				int index_minu = tmp.my_grid->index_at( i, j, k-1);
+				int index_zero = tmp.index( i, j, k);
+				int index_plus = tmp.index( i, j, k+1);
+				int index_minu = tmp.index( i, j, k-1);
 				tmp.val[index_zero] =         in.val[index_zero];
 				tmp.val[index_zero] = (1./6.)*in.val[index_plus];
 				tmp.val[index_zero] = (1./6.)*in.val[index_minu];
@@ -294,7 +293,7 @@ void OP_2htoh_lvl1(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<tmp.Nz; k++)
 			{
-				int index = tmp.my_grid->index_at( i, j, k);
+				int index = tmp.index( i, j, k);
 				tmp.val[index] =         in.val[index];
 			}
 		}
@@ -307,8 +306,8 @@ void OP_2htoh_lvl1(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<tmp.Nz; k++)
 			{
-				int index       = tmp.my_grid->index_at( i  , j  , k );
-				int index_shift = tmp.my_grid->index_at( i+1, j  , k );
+				int index       = tmp.index( i  , j  , k );
+				int index_shift = tmp.index( i+1, j  , k );
 
 				tmp.val[index] += (1./6.)*in.val[index_shift];
 			}
@@ -322,8 +321,8 @@ void OP_2htoh_lvl1(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<tmp.Nz; k++)
 			{
-				int index       = tmp.my_grid->index_at( i  , j  , k );
-				int index_shift = tmp.my_grid->index_at( i-1, j  , k );
+				int index       = tmp.index( i  , j  , k );
+				int index_shift = tmp.index( i-1, j  , k );
 
 				tmp.val[index] += (1./6.)*in.val[index_shift];
 			}
@@ -337,8 +336,8 @@ void OP_2htoh_lvl1(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<tmp.Nz; k++)
 			{
-				int index       = tmp.my_grid->index_at( i  , j   , k );
-				int index_shift = tmp.my_grid->index_at( i  , j+1 , k );
+				int index       = tmp.index( i  , j   , k );
+				int index_shift = tmp.index( i  , j+1 , k );
 
 				tmp.val[index] += (1./6.)*in.val[index_shift];
 			}
@@ -352,8 +351,8 @@ void OP_2htoh_lvl1(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<tmp.Nz; k++)
 			{
-				int index       = tmp.my_grid->index_at( i  , j   , k );
-				int index_shift = tmp.my_grid->index_at( i  , j-1 , k );
+				int index       = tmp.index( i  , j   , k );
+				int index_shift = tmp.index( i  , j-1 , k );
 
 				tmp.val[index] += (1./6.)*in.val[index_shift];
 			}
@@ -367,8 +366,8 @@ void OP_2htoh_lvl1(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<tmp.Nz-1; k++)
 			{
-				int index       = tmp.my_grid->index_at( i  , j   , k   );
-				int index_shift = tmp.my_grid->index_at( i  , j   , k+1 );
+				int index       = tmp.index( i  , j   , k   );
+				int index_shift = tmp.index( i  , j   , k+1 );
 
 				tmp.val[index] += (1./6.)*in.val[index_shift];
 			}
@@ -382,8 +381,8 @@ void OP_2htoh_lvl1(const field_real &in, field_real &out)
 		{
 			for(int k=1; k<tmp.Nz; k++)
 			{
-				int index       = tmp.my_grid->index_at( i  , j   , k   );
-				int index_shift = tmp.my_grid->index_at( i  , j   , k-1 );
+				int index       = tmp.index( i  , j   , k   );
+				int index_shift = tmp.index( i  , j   , k-1 );
 
 				tmp.val[index] += (1./6.)*in.val[index_shift];
 			}
@@ -396,8 +395,8 @@ void OP_2htoh_lvl1(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<out.Nz; k++)
 			{
-				int index_in  = in.my_grid->index_at( 2*i, 2*j, 2*k);
-				int index_out = out.my_grid->index_at(   i,   j,   k);
+				int index_in  = in.index( 2*i, 2*j, 2*k);
+				int index_out = out.index(   i,   j,   k);
 
 				out.val[index_out] = tmp.val[index_in];
 			}
@@ -427,13 +426,13 @@ void OP_XhtoYh_lvl1(const field_real &in, field_real &out, const int type, const
 			std::cout << "case 0" << std::endl;
 			for(int i=0; i<out.Nx; ++i)
 			{
-				double x = out.my_grid->x_axis->val_at(i);
+				double x = out.my_grid.x_axis->val_at(i);
 				for(int j=0; j<out.Ny; ++j)
 				{
-					double y = out.my_grid->y_axis->val_at(j);
+					double y = out.my_grid.y_axis->val_at(j);
 					for(int k=0; k<out.Nz; ++k)
 					{
-						double z = out.my_grid->z_axis->val_at(k);
+						double z = out.my_grid.z_axis->val_at(k);
 						out(i,j,k) = in(x,y,z);
 		               #if defined(_MY_VERBOSE_TEDIOUS)
 				    	std::stringstream sstr;
@@ -452,22 +451,22 @@ void OP_XhtoYh_lvl1(const field_real &in, field_real &out, const int type, const
 		case 1 :
 			// if input is too small continue with given value c1value
 			std::cout << "case 1" << std::endl;
-			xmin = in.my_grid->x_axis->l0;
-			xmax = xmin + in.my_grid->x_axis->L;
-			ymin = in.my_grid->y_axis->l0;
-			ymax = ymin + in.my_grid->y_axis->L;
-			zmin = in.my_grid->z_axis->l0;
-			zmax = zmin + in.my_grid->z_axis->L;
+			xmin = in.my_grid.x_axis->l0;
+			xmax = xmin + in.my_grid.x_axis->L;
+			ymin = in.my_grid.y_axis->l0;
+			ymax = ymin + in.my_grid.y_axis->L;
+			zmin = in.my_grid.z_axis->l0;
+			zmax = zmin + in.my_grid.z_axis->L;
 
 			for(int i=0; i<out.Nx; ++i)
 			{
-				double x = out.my_grid->x_axis->val_at(i);
+				double x = out.my_grid.x_axis->val_at(i);
 				for(int j=0; j<out.Ny; ++j)
 				{
-					double y = out.my_grid->y_axis->val_at(j);
+					double y = out.my_grid.y_axis->val_at(j);
 					for(int k=0; k<out.Nz; ++k)
 					{
-						double z = out.my_grid->z_axis->val_at(k);
+						double z = out.my_grid.z_axis->val_at(k);
 						out(i,j,k) = c1value;
 						if( ((xmin <= x) && (x <xmax)) &&
 							((ymin <= y) && (y <ymax)) &&
@@ -496,23 +495,23 @@ void OP_XhtoYh_lvl1(const field_real &in, field_real &out, const int type, const
 			// if input is too small use periodicity in positive x-direction for x .ge. c2value and
 			// continue with given value c1value in negative xdirection for x .lt. c2value
 			std::cout << "case 1" << std::endl;
-			xmin = in.my_grid->x_axis->l0;
-			xmax = xmin + in.my_grid->x_axis->L;
+			xmin = in.my_grid.x_axis->l0;
+			xmax = xmin + in.my_grid.x_axis->L;
 			xlim = c2value;
-			ymin = in.my_grid->y_axis->l0;
-			ymax = ymin + in.my_grid->y_axis->L;
-			zmin = in.my_grid->z_axis->l0;
-			zmax = zmin + in.my_grid->z_axis->L;
+			ymin = in.my_grid.y_axis->l0;
+			ymax = ymin + in.my_grid.y_axis->L;
+			zmin = in.my_grid.z_axis->l0;
+			zmax = zmin + in.my_grid.z_axis->L;
 
 			for(int i=0; i<out.Nx; ++i)
 			{
-				double x = out.my_grid->x_axis->val_at(i);
+				double x = out.my_grid.x_axis->val_at(i);
 				for(int j=0; j<out.Ny; ++j)
 				{
-					double y = out.my_grid->y_axis->val_at(j);
+					double y = out.my_grid.y_axis->val_at(j);
 					for(int k=0; k<out.Nz; ++k)
 					{
-						double z = out.my_grid->z_axis->val_at(k);
+						double z = out.my_grid.z_axis->val_at(k);
 						out(i,j,k) = c1value;
 						if(  (xlim <= x) &&
 							((ymin <= y) && (y <ymax)) &&
@@ -591,7 +590,7 @@ void OP_smoothing(const field_real &in, field_real &out)
 		return;
 	}
 
-	field_real tmp(*in.my_grid);
+	field_real tmp(in.my_grid);
 
 	for(int i=0; i<in.Nx; i++)
 	{
@@ -599,7 +598,7 @@ void OP_smoothing(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<in.Nz; k++)
 			{
-				int index  = tmp.my_grid->index_at( i, j, k);
+				int index  = tmp.index(i,j,k);
 
 				tmp.val[index] = (2./8.)*get_PG(in,i,j,k);
 				tmp.val[index]+= (1./8.)*get_PG(in,i+1,j,k);
@@ -638,7 +637,7 @@ void OP_smoothing_lvl2(const field_real &in, field_real &out)
 		return;
 	}
 
-	field_real tmp(*in.my_grid);
+	field_real tmp(in.my_grid);
 
 	for(int i=0; i<in.Nx; i++)
 	{
@@ -646,7 +645,7 @@ void OP_smoothing_lvl2(const field_real &in, field_real &out)
 		{
 			for(int k=0; k<in.Nz; k++)
 			{
-				int index  = tmp.my_grid->index_at( i, j, k);
+				int index  = tmp.index(i,j,k);
 
 				tmp.val[index] = 3.*get_PG(in,i,j,k);
 				tmp.val[index]+= 1.*get_PG(in,i+2,j,k);

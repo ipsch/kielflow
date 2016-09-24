@@ -1,7 +1,7 @@
 #include "effect_spectral_viscosity.hpp"
 
 
-effect_spectral_viscosity::effect_spectral_viscosity(const double &fraction, const grid_Fo &Omega)
+effect_spectral_viscosity::effect_spectral_viscosity(const double &fraction, const grid &Omega)
 {
 	const double pi = acos(-1.);
 	kx_max = (pi*Omega.x_axis->N/Omega.x_axis->L);
@@ -29,14 +29,14 @@ void effect_spectral_viscosity::execute(const field_imag &in, field_imag &out) c
 	double kx, ky, kz;
 	for(int i=0; i<in.Nx;++i)
 	{
-		kx = in.my_grid->x_axis->val_at(i);
+		kx = in.my_grid.x_axis->val_at(i);
 		for(int j=0; j<in.Ny; ++j)
 		{
-			ky = in.my_grid->y_axis->val_at(j);
+			ky = in.my_grid.y_axis->val_at(j);
 			for(int k=0; k<in.Nz; ++k)
 			{
-				kz = in.my_grid->z_axis->val_at(k);
-				int index= in.my_grid->index_at(i,j,k);
+				kz = in.my_grid.z_axis->val_at(k);
+				int index= in.index(i,j,k);
 				double k2 = kx*kx + ky*ky + kz*kz;
 
 				out.val[index][0] += -eps*k2*this->filter(kx,ky,kz)*in.val[index][0];

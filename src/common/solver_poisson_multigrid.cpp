@@ -230,8 +230,8 @@ void solver_poisson_multigrid::solve(field_real &Phi_IO, field_real &rho)
 
 	int lvl_current = 0;
 	int cascade_current = 0;
-	field_real Phi_n(*Phi_IO.my_grid);
-	field_real rho_n(*rho.my_grid);
+	field_real Phi_n(Phi_IO.my_grid);
+	field_real rho_n(rho.my_grid);
 	rho_n = rho; // only important for the first run per call
 
    #if defined (_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
@@ -277,7 +277,7 @@ void solver_poisson_multigrid::solve(field_real &Phi_IO, field_real &rho)
            #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	        my_log << "reduce rho_n in all directions";
            #endif
-			field_real bc(*rho_n.my_grid);
+			field_real bc(rho_n.my_grid);
 			bc = rho_n;
 			I_2htoh(bc,rho_n);
 		}
@@ -287,7 +287,7 @@ void solver_poisson_multigrid::solve(field_real &Phi_IO, field_real &rho)
            #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
             my_log << "reduce rho_n in x-directions";
            #endif
-			field_real bc(*rho_n.my_grid);
+			field_real bc(rho_n.my_grid);
 			bc = rho_n;
 			I_2xtox(bc,rho_n);
 		}
@@ -297,7 +297,7 @@ void solver_poisson_multigrid::solve(field_real &Phi_IO, field_real &rho)
            #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
             my_log << "reduce rho_n in x-directions";
            #endif
-			field_real bc(*rho_n.my_grid);
+			field_real bc(rho_n.my_grid);
 			bc = rho_n;
 			I_2ytoy(bc,rho_n);
 		}
@@ -307,7 +307,7 @@ void solver_poisson_multigrid::solve(field_real &Phi_IO, field_real &rho)
            #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
             my_log << "reduce rho_n in z-directions";
            #endif
-			field_real bc(*rho_n.my_grid);
+			field_real bc(rho_n.my_grid);
 			bc = rho_n;
 			I_2ztoz(bc,rho_n);
 		}
@@ -318,7 +318,7 @@ void solver_poisson_multigrid::solve(field_real &Phi_IO, field_real &rho)
 		ptr_relaxation_method->solve(Phi_n,rho_n);
 
 		/*
-		 * ToDo : why didn't is work properly
+		 * ToDo : why didn't it work properly
 		// code zum fast forwarden: Die Rechnung auf einem gröberen Gitter kann
 		// übersprungen werden, wenn:
 		// - die Relaxation auf diesem Gitter bereits konvergiert ist

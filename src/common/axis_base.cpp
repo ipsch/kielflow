@@ -1,4 +1,4 @@
-#include "axis_base.hpp"
+#include "axis.hpp"
 
 axis::axis()
 {

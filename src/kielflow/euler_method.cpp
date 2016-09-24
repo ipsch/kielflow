@@ -31,10 +31,10 @@ void euler_method::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
    #ifdef _MY_VERBOSE
 	log << "allocating fields (fourierspace) (for RK-coefficients)";
    #endif
-	static field_imag RK0_FUx(*FUx.my_grid);
-	static field_imag RK0_FUy(*FUy.my_grid);
-	static field_imag RK0_FUz(*FUz.my_grid);
-	static field_imag RK0_Fni(*Fni.my_grid);
+	static field_imag RK0_FUx(FUx.my_grid);
+	static field_imag RK0_FUy(FUy.my_grid);
+	static field_imag RK0_FUz(FUz.my_grid);
+	static field_imag RK0_Fni(Fni.my_grid);
 
 
    #ifdef _MY_VERBOSE

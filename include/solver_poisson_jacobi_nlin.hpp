@@ -12,6 +12,7 @@
 #include "interface_poisson_solver.hpp"
 #include "masks.hpp"
 #include "newton_method.hpp"
+#include "bisection_method.hpp"
 
 
 // ToDo : These won't be necessary in final version
@@ -21,7 +22,6 @@
 #include <thread>
 #include "IO.hpp"
 #include <omp.h>
-
 
 #include <iostream>
 #include <iomanip>
@@ -45,24 +45,29 @@ class solver_poisson_jacobi_nlin : public interface_relaxation_solver
 public :
 	solver_poisson_jacobi_nlin(interface_3d_fkt &boundary, interface_3d_fkt &val_boundary, const double &w = 1.);
 	void solve(field_real &Phi_IO, field_real &rho);
-	bool converged(void) const {return converged_;}
+
 	void set_max_iterations(const int &iter) {max_iterations = iter;}
 	void set_tolerance(const double &tolerance){limit_max = tolerance;};
 
-	double limit_max;
-	double limit_sum;
+	bool converged(void) const {return converged_;}
+	void set_limit_NormMax(const double &val) {limit_max = val;}
+	void set_limit_NormSum(const double &val) {limit_sum = val;}
 
 private :
+
 	void main_loop(void);
 	void iteration_loop(const field_real &in, field_real &out, const field_real &rho);
     void save_evolution(const field_real &Phi, const field_real &rho) const;
 
-
+    std::string my_logfile;
 
 	double norm_max;
 	double norm_sum;
 	double supremum;
 	double infinum;
+
+	double limit_max;
+	double limit_sum;
 
 	interface_3d_fkt &H;
 	interface_3d_fkt &val_H;
@@ -73,10 +78,10 @@ private :
 	void H_create(const grid &Omega);
 	void H_delete();
 
-	std::string my_logfile;
+
 
 	double omega_SOR; // Successive Over-Relaxation parameter
-    double omega_NEWTON;
+
 
     double norm_sum_old;
     double norm_max_old;
@@ -88,12 +93,6 @@ private :
 	bool converged_;
 	bool use_boundary_;
 
-	// ToDo : move newton-method to own header (make it stand-alone)
-	double newton(const int &i, const int j, const int k,\
-			const field_real &Phi, const double &rho_ijk) const;
-	double f_df(const double &x, \
-			const int &i, const int j, const int k,\
-			const field_real &Phi, const double &rho_ijk) const;
 	const double eps;
 
 };

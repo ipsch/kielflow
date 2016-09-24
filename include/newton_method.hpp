@@ -17,10 +17,9 @@ public :
 	double solve(double x, Func_f f, Func_df df)
 	{
 		double omega = 1.;
-		double g = 0.3;
+		double g = 0.8;
 		double dx = 0.;
 		double dx_alt = f(x)/df(x);
-
 
 		int i=0;
 		do

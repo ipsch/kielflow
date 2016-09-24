@@ -22,25 +22,25 @@ void effect_force_E::execute(const field_imag &FPhi,
 	static OP_partial_derivative d_dy(FPhi,e_y);
 	static OP_partial_derivative d_dz(FPhi,e_z);
 
-	field_imag FBuffer(*FPhi.my_grid);
+	field_imag FBuffer(FPhi.my_grid);
 
 
 
-	d_dx.execute(FPhi,FBuffer);
+	d_dx(FPhi,FBuffer);
 	for(int i=0; i<FPhi.N; ++i)
 	{
 		Buffer_FUx.val[i][0] -= FBuffer.val[i][0];
 		Buffer_FUx.val[i][1] -= FBuffer.val[i][1];
 	}
 
-	d_dy.execute(FPhi,FBuffer);
+	d_dy(FPhi,FBuffer);
 	for(int i=0; i<FPhi.N; ++i)
 	{
 		Buffer_FUy.val[i][0] -= FBuffer.val[i][0];
 		Buffer_FUy.val[i][1] -= FBuffer.val[i][1];
 	}
 
-	d_dz.execute(FPhi,FBuffer);
+	d_dz(FPhi,FBuffer);
 	for(int i=0; i<FPhi.N; ++i)
 	{
 		Buffer_FUz.val[i][0] -= FBuffer.val[i][0];

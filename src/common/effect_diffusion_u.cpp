@@ -23,11 +23,11 @@ void effect_diffusion_u::execute(const field_imag &Fni,
 	static OP_partial_derivative d_dy(Fni,e_y);
 	static OP_partial_derivative d_dz(Fni,e_z);
 
-	field_imag FBuffer(*Fni.my_grid);
-	field_real Buffer(*Fni.my_grid);
+	field_imag FBuffer(Fni.my_grid);
+	field_real Buffer(Fni.my_grid);
 
 
-	field_real ni(*Fni.my_grid);
+	field_real ni(Fni.my_grid);
 	iFFT(Fni,ni);
 	/*
 
@@ -43,7 +43,7 @@ void effect_diffusion_u::execute(const field_imag &Fni,
 */
 
 	// x-Komponente
-	d_dx.execute(Fni,FBuffer);
+	d_dx(Fni,FBuffer);
 	iFFT(FBuffer, Buffer);
 
 
@@ -65,7 +65,7 @@ void effect_diffusion_u::execute(const field_imag &Fni,
 
 
 	// y-Komponente
-	d_dy.execute(Fni,FBuffer);
+	d_dy(Fni,FBuffer);
 	iFFT(FBuffer, Buffer);
 
 
@@ -86,7 +86,7 @@ void effect_diffusion_u::execute(const field_imag &Fni,
 
 
 	// z-Komponente
-	d_dz.execute(Fni,FBuffer);
+	d_dz(Fni,FBuffer);
 	iFFT(FBuffer, Buffer);
 
 

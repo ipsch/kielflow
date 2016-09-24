@@ -21,9 +21,9 @@ void solver_rhs::evaluate_advection(const field_imag &FUx, const field_imag &FUy
 	// step1: berechne hier F^{-1}[F[Ux]], F^{-1}[F[Uy]] und F^{-1}[F[Uz]]
 	// dies ist identisch mit
 	// Ux, Uy und Uz
-	field_real Ux(*FUx.my_grid);
-	field_real Uy(*FUy.my_grid);
-	field_real Uz(*FUz.my_grid);
+	field_real Ux(FUx.my_grid);
+	field_real Uy(FUy.my_grid);
+	field_real Uz(FUz.my_grid);
 
 
 	static OP_partial_derivative d_dx(FUx,e_x);
@@ -39,25 +39,25 @@ void solver_rhs::evaluate_advection(const field_imag &FUx, const field_imag &FUy
 	// dies ist identisch mit
 	// (d/dx) Ux, (d/dy) Ux und (d/dz) Ux
 
-	field_imag FBuffer(*FXX.my_grid);
+	field_imag FBuffer(FXX.my_grid);
 
 
-	d_dx.execute(FXX,FBuffer);
-	field_real dx_XX(*FBuffer.my_grid);
+	d_dx(FXX,FBuffer);
+	field_real dx_XX(FBuffer.my_grid);
 	iFFT(FBuffer,dx_XX);
 
 
-	d_dy.execute(FXX,FBuffer);
-	field_real dy_XX(*FBuffer.my_grid);
+	d_dy(FXX,FBuffer);
+	field_real dy_XX(FBuffer.my_grid);
 	iFFT(FBuffer,dy_XX);
 
-	d_dz.execute(FXX,FBuffer);
-	field_real dz_XX(*FBuffer.my_grid);
+	d_dz(FXX,FBuffer);
+	field_real dz_XX(FBuffer.my_grid);
 	iFFT(FBuffer,dz_XX);
 
 	// step3: berechne hier F[ Ux*(d/dx)Ux + Uy*(d/dy)Ux + Uz*(d/dz)Ux ]
 
-	field_real Buffer(*FXX.my_grid);
+	field_real Buffer(FXX.my_grid);
 
 
 	for(int i=0; i<Ux.N; ++i)
@@ -120,19 +120,19 @@ void solver_rhs::evaluate_force_E(const field_imag &FPhi,
 		for(int j=0; j<FPhi.Ny; ++j)
 			for(int k=0; k<FPhi.Nz; ++k)
 			{
-				int index = FPhi.my_grid->index_at(i,j,k);
+				int index = FPhi.index(i,j,k);
 				double FPhi_re = FPhi.val[index][0];
 				double FPhi_im = FPhi.val[index][1];
 
 
-				Buffer_FUx.val[index][0] += FPhi.my_grid->x_axis->val_at(i)*FPhi_im;
-				Buffer_FUx.val[index][1] -= FPhi.my_grid->x_axis->val_at(i)*FPhi_re;
+				Buffer_FUx.val[index][0] += FPhi.my_grid.x_axis->k_val_at(i)*FPhi_im;
+				Buffer_FUx.val[index][1] -= FPhi.my_grid.x_axis->k_val_at(i)*FPhi_re;
 
-				Buffer_FUy.val[index][0] += FPhi.my_grid->y_axis->val_at(j)*FPhi_im;
-				Buffer_FUy.val[index][1] -= FPhi.my_grid->y_axis->val_at(j)*FPhi_re;
+				Buffer_FUy.val[index][0] += FPhi.my_grid.y_axis->k_val_at(j)*FPhi_im;
+				Buffer_FUy.val[index][1] -= FPhi.my_grid.y_axis->k_val_at(j)*FPhi_re;
 
-				Buffer_FUz.val[index][0] += FPhi.my_grid->z_axis->val_at(k)*FPhi_im;
-				Buffer_FUz.val[index][1] -= FPhi.my_grid->z_axis->val_at(k)*FPhi_re;
+				Buffer_FUz.val[index][0] += FPhi.my_grid.z_axis->k_val_at(k)*FPhi_im;
+				Buffer_FUz.val[index][1] -= FPhi.my_grid.z_axis->k_val_at(k)*FPhi_re;
 			}
    #ifdef _MY_VERBOSE
 	log <<"done";
@@ -162,12 +162,12 @@ void solver_rhs::evaluate_diffusion_mu(const field_imag &FXX, field_imag &Buffer
 		for(int j=0; j<FXX.Ny; ++j)
 			for(int k=0; k<FXX.Nz; ++k)
 			{
-				double kx = FXX.my_grid->x_axis->val_at(i);
-				double ky = FXX.my_grid->y_axis->val_at(j);
-				double kz = FXX.my_grid->z_axis->val_at(k);
+				double kx = FXX.my_grid.x_axis->k_val_at(i);
+				double ky = FXX.my_grid.y_axis->k_val_at(j);
+				double kz = FXX.my_grid.z_axis->k_val_at(k);
 
 				double pow_k = kx*kx + ky*ky + kz*kz;
-				int index = Buffer_FXX.my_grid->index_at(i,j,k);
+				int index = Buffer_FXX.index(i,j,k);
 				Buffer_FXX.val[index][0] += my_params.mu* pow_k * FXX.val[index][0];
 				Buffer_FXX.val[index][1] += my_params.mu *pow_k * FXX.val[index][1];
 
@@ -190,14 +190,14 @@ void solver_rhs::evaluate_diffusion_u(const field_imag &Fni,
 
 
 
-	field_imag FBuffer(*Fni.my_grid);
-	field_real Buffer(*Fni.my_grid);
+	field_imag FBuffer(Fni.my_grid);
+	field_real Buffer(Fni.my_grid);
 
-	field_real ni(*Fni.my_grid);
+	field_real ni(Fni.my_grid);
 	iFFT(Fni,ni);
 
 	// x-Komponente
-	d_dx.execute(Fni,FBuffer);
+	d_dx(Fni,FBuffer);
 	iFFT(FBuffer, Buffer);
 
 	for(int i=0; i<ni.N; ++i)
@@ -211,7 +211,7 @@ void solver_rhs::evaluate_diffusion_u(const field_imag &Fni,
 	}
 
 	// y-Komponente
-	d_dy.execute(Fni,FBuffer);
+	d_dy(Fni,FBuffer);
 	iFFT(FBuffer, Buffer);
 
 	for(int i=0; i<ni.N; ++i)
@@ -226,7 +226,7 @@ void solver_rhs::evaluate_diffusion_u(const field_imag &Fni,
 
 
 	// z-Komponente
-	d_dz.execute(Fni,FBuffer);
+	d_dz(Fni,FBuffer);
 	iFFT(FBuffer, Buffer);
 
 	for(int i=0; i<ni.N; ++i)
@@ -256,13 +256,13 @@ void solver_rhs::evaluate_diffusion_n(const field_imag &FUx, const field_imag &F
 	OP_partial_derivative d_dy(FUy,e_y);
 	OP_partial_derivative d_dz(FUz,e_z);
 
-	field_imag FBuffer_x(*FUx.my_grid);
-	field_imag FBuffer_y(*FUy.my_grid);
-	field_imag FBuffer_z(*FUz.my_grid);
+	field_imag FBuffer_x(FUx.my_grid);
+	field_imag FBuffer_y(FUy.my_grid);
+	field_imag FBuffer_z(FUz.my_grid);
 
-	d_dx.execute(FUx,FBuffer_x);
-	d_dy.execute(FUy,FBuffer_y);
-	d_dz.execute(FUz,FBuffer_z);
+	d_dx(FUx,FBuffer_x);
+	d_dy(FUy,FBuffer_y);
+	d_dz(FUz,FBuffer_z);
 
 	for(int i=0; i<N;++i)
 	{
@@ -290,13 +290,13 @@ void solver_rhs::evaluate_continuityEQ(field_imag &FUx, field_imag &FUy, field_i
 
 
 	// Temporäre größen im Ortsraum (iFFT impliziert)
-	field_real ni(*Fni.my_grid);
+	field_real ni(Fni.my_grid);
 	iFFT(Fni,ni);
-	field_real Ux(*FUx.my_grid);
+	field_real Ux(FUx.my_grid);
 	iFFT(FUx,Ux);
-	field_real Uy(*FUy.my_grid);
+	field_real Uy(FUy.my_grid);
 	iFFT(FUy,Uy);
-	field_real Uz(*FUz.my_grid);
+	field_real Uz(FUz.my_grid);
 	iFFT(FUz,Uz);
 
 	// evaluate non-linearity in realspace FUx \cdot ni (and so on)
@@ -308,11 +308,11 @@ void solver_rhs::evaluate_continuityEQ(field_imag &FUx, field_imag &FUy, field_i
 	}
 
 	// backtransformation
-	field_imag FBuffer_x(*Ux.my_grid);
+	field_imag FBuffer_x(Ux.my_grid);
 	FFT(Ux,FBuffer_x);
-	field_imag FBuffer_y(*Uy.my_grid);
+	field_imag FBuffer_y(Uy.my_grid);
 	FFT(Uy,FBuffer_y);
-	field_imag FBuffer_z(*Uz.my_grid);
+	field_imag FBuffer_z(Uz.my_grid);
 	FFT(Uz,FBuffer_z);
 
 	// Ableitung bilden
@@ -321,9 +321,9 @@ void solver_rhs::evaluate_continuityEQ(field_imag &FUx, field_imag &FUy, field_i
 	static OP_partial_derivative d_dy(FUx,e_y);
 	static OP_partial_derivative d_dz(FUx,e_z);
 
-	d_dx.execute(FBuffer_x,FBuffer_x);
-	d_dy.execute(FBuffer_y,FBuffer_y);
-	d_dz.execute(FBuffer_z,FBuffer_z);
+	d_dx(FBuffer_x,FBuffer_x);
+	d_dy(FBuffer_y,FBuffer_y);
+	d_dz(FBuffer_z,FBuffer_z);
 
 	for(int i=0; i<Buffer_Fni.N; ++i)
 	{

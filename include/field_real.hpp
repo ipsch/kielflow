@@ -13,7 +13,8 @@ public :
 
 	void fill(double (*fill_fkt)(const double &,const double &, const double &)) const;
 	void fill(interface_3d_fkt const &rhs);
-	bool IsNan();
+	bool IsNan() const;
+	bool IsInf() const;
 
 	template<typename Func>
 	void fill2(Func fkt)

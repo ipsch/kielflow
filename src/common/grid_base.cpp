@@ -6,36 +6,32 @@
 
 
 
-grid::grid(const int &Nx_, const int &Ny_, const int &Nz_,
-		const axis &Ax, const axis &Ay, const axis &Az,
-		const ptr_axis_factory_fkt &factory_fkt) :
-		Nx(Nx_), Ny(Ny_), Nz(Nz_), N(Nx_*Ny_*Nz_),
-		x_axis( (Ax.*factory_fkt)()), y_axis( (Ay.*factory_fkt)()), z_axis( (Az.*factory_fkt)() )
+grid::grid(const axis &Ax, const axis &Ay, const axis &Az) :
+	x_axis(Ax.clone()), y_axis(Ay.clone()), z_axis(Az.clone()),
+	Nx(x_axis->N), Ny(y_axis->N), Nz(z_axis->N)
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("grid");
-	log << "grid(const int &Nx_, const int &Ny_, const int &Nz_, axis &Ax, axis &Ay, axis &Az, ptr_axis_factory_fkt &factory_fkt) ";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("grid");
+	my_log << "grid(const int &Nx_, const int &Ny_, const int &Nz_, axis &Ax, axis &Ay, axis &Az, ptr_axis_factory_fkt &factory_fkt) ";
    #endif
 }
 
 
 grid::grid(const grid &that) :
-Nx(that.Nx), Ny(that.Ny), Nz(that.Nz), N(that.N),
-x_axis(that.x_axis->clone()), y_axis(that.y_axis->clone()), z_axis(that.z_axis->clone())
-
+	grid(*that.x_axis, *that.y_axis, *that.z_axis)
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("grid");
-	log << "grid(const  grid &that)";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("grid");
+	my_log << "grid(const  grid &that)";
    #endif
 }
 
 
 grid::~grid()
 {
-   #ifdef _MY_VERBOSE_MORE
-	logger log("grid");
-	log << "~grid()";
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("grid");
+	my_log << "~grid()";
    #endif
 	delete x_axis;
 	delete y_axis;

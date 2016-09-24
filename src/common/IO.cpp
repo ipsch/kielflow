@@ -14,20 +14,20 @@ std::string get_selfpath()
     /* handle error condition */
 }
 
-std::string get_header(const grid_Co &grid)
+std::string get_header(const grid &domain)
 {
 	// write header to file (3-lines of header)
 	std::stringstream sstr;
 
 	sstr << "output from PFluidDy\n";
 	sstr << "Domain: ";
-	sstr << "[" << grid.x_axis->val_at(0) << "," << grid.x_axis->val_at(grid.Nx)<< "]x";
-	sstr << "[" << grid.y_axis->val_at(0) << "," << grid.y_axis->val_at(grid.Nx)<< "]x";
-	sstr << "[" << grid.z_axis->val_at(0) << "," << grid.z_axis->val_at(grid.Nx)<< "]x";
+	sstr << "[" << domain.x_axis->val_at(0) << "," << domain.x_axis->val_at(domain.Nx)<< "]x";
+	sstr << "[" << domain.y_axis->val_at(0) << "," << domain.y_axis->val_at(domain.Nx)<< "]x";
+	sstr << "[" << domain.z_axis->val_at(0) << "," << domain.z_axis->val_at(domain.Nx)<< "]x";
 	sstr << "Nx/Ny/Nz ";
-	sstr << grid.Nx << "/";
-	sstr << grid.Ny << "/";
-	sstr << grid.Nz << "\n";
+	sstr << domain.Nx << "/";
+	sstr << domain.Ny << "/";
+	sstr << domain.Nz << "\n";
 	sstr << "x\ty\tz\tUx\tUy\tUz\tni\tPhi\n\n";
 
 	return sstr.str();
@@ -116,7 +116,7 @@ void save_axis(const axis * const A, const std::string &C, const std::string &pa
 	return;
 }
 
-void load_axis(const std::string &C, const std::string &path, axis_Co * &A)
+void load_axis(const std::string &C, const std::string &path, axis * &A)
 {
    #if defined(_MY_VERBOSE_TEDIOUS)
 	logger my_log("IO");
@@ -172,7 +172,7 @@ void load_axis(const std::string &C, const std::string &path, axis_Co * &A)
 
 
 
-void save_grid(const grid_Co &Target, const std::string &path)
+void save_grid(const grid &Target, const std::string &path)
 {
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	logger my_log("IO");
@@ -196,20 +196,20 @@ void save_grid(const grid_Co &Target, const std::string &path)
 	return;
 }
 
-grid_Co load_grid(const std::string &path)
+grid load_grid(const std::string &path)
 {
 
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
-	logger my_log("grid_Co load_grid(const std::string &path)");
+	logger my_log("grid load_grid(const std::string &path)");
 	my_log << "start";
 	std::string status_text = "path: " + path;
 	my_log << status_text;
    #endif
 
 
-	axis_Co * x_axis;
-	axis_Co * y_axis;
-	axis_Co * z_axis;
+	axis * x_axis;
+	axis * y_axis;
+	axis * z_axis;
 
 	load_axis("x", path, x_axis);
 	load_axis("y", path, y_axis);
@@ -218,7 +218,7 @@ grid_Co load_grid(const std::string &path)
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	my_log << "creating grid";
    #endif
-    grid_Co Omega(*x_axis, *y_axis , *z_axis);
+    grid Omega(*x_axis, *y_axis , *z_axis);
 
    #if defined(_MY_VERBOSE_TEDIOUS)
 	std::stringstream sstr;
@@ -380,7 +380,7 @@ void save_field_real(const std::string &data_set, const field_real &Target, cons
 	for( int i=0; i<Target.Nx; ++i)
 		for( int j=0; j<Target.Ny; ++j)
 			for( int k=0; k<Target.Nz; ++k)
-				conversion_array(i,j,k) = Target.val[Target.my_grid->index_at(i,j,k)];
+				conversion_array(i,j,k) = Target.val[Target.index(i,j,k)];
 
 	echelon::file hdf5_file(path, echelon::file::open_mode::read_write);
 	echelon::group data = hdf5_file["data"];
@@ -408,7 +408,7 @@ field_real load_field_real(const std::string &path, const std::string &data_set)
 	my_log << "loading grid";
    #endif
 
-	grid_Co Omega = load_grid(path);
+	grid Omega = load_grid(path);
 
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	my_log << "done loading grid";
@@ -433,7 +433,7 @@ field_real load_field_real(const std::string &path, const std::string &data_set)
 		for( int j=0; j<Target.Ny; ++j)
 			for( int k=0; k<Target.Nz; ++k)
 			{
-				Target.val[Target.my_grid->index_at(i,j,k)] = conversion_array(i,j,k);
+				Target.val[Target.index(i,j,k)] = conversion_array(i,j,k);
 			}
 
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
@@ -454,7 +454,7 @@ void save_field_imag(const std::string &data_set, const field_imag &Target, cons
 	my_log << status_text;
    #endif
 
-	field_real tmp = field_real(*Target.my_grid);
+	field_real tmp = field_real(Target.my_grid);
 
 	iFFT(Target,tmp);
 
@@ -466,7 +466,7 @@ void save_field_imag(const std::string &data_set, const field_imag &Target, cons
 	for( int i=0; i<tmp.Nx; ++i)
 		for( int j=0; j<tmp.Ny; ++j)
 			for( int k=0; k<tmp.Nz; ++k)
-				conversion_array(i,j,k) = tmp.val[tmp.my_grid->index_at(i,j,k)];
+				conversion_array(i,j,k) = tmp.val[tmp.index(i,j,k)];
 
 
 	echelon::file hdf5_file(path, echelon::file::open_mode::read_write);
@@ -490,9 +490,10 @@ field_imag load_field_imag(const std::string &data_set, const std::string &path)
 	my_log << status_text;
    #endif
 
-	grid_Co Omega = load_grid(path);
+	grid Omega = load_grid(path);
 	field_real RF = load_field_real(path, data_set);
 	field_imag IF(Omega);
+
 	FFT(RF,IF);
 
    #if defined(_MY_VERBOSE_TEDIOUS)
@@ -638,9 +639,9 @@ void save_1d(const field_real &XX, subdim & sdim, const std::string &path)
 	// write header to file (3-lines of header)
 	output_stream << "output from PFluidDy\n";
 	output_stream << "Domain: ";
-	output_stream << "[" << XX.my_grid->x_axis->val_at(0) << "," <<  XX.my_grid->x_axis->val_at(XX.Nx) << "]x";
-	output_stream << "[" << XX.my_grid->y_axis->val_at(0) << "," <<  XX.my_grid->y_axis->val_at(XX.Nx) << "]x";
-	output_stream << "[" << XX.my_grid->z_axis->val_at(0) << "," <<  XX.my_grid->z_axis->val_at(XX.Nx) << "]\t";
+	output_stream << "[" << XX.my_grid.x_axis->val_at(0) << "," <<  XX.my_grid.x_axis->val_at(XX.Nx) << "]x";
+	output_stream << "[" << XX.my_grid.y_axis->val_at(0) << "," <<  XX.my_grid.y_axis->val_at(XX.Nx) << "]x";
+	output_stream << "[" << XX.my_grid.z_axis->val_at(0) << "," <<  XX.my_grid.z_axis->val_at(XX.Nx) << "]\t";
 	output_stream << "Nx/Ny/Nz ";
 	output_stream << XX.Nx << "/";
 	output_stream << XX.Ny << "/";
@@ -657,11 +658,11 @@ void save_1d(const field_real &XX, subdim & sdim, const std::string &path)
 		//std::cout << "(" << *i << "," << *j << "," << *k << ")" << std::endl;
 		//i_fast << " " << domain::index_3d_re(*i,*j,*k) << std::endl;
 		output_stream << std::scientific << std::setprecision(3);
-		output_stream << XX.my_grid->x_axis->val_at(*i) << "\t";
-		output_stream << XX.my_grid->y_axis->val_at(*j) << "\t";
-		output_stream << XX.my_grid->z_axis->val_at(*k) << "\t";
+		output_stream << XX.my_grid.x_axis->val_at(*i) << "\t";
+		output_stream << XX.my_grid.y_axis->val_at(*j) << "\t";
+		output_stream << XX.my_grid.z_axis->val_at(*k) << "\t";
 		output_stream << std::scientific << std::setprecision(6);
-		int index = XX.my_grid->index_at(*i,*j,*k);
+		int index = XX.index(*i,*j,*k);
 		output_stream << XX.val[index] << "\n";
 		//output_stream << std::endl;
 	}
@@ -726,9 +727,9 @@ void save_1d(const field_real &Ux, const field_real &Uy, const field_real  &Uz, 
 	// write header to file (3-lines of header)
 	output_stream << "output from PFluidDy\n";
 	output_stream << "Domain: ";
-	output_stream << "[" << Ux.my_grid->x_axis->val_at(0) << "," <<  Ux.my_grid->x_axis->val_at(Ux.Nx) << "]x";
-	output_stream << "[" << Ux.my_grid->y_axis->val_at(0) << "," <<  Ux.my_grid->y_axis->val_at(Ux.Nx) << "]x";
-	output_stream << "[" << Ux.my_grid->z_axis->val_at(0) << "," <<  Ux.my_grid->z_axis->val_at(Ux.Nx) << "]\t";
+	output_stream << "[" << Ux.my_grid.x_axis->val_at(0) << "," <<  Ux.my_grid.x_axis->val_at(Ux.Nx) << "]x";
+	output_stream << "[" << Ux.my_grid.y_axis->val_at(0) << "," <<  Ux.my_grid.y_axis->val_at(Ux.Nx) << "]x";
+	output_stream << "[" << Ux.my_grid.z_axis->val_at(0) << "," <<  Ux.my_grid.z_axis->val_at(Ux.Nx) << "]\t";
 	output_stream << "Nx/Ny/Nz ";
 	output_stream << Ux.Nx << "/";
 	output_stream << Ux.Ny << "/";
@@ -745,11 +746,11 @@ void save_1d(const field_real &Ux, const field_real &Uy, const field_real  &Uz, 
 		//std::cout << "(" << *i << "," << *j << "," << *k << ")" << std::endl;
 		//i_fast << " " << domain::index_3d_re(*i,*j,*k) << std::endl;
 		output_stream << std::scientific << std::setprecision(3);
-		output_stream << Ux.my_grid->x_axis->val_at(*i) << "\t";
-		output_stream << Ux.my_grid->y_axis->val_at(*j) << "\t";
-		output_stream << Ux.my_grid->z_axis->val_at(*k) << "\t";
+		output_stream << Ux.my_grid.x_axis->val_at(*i) << "\t";
+		output_stream << Ux.my_grid.y_axis->val_at(*j) << "\t";
+		output_stream << Ux.my_grid.z_axis->val_at(*k) << "\t";
 		output_stream << std::scientific << std::setprecision(6);
-		int index = Ux.my_grid->index_at(*i,*j,*k);
+		int index = Ux.index(*i,*j,*k);
 		output_stream << Ux.val[index] << "\t";
 		output_stream << Uy.val[index] << "\t";
 		output_stream << Uz.val[index] << "\t";
@@ -822,7 +823,7 @@ void save_2d(const field_real &XX, subdim & sdim,  const std::string &path)
 
 
 	std::ofstream output_stream(path.c_str(), std::ofstream::trunc);
-	output_stream << get_header(*XX.my_grid);
+	output_stream << get_header(XX.my_grid);
 
 	// write data to file
 	for(i_slow=0; i_slow<N_slow; ++i_slow)
@@ -830,11 +831,11 @@ void save_2d(const field_real &XX, subdim & sdim,  const std::string &path)
 		for(i_fast=0; i_fast<N_fast; ++i_fast)
 		{
 			output_stream << std::scientific << std::setprecision(3);
-			output_stream << XX.my_grid->x_axis->val_at(*i) << "\t";
-			output_stream << XX.my_grid->y_axis->val_at(*j) << "\t";
-			output_stream << XX.my_grid->z_axis->val_at(*k) << "\t";
+			output_stream << XX.my_grid.x_axis->val_at(*i) << "\t";
+			output_stream << XX.my_grid.y_axis->val_at(*j) << "\t";
+			output_stream << XX.my_grid.z_axis->val_at(*k) << "\t";
 			output_stream << std::scientific << std::setprecision(6);
-			 int index = XX.my_grid->index_at(*i,*j,*k);
+			 int index = XX.index(*i,*j,*k);
 			output_stream << XX.val[index] << "\n";
 		}
 		output_stream << std::endl;
@@ -854,7 +855,7 @@ void save_2d(const field_real &Ux, const field_real &Uy, const field_real  &Uz, 
    #endif
 
 	std::ofstream output_stream(path.c_str(), std::ofstream::trunc);
-	output_stream << get_header(*Ux.my_grid);
+	output_stream << get_header(Ux.my_grid);
 
 	// write data to file
 	for(sdim.i_slow=0; sdim.i_slow<sdim.N_slow; ++sdim.i_slow)
@@ -862,11 +863,11 @@ void save_2d(const field_real &Ux, const field_real &Uy, const field_real  &Uz, 
 		for(sdim.i_fast=0; sdim.i_fast<sdim.N_fast; ++sdim.i_fast)
 		{
 			output_stream << std::scientific << std::setprecision(3);
-			output_stream << Ux.my_grid->x_axis->val_at(*sdim.i) << "\t";
-			output_stream << Ux.my_grid->y_axis->val_at(*sdim.j) << "\t";
-			output_stream << Ux.my_grid->z_axis->val_at(*sdim.k) << "\t";
+			output_stream << Ux.my_grid.x_axis->val_at(*sdim.i) << "\t";
+			output_stream << Ux.my_grid.y_axis->val_at(*sdim.j) << "\t";
+			output_stream << Ux.my_grid.z_axis->val_at(*sdim.k) << "\t";
 			output_stream << std::scientific << std::setprecision(6);
-			int index = Ux.my_grid->index_at(*sdim.i,*sdim.j,*sdim.k);
+			int index = Ux.index(*sdim.i,*sdim.j,*sdim.k);
 			output_stream << Ux.val[index] << "\t";
 			output_stream << Uy.val[index] << "\t";
 			output_stream << Uz.val[index] << "\t";
@@ -886,7 +887,7 @@ void save_3d(const std::string &file_name , const field_real &Ux, const field_re
 	std::ofstream output_stream(path.c_str(), std::ofstream::trunc);
 
 	// write header to file
-	output_stream << get_header(*Ux.my_grid);
+	output_stream << get_header(Ux.my_grid);
 
 	std::cout << "   save(): saving data to ";
 	std::cout << file_name;
@@ -899,11 +900,11 @@ void save_3d(const std::string &file_name , const field_real &Ux, const field_re
 			for( int k=0; k<Ux.Nz; ++k)
 			{
 				output_stream << std::scientific << std::setprecision(3);
-				output_stream << Ux.my_grid->x_axis->val_at(i) << "\t";
-				output_stream << Ux.my_grid->y_axis->val_at(j) << "\t";
-				output_stream << Ux.my_grid->z_axis->val_at(k) << "\t";
+				output_stream << Ux.my_grid.x_axis->val_at(i) << "\t";
+				output_stream << Ux.my_grid.y_axis->val_at(j) << "\t";
+				output_stream << Ux.my_grid.z_axis->val_at(k) << "\t";
 				output_stream << std::scientific << std::setprecision(6);
-				int index = Ux.my_grid->index_at(i,j,k);
+				int index = Ux.index(i,j,k);
 				output_stream << Ux.val[index] << "\t";
 				output_stream << Uy.val[index] << "\t";
 				output_stream << Uz.val[index] << "\t";
@@ -933,11 +934,11 @@ void save_3d(const field_real &XX, const std::string &path)
 			for( int k=0; k<XX.Nz; ++k)
 			{
 				output_stream << std::scientific << std::setprecision(3);
-				output_stream << XX.my_grid->x_axis->val_at(i) << "\t";
-				output_stream << XX.my_grid->y_axis->val_at(j) << "\t";
-				output_stream << XX.my_grid->z_axis->val_at(k) << "\t";
+				output_stream << XX.my_grid.x_axis->val_at(i) << "\t";
+				output_stream << XX.my_grid.y_axis->val_at(j) << "\t";
+				output_stream << XX.my_grid.z_axis->val_at(k) << "\t";
 				output_stream << std::scientific << std::setprecision(6);
-				int index = XX.my_grid->index_at(i,j,k);
+				int index = XX.index(i,j,k);
 				output_stream << XX.val[index] << "\n";
 			}
 			output_stream << std::endl;
@@ -960,7 +961,7 @@ void save_slice(const std::string &data_set, const field_imag &Target, const std
    #endif
 
 
-	field_real tmp_3d_out(*Target.my_grid);
+	field_real tmp_3d_out(Target.my_grid);
 	iFFT(Target,tmp_3d_out);
 
 
@@ -977,11 +978,11 @@ void save_slice(const std::string &data_set, const field_imag &Target, const std
 
 	echelon::multi_array<double> conversion_array({Nx_, Ny_}, 0.);
 
-	int k = tmp_3d_out.my_grid->z_axis->index_at(0.);
+	int k = tmp_3d_out.my_grid.z_axis->index_at(0.);
 	for(int i=0; i<tmp_3d_out.Nx; ++i)
 		for(int j=0; j<tmp_3d_out.Ny; ++j)
 		{
-			int index = tmp_3d_out.my_grid->index_at(i,j,k);
+			int index = tmp_3d_out.index(i,j,k);
 			conversion_array(i,j) = tmp_3d_out.val[index];
 
 		}
@@ -1006,7 +1007,7 @@ void load_slice(const std::string &data_set, double * ptr_data, const std::strin
 	my_log << "load_slice(const std::string &path, const std::string &data_set)" ;
    #endif
 
-	grid_Co Omega = load_grid(path);
+	grid Omega = load_grid(path);
 
 	/*
 	long unsigned int Nx_ = static_cast<int>(Omega.Nx);
@@ -1070,7 +1071,7 @@ std::string I4(int number){
 
 
 void save_all(std::vector<particle> &particle_list,
-		      const grid_Co &Omega,
+		      const grid &Omega,
 			  const double &Time,
 		      const parameters &Params,
 		      const field_imag &FUx, const field_imag &FUy, const field_imag &FUz,
@@ -1094,7 +1095,7 @@ void save_all(std::vector<particle> &particle_list,
 
 void save_slice(const int &step,
 		  std::vector<particle> &particle_list,
-	      const grid_Co &Omega,
+	      const grid &Omega,
 		  const double &Time,
 	      const parameters &Params,
 	      const field_imag &FUx, const field_imag &FUy, const field_imag &FUz,
@@ -1119,7 +1120,7 @@ void save_slice(const int &step,
 
 
 
-void save_frame_1d(const grid_Co &Omega,
+void save_frame_1d(const grid &Omega,
 		        double* Ux, double* Uy, double* Uz, double* ni, double* Ph,
 			    const std::string &path = "./data/frame.dat"
 			    )
@@ -1150,7 +1151,7 @@ void save_frame_1d(const grid_Co &Omega,
 	return;
 }
 
-void save_frame_2d(const grid_Co &Omega,
+void save_frame_2d(const grid &Omega,
 		        double* Ux, double* Uy, double* Uz, double* ni, double* Ph,
 			    const std::string &path = "./data/frame.dat"
 			    )
@@ -1211,7 +1212,7 @@ void save_major_wavevectors(const std::string &filename, field_imag &data)
 		// write info about major kx into stream
 		if(iter<data.Nx)
 		{
-			index = data.my_grid->index_at(iter,0,0);
+			index = data.index(iter,0,0);
 			sstr << data.val[index][0] << "\t" << data.val[index][1];
 		}
 		else
@@ -1223,7 +1224,7 @@ void save_major_wavevectors(const std::string &filename, field_imag &data)
 		// write info about major ky into stream
 		if(iter<data.Ny)
 		{
-			index = data.my_grid->index_at(0,iter,0);
+			index = data.index(0,iter,0);
 			sstr << data.val[index][0] << "\t" << data.val[index][1];
 		}
 		else
@@ -1235,7 +1236,7 @@ void save_major_wavevectors(const std::string &filename, field_imag &data)
 		// write info about major kz into stream
 		if(iter<data.Nz)
 		{
-			index = data.my_grid->index_at(0,0,iter);
+			index = data.index(0,0,iter);
 			sstr << data.val[index][0] << "\t" << data.val[index][1];
 		}
 		else

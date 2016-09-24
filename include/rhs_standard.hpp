@@ -7,7 +7,7 @@
 
 #include <cmath>     // basic math stuff (sqrt(), cabs(), pow(a,n) etc.)
 #include <omp.h>
-
+#include "fftw3.h"
 
 
 #include "parameters.hpp"
@@ -32,7 +32,7 @@
    #define _RHS_E_EXT
    #define _RHS_CONTINUITY
    //#define _RHS_PENALIZATION_U
-   //#define _RHS_SPECTRAL_VISCOSITY
+   #define _RHS_SVISCOSITY
 
 class rhs_standard : public interface_rhs
 {
@@ -41,9 +41,10 @@ public :
 			field_real &potential, field_real &density_dust,
 			field_real &solid_mask, const grid &domain);
 	void solve(const double &t, field_imag &FUx, field_imag &FUy, field_imag &FUz, field_imag &Fni);
-	~rhs_standard() {	}
+	~rhs_standard() { fftw_free(field_SV);	}
 
 protected :
+	const int N;
 	parameters &my_params;
 	interface_poisson_solver &my_poisson_solver;
 	field_real &Phi;
@@ -85,7 +86,7 @@ protected :
 	field_imag FBuffer_2nd;
 
 
-
+	double * field_SV;
 
 };
 

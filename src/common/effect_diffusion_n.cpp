@@ -15,13 +15,13 @@ void effect_diffusion_n::execute(const field_imag &FUx, const field_imag &FUy, c
 	static OP_partial_derivative d_dy(FUx,e_y);
 	static OP_partial_derivative d_dz(FUx,e_z);
 
-	field_imag FBuffer_x(*FUx.my_grid);
-	field_imag FBuffer_y(*FUy.my_grid);
-	field_imag FBuffer_z(*FUz.my_grid);
+	field_imag FBuffer_x(FUx.my_grid);
+	field_imag FBuffer_y(FUy.my_grid);
+	field_imag FBuffer_z(FUz.my_grid);
 
-	d_dx.execute(FUx,FBuffer_x);
-	d_dy.execute(FUy,FBuffer_y);
-	d_dz.execute(FUz,FBuffer_z);
+	d_dx(FUx,FBuffer_x);
+	d_dy(FUy,FBuffer_y);
+	d_dz(FUz,FBuffer_z);
 
 	for(int i=0; i<N;++i)
 	{

@@ -1,41 +1,46 @@
 #include "field_real.hpp"
 
 
+bool field_real::IsNan() const
+{
+	for(int i=0; i<N; ++ i)
+		if(val[i]!=val[i])
+			return true;
+	return false;
+}
+
+bool field_real::IsInf() const
+{
+	for(int i=0; i<N; ++ i)
+		if(std::isinf(val[i]))
+			return true;
+	return false;
+}
+
+
 // ###################### coordinate space #############################
-field_real::field_real(const grid_Co &Omega) :
-my_grid(Omega.clone()),
-N(my_grid->N), Nx(my_grid->Nx), Ny(my_grid->Ny), Nz(my_grid->Nz)
+field_real::field_real(const grid &Omega) :
+field(Omega, Omega.Nx, Omega.Ny, Omega.Nz)
 {
    #ifdef _MY_VERBOSE_MORE
 	logger log("field_real");
 	log << "field_real(const grid_Co &Omega)";
    #endif
 
-	val = (double*) fftw_malloc(sizeof(double) * my_grid->N);
+	val = (double*) fftw_malloc(sizeof(double) * N);
 }
 
-field_real::field_real(const grid_Fo &FOmega) :
-my_grid(FOmega.reziprocal()),
-N(my_grid->N), Nx(my_grid->Nx), Ny(my_grid->Ny), Nz(my_grid->Nz)
-{
-   #ifdef _MY_VERBOSE_MORE
-	logger log("field_real");
-	log << "field_real(const grid_Fo &FOmega)";
-   #endif
 
-	val = (double*) fftw_malloc(sizeof(double) * my_grid->N);
-}
 
 field_real::field_real(const field_real &that) :
-my_grid(that.my_grid->clone()),
-N(my_grid->N), Nx(my_grid->Nx), Ny(my_grid->Ny), Nz(my_grid->Nz)
+		field(that.my_grid, that.my_grid.Nx, that.my_grid.Ny, that.my_grid.Nz)
 {
    #ifdef _MY_VERBOSE_MORE
 	logger log("field_real");
 	log << "field_real(const grid &Omega)";
    #endif
 
-	val = (double*) fftw_malloc(sizeof(double) * my_grid->N);
+	val = (double*) fftw_malloc(sizeof(double) * N);
 
 	for( int i=0; i<that.N; ++i)
 	{
@@ -50,7 +55,6 @@ field_real::~field_real()
 	log << "~field_real()";
    #endif
 	fftw_free(val);
-	delete my_grid;
 }
 
 void field_real::fill(double (*fill_fkt)(const double &,const double &, const double &)) const
@@ -63,10 +67,10 @@ void field_real::fill(double (*fill_fkt)(const double &,const double &, const do
 		for( int j=0; j < Ny; ++j)
 			for( int k=0; k < Nz; ++k)
 			{
-				double tmp_x = my_grid->x_axis->val_at(i);
-				double tmp_y = my_grid->y_axis->val_at(j);
-				double tmp_z = my_grid->z_axis->val_at(k);
-				val[my_grid->index_at(i,j,k)] = fill_fkt(tmp_x,tmp_y,tmp_z);
+				double tmp_x = my_grid.x_axis->val_at(i);
+				double tmp_y = my_grid.y_axis->val_at(j);
+				double tmp_z = my_grid.z_axis->val_at(k);
+				val[index(i,j,k)] = fill_fkt(tmp_x,tmp_y,tmp_z);
 			}
 	return;
 }
@@ -75,14 +79,14 @@ void field_real::fill(interface_3d_fkt const &rhs)
 {
 	for(int i=0; i<Nx; ++i)
 	{
-		double x = my_grid->x_axis->val_at(i);
+		double x = my_grid.x_axis->val_at(i);
 		for(int j=0; j<Ny; ++j)
 		{
-			double y = my_grid->y_axis->val_at(j);
+			double y = my_grid.y_axis->val_at(j);
 			for(int k=0; k<Nz; ++k)
 			{
-				double z = my_grid->z_axis->val_at(k);
-				val[my_grid->index_at(i,j,k)] = rhs(x,y,z);
+				double z = my_grid.z_axis->val_at(k);
+				val[index(i,j,k)] = rhs(x,y,z);
 			}
 		}
 	}
@@ -100,10 +104,10 @@ void field_real::add(double (*fill_fkt)(const double &,const double &, const dou
 		for( int j=0; j < Ny; ++j)
 			for( int k=0; k < Nz; ++k)
 			{
-				double tmp_x = my_grid->x_axis->val_at(i);
-				double tmp_y = my_grid->y_axis->val_at(j);
-				double tmp_z = my_grid->z_axis->val_at(k);
-				val[my_grid->index_at(i,j,k)] += fill_fkt(tmp_x,tmp_y,tmp_z);
+				double tmp_x = my_grid.x_axis->val_at(i);
+				double tmp_y = my_grid.y_axis->val_at(j);
+				double tmp_z = my_grid.z_axis->val_at(k);
+				val[index(i,j,k)] += fill_fkt(tmp_x,tmp_y,tmp_z);
 			}
 	return;
 }
@@ -127,20 +131,20 @@ double field_real::val_at(int ix, int iy, int iz) const
 	while(iy>Ny-1) iy-=Ny;
 	while(iz<0) iz+=Nz;
 	while(iz>Nz-1) iz-=Nz;
-	return val[my_grid->index_at(ix, iy, iz)];
+	return val[index(ix, iy, iz)];
 }
 
 //inline
 double& field_real::operator() (const int &ix, const int &iy, const int &iz)
 {
-	return val[my_grid->index_at(ix, iy, iz)];
+	return val[index(ix, iy, iz)];
 }
 
 
 //inline
 double field_real::operator() (const int &ix, const int &iy, const int &iz) const
 {
-	return val[my_grid->index_at(ix, iy, iz)];
+	return val[index(ix, iy, iz)];
 }
 
 
@@ -156,10 +160,10 @@ return val[N];
 
 double field_real::operator() (const double &x, const double &y, const double &z) const
 {
-	int i = my_grid->x_axis->index_at(x); // index_at returns nearest int
-	int j = my_grid->y_axis->index_at(y);
-	int k = my_grid->z_axis->index_at(z);
-	return val[my_grid->index_at(i,j,k)];
+	int i = my_grid.x_axis->index_at(x); // index_at returns nearest int
+	int j = my_grid.y_axis->index_at(y);
+	int k = my_grid.z_axis->index_at(z);
+	return val[index(i,j,k)];
 }
 
 
@@ -195,8 +199,12 @@ field_real& field_real::operator+= (const field_real &rhs)
 void field_real::resize(int NX, int NY, int NZ)
 {
 	fftw_free(val);
-	my_grid->set_resolution(NX,NY,NZ);
-	val = (double*) fftw_malloc(sizeof(double) * my_grid->N);
+	my_grid.resize(NX,NY,NZ);
+	Nx=NX;
+	Ny=NY;
+	Nz=NZ;
+	N=Nx*Ny*Nz;
+	val = (double*) fftw_malloc(sizeof(double) * N);
 
 	return;
 }

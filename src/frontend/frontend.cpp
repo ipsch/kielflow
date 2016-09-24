@@ -53,20 +53,22 @@ double pi = acos(-1.);
 // number of grid-points
 // in different space directions
 
-int Nx = 192;
+int Nx = 128;
+//int Nx = 384;
 int Ny = 128;
 int Nz = 128;
 // Box dimensions
-double Lx = 12.;
+double Lx = 8.;
 double Ly = 8.;
 double Lz = 8.;
+
 // physical parameters
 double M = .5;
 double tau = 0.1;
 double theta = 50.;
 double mu = 0.;
 double beta = 0.0;
-
+double global_Q = -11498.5;
 
 
 void create_input_from_old_data(field_real &Ux, field_real &Uy, field_real &Uz, field_real &ni, field_real &Ph)
@@ -88,11 +90,11 @@ void create_input_from_old_data(field_real &Ux, field_real &Uy, field_real &Uz, 
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	my_log << "allocate memory for old data in real space ";
    #endif
-	field_real AUx(*FUx.my_grid);
-	field_real AUy(*FUx.my_grid);
-	field_real AUz(*FUx.my_grid);
-	field_real Ani(*FUx.my_grid);
-	field_real APh(*FUx.my_grid);
+	field_real AUx(FUx.my_grid);
+	field_real AUy(FUx.my_grid);
+	field_real AUz(FUx.my_grid);
+	field_real Ani(FUx.my_grid);
+	field_real APh(FUx.my_grid);
 
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	my_log << "transform fourier space data to real space";
@@ -125,16 +127,17 @@ void create_input_from_old_data(field_real &Ux, field_real &Uy, field_real &Uz, 
 	return;
 }
 
-void create_input_from_MGsolver(field_real &Ux, field_real &Uy, field_real &Uz, field_real &ni, field_real &Ph)
+void create_input_from_MGsolver(field_real &ni, field_real &Ph)
 {
-	Ux.fill(&set_zero);
-	Uy.fill(&set_zero);
-	Uz.fill(&set_zero);
+
+	double pi = acos(-1.);
+	double L = 8;
+
 
 	// ##### DUST #####
-	field_real nd(*ni.my_grid);
+	field_real nd(ni.my_grid);
 	//double Rd = 0.1183;
-	double default_Q = -11498.5;;
+	double default_Q = global_Q; //-11498.5;
 	double scale_Q = 8.1720e-06;
 	// -Q/2299.7
 	//fkt3d_Gauss dust_3d_fkt(Q*scale_Q,0.15,0.15,0.15);
@@ -152,7 +155,7 @@ void create_input_from_MGsolver(field_real &Ux, field_real &Uy, field_real &Uz, 
 	save_2d(nd, my_dim, "./data/nd2d.dat");
 	save_1d(nd, my_dim, "./data/nd1d.dat");
 
-	field_integrate Integrator(*nd.my_grid);
+	field_integrate Integrator(nd);
 	double Qges=Integrator.execute(nd);
 	std::cout << "Qges= " << Qges << std::endl;
 
@@ -162,27 +165,26 @@ void create_input_from_MGsolver(field_real &Ux, field_real &Uy, field_real &Uz, 
 	double SOR = .8; // Overrelaxation parameter
 	solver_poisson_jacobi_nlin NLJ(boundary_shape, boundary_value, SOR);
 	NLJ.set_max_iterations(80);
-	NLJ.limit_max = 1.e-5;
-	NLJ.limit_sum = 1.e-7;
+	NLJ.set_limit_NormMax(1.e-5);
+	NLJ.set_limit_NormSum(1.e-7);
 
 	// ##### MULTIGRID #####
 	solver_poisson_multigrid MG(NLJ);
-	{ // setup MG-cycle
-		const int MG_N = 6;
-		int * MG_steps_sizes = new int[MG_N]
-                  {0,0,0,-1,-1,-1};
-	    MG_lvl_control * cycle_shape = new MG_lvl_control[MG_N]
-			      {lvl_keep, lvl_down, lvl_keep, lvl_down, lvl_up, lvl_up};
-	    double * MG_error = new double[MG_N]
-	   				  {.01,.01,.01,2.e-5,5.e-5,1.e-4};
-	    MG.set_level_control(MG_N, MG_steps_sizes, cycle_shape,MG_error);
-	    // Sketch of cycle:
-	    // _
-	    //  \_  /
-	    //    \/
-	    delete[] MG_steps_sizes;
-	    delete[] cycle_shape;
-	} // configure done
+	const int MG_N = 4;
+	int * MG_steps_sizes = new int[MG_N]
+                 {0,-1,-1,-1};
+	MG_lvl_control * cycle_shape = new MG_lvl_control[MG_N]
+			  { lvl_down, lvl_down, lvl_up, lvl_up};
+	double * MG_error = new double[MG_N]
+			  {.01,
+			   0.0005,
+			   0.0005,
+			   0.0005};
+	MG.set_level_control(MG_N, MG_steps_sizes, cycle_shape, MG_error);
+
+	delete[] MG_steps_sizes;
+	delete[] cycle_shape;
+
 
 	MG.solve(Ph,nd);
 
@@ -199,13 +201,74 @@ void create_input_from_MGsolver(field_real &Ux, field_real &Uy, field_real &Uz, 
 
 
 // main #######################################################################
-int main(void)
+int main(int argc,char **argv)
 {
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	logger my_log("frontend");
 	my_log << "running version";
 	my_log << VERSION_STRING;
    #endif
+
+	parameters Params(M,tau,theta,mu,beta);
+
+	int switch_opt;
+	int opt_indent = 0;
+    opterr = 0;
+	 while ((switch_opt = getopt (argc, argv, "hM:Q:T:t:b:")) != -1)
+	    {
+	    	opt_indent+=2;
+	    	switch (switch_opt)
+	    	{
+
+	        case 'M':
+	        	Params.M = std::atof(optarg);
+	        	break;
+
+	        case 'Q':
+	        	global_Q = std::atof(optarg);
+	        	break;
+
+	        case 'T':
+	        	Params.theta = std::atof(optarg);
+	        	break;
+
+	        case 't':
+	        	Params.tau = std::atof(optarg);
+	        	break;
+
+	        case 'b':
+	        	Params.beta = std::atof(optarg);
+	        	break;
+
+	    	case 'h':
+	    		// ToDo : write help fkt
+	    		//help();
+	    		return 0;
+	    		break;
+
+	        case '?':
+	        	if (optopt == 'f')
+	        	{
+	        		std::cout << "Option" << optopt << " requires an argument.\n";
+	        		break;
+	        	}
+	        	else if (isprint (optopt))
+	        	{
+	        		std::cout << "Unknown option" << optopt << ".\n";
+	        	}
+	        	else
+	        	{
+	        		fprintf (stderr, "Unknown option character `\\x%x'.\n", optopt);
+	        	}
+	        	return 1;
+	        	break;
+
+	        default:
+	        	abort ();
+	        	break;
+
+	    	} // END SWITCH
+	    } // END WHILE
 
 
 
@@ -228,8 +291,8 @@ int main(void)
 	*/
 
 
-	grid_Co Omega(x_axis,y_axis,z_axis);
-	parameters Params(M,tau,theta,mu,beta);
+	grid Omega(x_axis,y_axis,z_axis);
+
 
 
    #if defined(_MY_VERBOSE)
@@ -241,10 +304,12 @@ int main(void)
 
 
 
-	create_input_from_MGsolver(Ux, Uy, Uz, ni, Ph);
+	create_input_from_MGsolver(ni, Ph);
 	//create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
 
 
+	//ni.fill2([&] (double x, double y, double z) {return 1.;});
+	//Ux.fill2([&] (double x, double y, double z) {return 0.2*sin(2*3.14152*x/8.);});
 
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)

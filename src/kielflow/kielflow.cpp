@@ -12,7 +12,6 @@
 
 // gcc standard C++ libraries (common stuff)
 #include <iostream>  // standard I/O-Operations (I/O to console)
-
 #include <cmath>     // basic math stuff (sqrt(), cabs(), pow(a,n) etc.)
 #include <string>    // class : string (here: used for filenames only; Maybe I should avoid this library)
 #include <sstream>   // class : string-stream (MORE OVERHEAD) I'am using this to interpret data read from a file
@@ -41,6 +40,7 @@
 
 #include "rhs.hpp"
 #include "rhs_standard.hpp"
+//#include "rhs_lab.hpp"
 
 #include "euler_method.hpp"
 #include "RKO4.hpp"
@@ -50,11 +50,10 @@
 
 
 #include <omp.h>
-//double omp_get_wtime(void);
 
 
 
-
+#include "bisection_method.hpp"
 
 
 
@@ -70,8 +69,8 @@ int main(int argc,char **argv)
    #endif
 
 
+	double default_Q = -11498.5;
     bool override_M = false;
-    double default_Q = -11498.5;
     bool override_theta = false;
     bool override_tau = false;
     bool override_beta = false;
@@ -145,15 +144,15 @@ int main(int argc,char **argv)
     for(int i=opt_indent+1; i<argc; ++i)
     	IO_file = argv[i];
 
-	counter iteration(5000);   // set counter for how many iterations are allowed
-	counter i_output(1);
-	counter i_backup(10);
+	counter iteration(1000);   // set counter for how many iterations are allowed
+	counter i_output(5);
+	counter i_backup(100);
 
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	my_log << "loading input";
    #endif
-	grid_Co Omega     = load_grid(IO_file);
+	grid Omega     = load_grid(IO_file);
 	double t_total    = load_time(IO_file);
 	parameters Params = load_parameters(IO_file);
 	field_imag FUx    = load_field_imag("Ux", IO_file);
@@ -164,19 +163,33 @@ int main(int argc,char **argv)
 	std::vector<particle> particle_list;
 	load_particles(particle_list, "./config/particles.dat");
 
+
 	if(override_M) Params.M = override_Params.M;
 	if(override_theta) Params.theta = override_Params.theta;
 	if(override_tau) Params.tau = override_Params.tau;
 	if(override_beta) Params.beta = override_Params.beta;
 
 
+    // ##### ION DENSITY TO LOGSCALE ######
+    field_real ni_tmp(Omega);
+	field_imag Fni_tmp(Omega);
+
+	iFFT(Fni,ni_tmp);
+
+	for(int i=0; i<ni_tmp.N; ++i)
+	{
+		ni_tmp.val[i] = log(ni_tmp.val[i]);
+	}
+	FFT(ni_tmp,Fni);
+	//dealaising_theta(Fni, 0.666);
+
 	// ##### DUST #####
 	double scale_Q = 8.1720e-06; // umrechnungsfaktor auf dimensionslose Einheiten
-	field_real nd(*FPh.my_grid);
+	field_real nd(FPh.my_grid);
 	fkt3d_Gauss dust_3d_fkt(default_Q*scale_Q,0.15,0.15,0.15);
 	nd.fill(dust_3d_fkt);
 
-	field_real Hd(*FPh.my_grid);
+	field_real Hd(FPh.my_grid);
 	fkt3d_Gauss dust_3d_mask(1.,0.15,0.15,0.15);
 	Hd.fill(dust_3d_mask);
 
@@ -187,39 +200,39 @@ int main(int argc,char **argv)
 	double SOR = .8; // Overrelaxation parameter
 	solver_poisson_jacobi_nlin NLJ(boundary_shape, boundary_value, SOR);
 	NLJ.set_max_iterations(80);
-	NLJ.limit_max = .5e-5; // precision in percent of amplitude
-	NLJ.limit_sum = .5e-7;
+	NLJ.set_limit_NormMax(.5e-5);
+	NLJ.set_limit_NormSum(.5e-7);
 
 
 	// ##### MULTIGRID #####
 	solver_poisson_multigrid MG(NLJ);
-	{ // setup MG-cycle
-		const int MG_N = 6;
-		int * MG_steps_sizes = new int[MG_N]
-                  {1,1,1,-1,-1,-1};
-	    MG_lvl_control * cycle_shape = new MG_lvl_control[MG_N]
-				  {lvl_keep, lvl_down, lvl_keep, lvl_down, lvl_up, lvl_up};
-	    double * MG_error = new double[MG_N]
-				  {.01,.01,0.01,2.e-5,5.e-5,1.e-4};
-	    MG.set_level_control(MG_N, MG_steps_sizes, cycle_shape, MG_error);
-	    // Sketch of cycle:
-	    // _
-	    //  \_  /
-	    //    \/
-	    delete[] MG_steps_sizes;
-	    delete[] MG_error;
-	    delete[] cycle_shape;
-	} // configure done
+	const int MG_N = 4;
+
+	int * MG_steps_sizes = new int[MG_N]
+              {0,-1,-1,-1};
+	MG_lvl_control * cycle_shape = new MG_lvl_control[MG_N]
+			  { lvl_down, lvl_down, lvl_up, lvl_up};
+
+	double * MG_error = new double[MG_N]
+              {.01, 0.0005, 0.0005, 0.0005};
+
+	MG.set_level_control(MG_N, MG_steps_sizes, cycle_shape, MG_error);
+
+	delete[] MG_steps_sizes;
+	delete[] MG_error;
+	delete[] cycle_shape;
+
 
 
 
 	// ##### RHS #####
-	fkt3d_barrier Barrier_fkt(nd.my_grid->x_axis->val_at(0), -3.);
-	field_real Barrier(*FPh.my_grid);
+	fkt3d_barrier Barrier_fkt(nd.my_grid.x_axis->val_at(0), -3.);
+	field_real Barrier(FPh.my_grid);
     Barrier.fill(Barrier_fkt);
-	field_real Ph(*FPh.my_grid);
+	field_real Ph(FPh.my_grid);
 	iFFT(FPh, Ph);
-	rhs_standard rhs(Params, MG, Ph, nd, Barrier);
+	rhs_standard rhs(Params, MG, Ph, nd, Barrier, Omega);
+	//rhs_lab rhs(Params, MG, Ph, nd, Barrier);
    #if defined(TEST_RHS)
 	//rhs.solve(FUx, FUy, FUz, Fni);
    #endif
@@ -245,84 +258,78 @@ int main(int argc,char **argv)
    #endif
 
 
-
-   //#define KILL_MAIN_LOOP
+   // #define KILL_MAIN_LOOP
    #ifndef KILL_MAIN_LOOP
 	// #### Time-Step #########################################################
 	while(iteration.good())
 	{
+		std::cout << "step(time) (iteration: " << (iteration.show()) << ")" << std::endl;
        #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 		std::stringstream sstr;
 		sstr << "step(time) (iteration: " << (iteration.show()) << ")";
 		my_log << sstr.str();
        #endif
 
-		std::cout << "step(time) (iteration: " << (iteration.show()) << ")" << std::endl;
 		time_integrator.solve(FUx, FUy, FUz, Fni);
-		//rhs.solve(FUx, FUy, FUz, Fni);
-		//MG.solve(Ph,ni);
-		//NLJ.solve(Ph,ni);
-
 		iteration.up();
 		i_output.up();
 		i_backup.up();
+
 
 		// ##### SLICE OUTPUT #####
 		if(!i_output.good())
 		{
            #if defined (_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
-			sstr << "step(time) (iteration: " << (iteration.show()) << ") saving step to file.";
-			my_log << sstr.str();
-			std::cout << sstr.str() << std::endl;
+			my_log << "saving slice";
            #endif
 
 			FFT(Ph,FPh);
-			save_slice(iteration.show(),particle_list, Omega, t_total, Params, FUx, FUy, FUz, Fni, FPh);
+
+			// ION DENSITY TO LINEAR SCALE
+			iFFT(Fni,ni_tmp);
+			for(int i=0; i<ni_tmp.N; ++i)
+				ni_tmp.val[i] = exp(ni_tmp.val[i]);
+			FFT(ni_tmp, Fni_tmp);
+			save_slice(iteration.show(),particle_list, Omega, t_total, Params, FUx, FUy, FUz, Fni_tmp, FPh);
+
 			i_output.reset();
-
-			/*
-			sstr.str(std::string());
-			sstr << "./data/FUx_" << (iteration.show()) << ".dat";
-			save_major_wavevectors(sstr.str(), FUx);
-
-			sstr.str(std::string());
-			sstr << "./data/FUy_" << (iteration.show()) << ".dat";
-			save_major_wavevectors(sstr.str(), FUy);
-
-			sstr.str(std::string());
-			sstr << "./data/FUz_" << (iteration.show()) << ".dat";
-			sa#endif /* KILL_MAIN_LOOPve_major_wavevectors(sstr.str(), FUz);
-
-			sstr.str(std::string());
-			sstr << "./data/Fni_" << (iteration.show()) << ".dat";
-			save_major_wavevectors(sstr.str(), Fni);
-*/
 		}
 
 		// ##### BACKUP OUTPUT #####
 		if(!i_backup.good())
 		{
-			// ToDo : also overwrite fields.h5
            #if defined (_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
-	        sstr << "step(time) (iteration: " << (iteration.show()) << ") saving step to file.";
-	        my_log << sstr.str();
+	        my_log << "saving backup";
            #endif
-	        save_all(particle_list, Omega, t_total, Params, FUx, FUy, FUz, Fni, FPh, "./data/fields.h5");
+
+			// ION DENSITY TO LINEAR SCALE
+			iFFT(Fni,ni_tmp);
+			for(int i=0; i<ni_tmp.N; ++i)
+				ni_tmp.val[i] = exp(ni_tmp.val[i]);
+			FFT(ni_tmp, Fni_tmp);
+
+			std::stringstream sstr;
 	        sstr.str(std::string());
 			sstr << "./data/backup_at_" << (iteration.show()) << ".h5";
-			save_all(particle_list, Omega, t_total, Params, FUx, FUy, FUz, Fni, FPh, sstr.str());
+			save_all(particle_list, Omega, t_total, Params, FUx, FUy, FUz, Fni_tmp, FPh, sstr.str());
+
 			i_backup.reset();
 		}
+
 
 		t_total += t_delta;
 	}
    #endif // KILL_MAIN_LOOP
 
+
+
+	// ##### ION DENSITY TO LINEAR SCALE #####
+	iFFT(Fni,ni_tmp);
+	for(int i=0; i<ni_tmp.N; ++i)
+		ni_tmp.val[i] = exp(ni_tmp.val[i]);
+	FFT(ni_tmp,Fni);
+
 	save_all(particle_list, Omega, t_total, Params, FUx, FUy, FUz, Fni, FPh, IO_file);
-
-	// ##### DONE #####
-
-
 
 	std::cout  << "finished - kielflow terminated" << std::endl;
    #if defined (_MY_VERBOSE) || defined (_MY_VERBOSE_MORE) || defined (_MY_VERBOSE_TEDIOUS)

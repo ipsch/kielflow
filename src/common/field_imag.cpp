@@ -3,47 +3,38 @@
 
 
 
-// ###################### fourier space #############################
+bool field_imag::IsNan()
+{
+	for(int i=0; i<N; ++ i)
+		if((val[i][0]!=val[i][0]) || (val[i][1]!=val[i][1]))
+			return true;
+	return false;
+}
 
 
-field_imag::field_imag(const grid_Fo &FOmega) :
-my_grid(FOmega.clone()),
-N(my_grid->N), Nx(my_grid->Nx), Ny(my_grid->Ny), Nz(my_grid->Nz)
+field_imag::field_imag(const grid &Omega) :
+	field(Omega, Omega.x_axis->N, Omega.y_axis->N, (Omega.z_axis->N/2)+1)
 {
    #ifdef _MY_VERBOSE_MORE
 	logger log("field_imag");
 	log << "field_imag(const grid_Fo &FOmega)";
    #endif
 
-	val = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * my_grid->N);
+	val = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
 
-
-}
-
-field_imag::field_imag(const grid_Co &Omega) :
-my_grid(Omega.reziprocal()),
-N(my_grid->N), Nx(my_grid->Nx), Ny(my_grid->Ny), Nz(my_grid->Nz)
-{
-   #ifdef _MY_VERBOSE_MORE
-	logger log("field_imag");
-	log << "field_imag(const grid_Co &Omega)";
-   #endif
-
-	val = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * my_grid->N);
 
 }
 
 
 field_imag::field_imag(const field_imag &that) :
-my_grid(that.my_grid->clone()),
-N(my_grid->N), Nx(my_grid->Nx), Ny(my_grid->Ny), Nz(my_grid->Nz)
+	field(that.my_grid, that.my_grid.x_axis->N, that.my_grid.y_axis->N, (that.my_grid.z_axis->N/2)+1)
 {
    #ifdef _MY_VERBOSE_MORE
 	logger log("field_imag");
 	log << "field_imag(const field_imag &that)";
    #endif
 
-	val = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * my_grid->N);
+	val = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
 
 
 	for( int i=0; i<that.N; ++i)
@@ -61,7 +52,6 @@ field_imag::~field_imag()
    #endif
 
 	fftw_free(val);
-	delete my_grid;
 
    #ifdef _MY_VERBOSE_MORE
 	log << "done";
@@ -78,10 +68,10 @@ void field_imag::fill_RE(double (*fill_fkt)(const double &,const double &, const
 		for( int j=0; j < Ny; ++j)
 			for( int k=0; k < Nz; ++k)
 			{
-				double tmp_x = my_grid->x_axis->val_at(i);
-				double tmp_y = my_grid->y_axis->val_at(j);
-				double tmp_z = my_grid->z_axis->val_at(k);
-				val[my_grid->index_at(i,j,k)][0] = fill_fkt(tmp_x,tmp_y,tmp_z);
+				double tmp_x = my_grid.x_axis->val_at(i);
+				double tmp_y = my_grid.y_axis->val_at(j);
+				double tmp_z = my_grid.z_axis->val_at(k);
+				val[index(i,j,k)][0] = fill_fkt(tmp_x,tmp_y,tmp_z);
 			}
 	return;
 }
@@ -96,10 +86,10 @@ void field_imag::fill_IM(double (*fill_fkt)(const double &,const double &, const
 		for( int j=0; j < Ny; ++j)
 			for( int k=0; k < Nz; ++k)
 			{
-				double tmp_x = my_grid->x_axis->val_at(i);
-				double tmp_y = my_grid->y_axis->val_at(j);
-				double tmp_z = my_grid->z_axis->val_at(k);
-				val[my_grid->index_at(i,j,k)][1] = fill_fkt(tmp_x,tmp_y,tmp_z);
+				double tmp_x = my_grid.x_axis->val_at(i);
+				double tmp_y = my_grid.y_axis->val_at(j);
+				double tmp_z = my_grid.z_axis->val_at(k);
+				val[index(i,j,k)][1] = fill_fkt(tmp_x,tmp_y,tmp_z);
 			}
 	return;
 }
@@ -110,7 +100,7 @@ fftw_complex& field_imag::operator() (int ix, int iy, int iz)
 	// ToDo: Fehler abfangen
 	//if (row >= rows_ || col >= cols_)
 	//throw BadIndex("Matrix subscript out of bounds");
-return val[my_grid->index_at(ix,iy,iz)];
+return val[index(ix,iy,iz)];
 }
 
 /*
@@ -144,10 +134,31 @@ return val[N];
 }
 */
 
+
+field_imag& field_imag::operator+=(const field_imag& rhs) // compound assignment (does not need to be a member,
+{
+	for(int i=0; i<N; ++i)
+	{
+		val[i][0] += rhs.val[i][0];
+		val[i][1] += rhs.val[i][1];
+	}
+	return *this; // return the result by reference
+}
+
+field_imag& field_imag::operator-=(const field_imag& rhs) // compound assignment (does not need to be a member,
+{
+	for(int i=0; i<N; ++i)
+	{
+		val[i][0] -= rhs.val[i][0];
+		val[i][1] -= rhs.val[i][1];
+	}
+	return *this; // return the result by reference
+}
+
 double& field_imag::operator() (int ix, int iy, int iz, int re_im)
 {
 
-	return val[my_grid->index_at(ix,iy,iz)][re_im];
+	return val[index(ix,iy,iz)][re_im];
 }
 
 double& field_imag::operator() (const int &N, int re_im)
