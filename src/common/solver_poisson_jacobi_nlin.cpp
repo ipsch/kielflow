@@ -6,7 +6,7 @@ int solver_poisson_jacobi_nlin::iterations_total = 0;
 
 
 solver_poisson_jacobi_nlin::solver_poisson_jacobi_nlin(interface_3d_fkt &boundary, interface_3d_fkt &val_boundary, const double &w) :
-	H(boundary), val_H(val_boundary), eps(0.0001),  omega_SOR(1.)
+	H(boundary), val_H(val_boundary), eps(0.0001),  omega_SOR(w)
 {
 	//limit_max = 2.3e-05;
 	//limit_sum = 3.0e-07;
@@ -57,7 +57,6 @@ void solver_poisson_jacobi_nlin::solve(field_real &Phi_IO, field_real &rho)
 	std::cout << "/" << limit_sum << "\n";
    #endif
    #endif
-
 
 	supremum = 0.;
 	infinum = 0.;
@@ -189,9 +188,16 @@ void solver_poisson_jacobi_nlin::iteration_loop(const field_real &in, field_real
 				A += rho(i,j,k);
 
 				double P_old = in(i,j,k);
+               #if defined(__FRONTEND__)
 				double P_new = NL_solver.solve(P_old,
-						[&] (double x) {return A -D*x - exp(x) + exp(-50.*x);},
+						[&] (double x) {return A -D*x - exp(x) + exp(-global_theta*x);},
 						[&] (double x) {return -D -exp(x);});
+               #else
+				double P_new = NL_solver.solve(P_old,
+						[&] (double x) {return A -D*x - exp(x);},
+						[&] (double x) {return -D -exp(x);});
+               #endif
+
 				//double P_new = bisect.solve(P_old-4.*amplitude,P_old+4.*amplitude);
 				//double P_new = bisecting(P_old-amplitude,P_old+amplitude,A,D);
 				double delta = fabs(P_new - P_old);

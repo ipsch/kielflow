@@ -32,7 +32,9 @@
 #include "logger.hpp"
 #endif
 
-
+#if defined(__FRONTEND__)
+extern double global_theta;
+#endif
 
 class solver_poisson_jacobi_nlin : public interface_relaxation_solver
 // relaxation solver for the nonlinear poission-equation

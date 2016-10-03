@@ -109,6 +109,7 @@ bin/kielflow : $(OBJ_COMMON) $(OBJ_KIELFLOW)
 	rm -f bin/kielflow
 	$(CXX) $(CXX_FLAGS) $(DEF_FLAGS) $(INC) $(OBJ_COMMON) $(OBJ_KIELFLOW) -o ./bin/kielflow $(LIB)
 
+bin/frontend : DEF_FLAGS += -D__FRONTEND__
 bin/frontend : $(OBJ_COMMON) $(OBJ_FRONTEND)
 	rm -f bin/frontend
 	$(CXX) $(CXX_FLAGS) $(DEF_FLAGS) $(INC) $(OBJ_COMMON) $(OBJ_FRONTEND) -o ./bin/frontend $(LIB)

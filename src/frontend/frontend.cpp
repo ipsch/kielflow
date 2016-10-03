@@ -63,9 +63,9 @@ double Ly = 8.;
 double Lz = 8.;
 
 // physical parameters
-double M = .5;
+double M = .7;
 double tau = 0.1;
-double theta = 50.;
+double global_theta = 30.;
 double mu = 0.;
 double beta = 0.0;
 double global_Q = -11498.5;
@@ -190,7 +190,7 @@ void create_input_from_MGsolver(field_real &ni, field_real &Ph)
 
 	for(int i=0; i<ni.N; ++i)
 	{
-		ni.val[i] = exp(-theta*Ph.val[i]);
+		ni.val[i] = exp(-global_theta*Ph.val[i]);
 	}
 
 
@@ -209,7 +209,11 @@ int main(int argc,char **argv)
 	my_log << VERSION_STRING;
    #endif
 
-	parameters Params(M,tau,theta,mu,beta);
+#if defined(__FRONTEND__)
+	std::cout << "ja definiert" << std::endl;
+#endif
+
+	parameters Params(M,tau,global_theta,mu,beta);
 
 	int switch_opt;
 	int opt_indent = 0;

@@ -144,9 +144,9 @@ int main(int argc,char **argv)
     for(int i=opt_indent+1; i<argc; ++i)
     	IO_file = argv[i];
 
-	counter iteration(1000);   // set counter for how many iterations are allowed
+	counter iteration(60);   // set counter for how many iterations are allowed
 	counter i_output(5);
-	counter i_backup(100);
+	counter i_backup(5);
 
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
