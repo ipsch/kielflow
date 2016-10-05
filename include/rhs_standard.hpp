@@ -2,37 +2,29 @@
 #define RHS_STANDARD_HPP_
 
 
+#include <cmath>     // basic math stuff (sqrt(), cabs(), pow(a,n) etc.)
+
 #include "interface_rhs.hpp"
 #include "interface_poisson_solver.hpp"
-
-#include <cmath>     // basic math stuff (sqrt(), cabs(), pow(a,n) etc.)
-#include <omp.h>
-#include "fftw3.h"
-
-
 #include "parameters.hpp"
 #include "field.hpp"
 #include "operations.hpp"
-#include "effect.hpp"
-#include "masks.hpp"
 #include "OP_FFT.hpp"
 #include "OP_iFFT.hpp"
 
 #ifdef _MY_VERBOSE
 #include "logger.hpp"
 #endif
-// magic stuff
 
-
-   #define _RHS_POISSON
-   #define _RHS_DISSIPATION
-   #define _RHS_ADVECTION
-   #define _RHS_DIFFUSION
-   #define _RHS_E_INT
-   #define _RHS_E_EXT
-   #define _RHS_CONTINUITY
-   //#define _RHS_PENALIZATION_U
-   //#define _RHS_SVISCOSITY
+#define _RHS_POISSON
+#define _RHS_DISSIPATION
+#define _RHS_ADVECTION
+#define _RHS_DIFFUSION
+#define _RHS_E_INT
+#define _RHS_E_EXT
+#define _RHS_CONTINUITY
+//#define _RHS_PENALIZATION_U
+#define _RHS_SVISCOSITY
 
 class rhs_standard : public interface_rhs
 {

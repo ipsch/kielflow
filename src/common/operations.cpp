@@ -350,7 +350,7 @@ OP_partial_derivative::OP_partial_derivative(const grid &domain, const direction
 		Buffer.val[ijk] = dS_val[ijk];
 	field_imag FBuffer(domain);
 	my_FFT(Buffer,FBuffer);
-	dealaising_36er(FBuffer);
+	dealaising_23rd(FBuffer);
 	my_iFFT(FBuffer,Buffer);
 
 	for(int ijk=0; ijk<Buffer.N; ++ijk)
@@ -395,7 +395,7 @@ void OP_partial_derivative::operator()(const field_imag &in, field_imag &out)
 	if(IsLinear)
 		return; // done if grid is uniform
 
-	dealaising_36er(out);
+	dealaising_23rd(out);
 	field_real tmp(in.my_grid);
 	my_iFFT(out,tmp);
 

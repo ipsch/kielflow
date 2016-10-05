@@ -241,7 +241,9 @@ void solver_poisson_jacobi_nlin::iteration_loop(const field_real &in, field_real
 		double omega_new;
 		double lambda = norm_sum/norm_sum_old;
 		omega_new = 2./(1.+sqrt(1.-pow(lambda+omega_SOR-1.,2.)/(lambda*pow(omega_SOR,2.))));
-		omega_SOR = .5*omega_old + 0.5*omega_new;
+		//omega_SOR = .5*omega_old + 0.5*omega_new;
+		omega_SOR = omega_new;
+		//omega_SOR = 0.5;
 	}
 	else
 	{

@@ -63,9 +63,9 @@ double Ly = 8.;
 double Lz = 8.;
 
 // physical parameters
-double M = .7;
+double M = .5;
 double tau = 0.1;
-double global_theta = 30.;
+double global_theta = 50.;
 double mu = 0.;
 double beta = 0.0;
 double global_Q = -11498.5;
@@ -209,10 +209,6 @@ int main(int argc,char **argv)
 	my_log << VERSION_STRING;
    #endif
 
-#if defined(__FRONTEND__)
-	std::cout << "ja definiert" << std::endl;
-#endif
-
 	parameters Params(M,tau,global_theta,mu,beta);
 
 	int switch_opt;
@@ -220,28 +216,34 @@ int main(int argc,char **argv)
     opterr = 0;
 	 while ((switch_opt = getopt (argc, argv, "hM:Q:T:t:b:")) != -1)
 	    {
-	    	opt_indent+=2;
+
 	    	switch (switch_opt)
 	    	{
 
 	        case 'M':
 	        	Params.M = std::atof(optarg);
+	        	opt_indent+=2;
 	        	break;
 
 	        case 'Q':
 	        	global_Q = std::atof(optarg);
+	        	opt_indent+=2;
 	        	break;
 
 	        case 'T':
-	        	Params.theta = std::atof(optarg);
+	        	global_theta = std::atof(optarg);
+	        	Params.theta = global_theta;
+	        	opt_indent+=2;
 	        	break;
 
 	        case 't':
 	        	Params.tau = std::atof(optarg);
+	        	opt_indent+=2;
 	        	break;
 
 	        case 'b':
 	        	Params.beta = std::atof(optarg);
+	        	opt_indent+=2;
 	        	break;
 
 	    	case 'h':
@@ -313,8 +315,12 @@ int main(int argc,char **argv)
 
 
 	//ni.fill2([&] (double x, double y, double z) {return 1.;});
+	//ni.fill2([&] (double x, double y, double z) {return 1.+exp(-(x*x)/0.1);});
 	//Ux.fill2([&] (double x, double y, double z) {return 0.2*sin(2*3.14152*x/8.);});
 
+	//Ux.fill2([&] (double x, double y, double z) {return 0.;});
+	//Uy.fill2([&] (double x, double y, double z) {return 0.;});
+	//Uz.fill2([&] (double x, double y, double z) {return 0.;});
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	std::cout << "save all" << std::endl;
