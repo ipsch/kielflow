@@ -11,14 +11,16 @@
 #include "operations.hpp"
 #include "OP_FFT.hpp"
 #include "OP_iFFT.hpp"
+#include "OP_dealiasing_23rd.hpp"
 
-#ifdef _MY_VERBOSE
+
+#if defined(_MY_VERBOSE)
 #include "logger.hpp"
 #endif
 
 #define _RHS_POISSON
 #define _RHS_DISSIPATION
-#define _RHS_ADVECTION
+#define _RHS_ADVECTION    // CHECKED
 #define _RHS_DIFFUSION
 #define _RHS_E_INT
 #define _RHS_E_EXT
@@ -66,10 +68,12 @@ protected :
 
 	OP_FFT my_FFT;
 	OP_iFFT my_iFFT;
-
 	OP_partial_derivative d_dx;
 	OP_partial_derivative d_dy;
 	OP_partial_derivative d_dz;
+	OP_dealiasing_23rd dealiasing;
+
+
 
 	field_real Buffer_1st;
 	field_real Buffer_2nd;

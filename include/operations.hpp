@@ -7,6 +7,7 @@
 #include <iostream>
 #include <cmath>
 
+#include "o_math.hpp"
 #include "OP_FFT.hpp"
 #include "OP_iFFT.hpp"
 

@@ -9,6 +9,7 @@ private :
 	int step_max;
 	int step;
 public :
+	void set_range(const int &N) {step_max = N;}
 	counter(int s_max);
 	void reset(void) {step = 0;}
 	int show(void) {return step;}

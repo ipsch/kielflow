@@ -3,6 +3,7 @@
 
 #include "field_base.hpp"
 #include "interface_3d_fkt.hpp"
+#include "fftw3.h"
 
 class field_real : public field
 {
@@ -46,11 +47,16 @@ public :
 
 	double val_at(int ix, int iy, int iz) const;
 
-	double& operator() (const int &ix, const int &iy, const int &iz); // Subscript operators often come in pairs
-	double  operator() (const int &ix, const int &iy, const int &iz) const; // Subscript operators often come in pairs
+	// Subscript operator (writing)
+	double& operator() (const int &i, const int &j, const int &k)
+		{return  val[index(i,j,k)];}
+
+	// Subscript operator (reading)
+	double const& operator() (const int &i, const int &j, const int &k) const
+		{return  val[index(i,j,k)];}
+
 	double  operator() (const double &x, const double &y, const double &z) const;
-	double& operator() (int N); // Subscript operators often come in pairs
-	//double  operator() (int N) const; // Subscript operators often come in pairs
+	double& operator() (int N);
 
 	double * val;
 
@@ -64,8 +70,6 @@ public :
 
 	//field_real& operator/= (double const& lambda);
 };
-
-
 
 
 

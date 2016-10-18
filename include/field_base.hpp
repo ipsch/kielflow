@@ -1,13 +1,9 @@
 #ifndef FIELD_BASE_HPP_
 #define FIELD_BASE_HPP_
 
-#include <iostream>
-
-#include "fftw3.h"
 #include "grid.hpp"
-#include "masks.hpp"
 
-#ifdef _MY_VERBOSE
+#if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_TEDIOUS)
 #include "logger.hpp"
 #endif
 
@@ -24,7 +20,7 @@ public :
 		{	}
 	~field()
 		{	};
-	int index(const int &i, const int &j, const int &k) const
+	inline int index(const int &i, const int &j, const int &k) const
 		{return (k + Nz*(j + i*Ny));}
 private :
 	//grid my_grid_;

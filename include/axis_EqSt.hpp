@@ -24,6 +24,9 @@ public :
 
 	void resize(const int &N_);
 
+	double S(const double &x) const;
+	double dS(const int &index) const;
+
 	// ToDo : remove
 	//virtual double operator() (const int &i) const;
 	//virtual int operator() (const double &x) const;

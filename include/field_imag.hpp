@@ -2,6 +2,7 @@
 #define FIELD_IMAG_HPP_
 
 #include "field_base.hpp"
+#include "fftw3.h"
 
 class field_imag : public field
 {

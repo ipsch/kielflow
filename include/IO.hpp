@@ -30,6 +30,7 @@
 #include "operations.hpp"
 #include "particle.hpp"
 #include "subdim.hpp"
+#include "o_math.hpp"
 
 
 #include <ctime>
