@@ -11,6 +11,7 @@
 #include "operations.hpp"
 #include "OP_FFT.hpp"
 #include "OP_iFFT.hpp"
+#include "OP_partial_derivative.hpp"
 #include "OP_dealiasing_23rd.hpp"
 
 

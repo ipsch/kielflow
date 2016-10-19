@@ -20,6 +20,8 @@ solver_poisson_multigrid::solver_poisson_multigrid()
 	I_2ytoy = &OP_2ytoy;
 	I_2ztoz = &OP_2ztoz;
 	I_2htoh = &OP_2htoh_lvl0;
+	I_4htoh = &OP_4htoh;
+	I_8htoh = &OP_8htoh;
 
 	my_cascades = 0;
 	my_lvl = 0L;
@@ -50,6 +52,8 @@ solver_poisson_multigrid::solver_poisson_multigrid(interface_relaxation_solver &
 	I_2ytoy = &OP_2ytoy;
 	I_2ztoz = &OP_2ztoz;
 	I_2htoh = &OP_2htoh_lvl0;
+	I_4htoh = &OP_4htoh;
+	I_8htoh = &OP_8htoh;
 
 	my_cascades = 1;
 	my_lvl = new MG_lvl_control[1]{lvl_keep};
@@ -117,6 +121,10 @@ void solver_poisson_multigrid::set_level_control(const int &N, int * lvl_steps, 
 			lvl_current--;
 		if(my_lvl[cascade]==lvl_down)
 			lvl_current--;
+		if(my_lvl[cascade]==lvl_down2)
+			lvl_current-=2;
+		if(my_lvl[cascade]==lvl_down3)
+			lvl_current-=3;
 
 		if(lvl_current>0)
 		{
@@ -169,6 +177,20 @@ int solver_poisson_multigrid::refine_mesh(const MG_lvl_control &step, const fiel
         my_log << "lvl_down";
        #endif
 		return -1;       // to coarser mesh if cycle[i]=0
+
+	case lvl_down2 :
+		I_4htoh(in,out); // average potential on current mesh
+       #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+        my_log << "lvl_down";
+       #endif
+		return -2;       // to coarser mesh if cycle[i]=0
+
+	case lvl_down3 :
+		I_8htoh(in,out); // average potential on current mesh
+       #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+        my_log << "lvl_down";
+       #endif
+		return -3;       // to coarser mesh if cycle[i]=0
 
 	// actions that apply only to one direction in space
 	case lvl_up_x :
@@ -269,6 +291,30 @@ void solver_poisson_multigrid::solve(field_real &Phi_IO, field_real &rho)
 			rho_n.resize(rho.Nx,rho.Ny,rho.Nz);
 			rho_n = rho;
 		}
+
+		if( (rho_n.Nx == 4.*Phi_n.Nx) &&
+			(rho_n.Ny == 4.*Phi_n.Ny) &&
+			(rho_n.Nz == 4.*Phi_n.Nz) )
+			{
+	           #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+		        my_log << "reduce rho_n in all directions";
+	           #endif
+				field_real bc(rho_n.my_grid);
+				bc = rho_n;
+				I_4htoh(bc,rho_n);
+			}
+
+		if( (rho_n.Nx == 8.*Phi_n.Nx) &&
+			(rho_n.Ny == 8.*Phi_n.Ny) &&
+			(rho_n.Nz == 8.*Phi_n.Nz) )
+			{
+	           #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+		        my_log << "reduce rho_n in all directions";
+	           #endif
+				field_real bc(rho_n.my_grid);
+				bc = rho_n;
+				I_8htoh(bc,rho_n);
+			}
 
 		while( (rho_n.Nx != Phi_n.Nx) &&
 			   (rho_n.Ny != Phi_n.Ny) &&

@@ -17,7 +17,7 @@
 #include "field.hpp"
 #include "field_interpolation.hpp"
 
-#ifdef _MY_VERBOSE
+#if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 #include "logger.hpp"
 #endif
 
@@ -25,6 +25,7 @@
 typedef enum
 {
     lvl_down, lvl_keep, lvl_up,
+	lvl_down2, lvl_down3,
 	lvl_down_x, lvl_up_x,
 	lvl_down_y, lvl_up_y,
 	lvl_down_z, lvl_up_z
@@ -51,7 +52,9 @@ private :
 	double * my_tolerance;
 	void (*I_hto2h)(const field_real&, field_real&);     // Interpolation Operator
 	void (*I_2htoh)(const field_real&, field_real&);     // Averageing Operator
-	void (*I_xto2x)(const field_real&, field_real&);     // Interpolation Operator
+	void (*I_4htoh)(const field_real&, field_real&);     // Interpolation Operator
+	void (*I_8htoh)(const field_real&, field_real&);
+	void (*I_xto2x)(const field_real&, field_real&);
 	void (*I_2xtox)(const field_real&, field_real&);
 	void (*I_yto2y)(const field_real&, field_real&);
 	void (*I_2ytoy)(const field_real&, field_real&);

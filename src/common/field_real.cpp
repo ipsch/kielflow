@@ -134,18 +134,6 @@ double field_real::val_at(int ix, int iy, int iz) const
 	return val[index(ix, iy, iz)];
 }
 
-//inline
-double& field_real::operator() (const int &ix, const int &iy, const int &iz)
-{
-	return val[index(ix, iy, iz)];
-}
-
-
-//inline
-double field_real::operator() (const int &ix, const int &iy, const int &iz) const
-{
-	return val[index(ix, iy, iz)];
-}
 
 
 inline

@@ -6,7 +6,8 @@
 #define VERSION_STRING "unknown"
 #endif
 
-#if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+#if defined(_MY_VERBOSE_LESS) || defined(_MY_VERBOSE) || \
+	defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 #include "logger.hpp"
 #endif
 
@@ -68,7 +69,6 @@ int main(int argc,char **argv)
 	my_log << VERSION_STRING;
    #endif
 
-
 	double default_Q = -11498.5;
     bool override_M = false;
     bool override_theta = false;
@@ -76,7 +76,6 @@ int main(int argc,char **argv)
     bool override_beta = false;
     parameters override_Params;
     std::string IO_file = "./data/fields.h5";
-
 
 	int switch_opt;
 	int opt_indent = 0;
@@ -146,7 +145,7 @@ int main(int argc,char **argv)
 
     std::cout << "IO_file " << IO_file << std::endl;
 
-	counter iteration(2000);   // set counter for how many iterations are allowed
+	counter iteration(1000);   // set counter for how many iterations are allowed
 	counter i_output(10);
 	counter i_backup(100);
 
@@ -213,10 +212,13 @@ int main(int argc,char **argv)
 	int * MG_steps_sizes = new int[MG_N]
               {0,-1,-1,-1};
 	MG_lvl_control * cycle_shape = new MG_lvl_control[MG_N]
-			  { lvl_down, lvl_down, lvl_up, lvl_up};
+			  { lvl_down3, lvl_up, lvl_up, lvl_up};
 
 	double * MG_error = new double[MG_N]
-              {.01, 0.0005, 0.0005, 0.0005};
+								   {0.01,
+									0.0005,
+									0.0001,
+									0.0001};
 
 	MG.set_level_control(MG_N, MG_steps_sizes, cycle_shape, MG_error);
 
@@ -259,6 +261,19 @@ int main(int argc,char **argv)
 	MG.solve(Ph,ni);
    #endif
 
+    /*
+	// Remember to set #define _MONITOR_EVOLUTION in RKO4.cpp
+	//iteration.set_range(1);
+	field_real dummy(Omega);
+	dummy.fill2([&] (double x, double y, double z) {return 0.;});
+	//FFT(dummy, FUx);
+	dummy.fill2([&] (double x, double y, double z) {return 0.;});
+	//FFT(dummy, FUy);
+	dummy.fill2([&] (double x, double y, double z) {return 0.;});
+	//FFT(dummy, FUz);
+	dummy.fill2([&] (double x, double y, double z) {return cos(2.*acos(-1.)/8.*x);});
+	//FFT(dummy, Fni);
+	*/
 
    // #define KILL_MAIN_LOOP
    #ifndef KILL_MAIN_LOOP
@@ -331,7 +346,7 @@ int main(int argc,char **argv)
 		ni_tmp.val[i] = exp(ni_tmp.val[i]);
 	FFT(ni_tmp,Fni);
 
-	save_all(particle_list, Omega, t_total, Params, FUx, FUy, FUz, Fni, FPh, IO_file);
+	//save_all(particle_list, Omega, t_total, Params, FUx, FUy, FUz, Fni, FPh, IO_file);
 
 	std::cout  << "finished - kielflow terminated" << std::endl;
    #if defined (_MY_VERBOSE) || defined (_MY_VERBOSE_MORE) || defined (_MY_VERBOSE_TEDIOUS)

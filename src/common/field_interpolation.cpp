@@ -258,6 +258,62 @@ void OP_2htoh_lvl0(const field_real &in, field_real &out)
 	return;
 }
 
+void OP_4htoh(const field_real &in, field_real &out)
+/* truncation of a field to another field with half the resolution */
+{
+	if( (in.Nx<8) || (in.Ny<8) || (in.Nz<8))
+		throw("system too small");
+
+	if( ((in.Nx % 4)!=0) || ((in.Ny % 4)!=0) || ((in.Nz % 4) != 0) )
+		throw("Feld Groesse ungerade");
+
+	out.resize(in.Nx/4, in.Ny/4, in.Nz/4);
+
+	for(int i=0; i<out.Nx; i++)
+	{
+		for(int j=0; j<out.Ny; j++)
+		{
+			for(int k=0; k<out.Nz; k++)
+			{
+				int index_in  = in.index( 4*i, 4*j, 4*k);
+				int index_out = out.index(   i,   j,   k);
+
+				out.val[index_out] = in.val[index_in];
+			}
+		}
+	}
+
+	return;
+}
+
+void OP_8htoh(const field_real &in, field_real &out)
+/* truncation of a field to another field with half the resolution */
+{
+	if( (in.Nx<16) || (in.Ny<16) || (in.Nz<16))
+		throw("system too small");
+
+	if( ((in.Nx % 8)!=0) || ((in.Ny % 8)!=0) || ((in.Nz % 8) != 0) )
+		throw("Feld Groesse ungerade");
+
+	out.resize(in.Nx/8, in.Ny/8, in.Nz/8);
+
+	for(int i=0; i<out.Nx; i++)
+	{
+		for(int j=0; j<out.Ny; j++)
+		{
+			for(int k=0; k<out.Nz; k++)
+			{
+				int index_in  = in.index( 8*i, 8*j, 8*k);
+				int index_out = out.index(   i,   j,   k);
+
+				out.val[index_out] = in.val[index_in];
+			}
+		}
+	}
+
+	return;
+}
+
 void OP_2htoh_lvl1(const field_real &in, field_real &out)
 /* interpolation of a field onto another with double the resolution */
 {

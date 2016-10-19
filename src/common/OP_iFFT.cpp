@@ -14,7 +14,7 @@ OP_iFFT::OP_iFFT(const grid &domain) :
 	output = (double*)  fftw_malloc(sizeof(double) * domain.Nx*domain.Ny*domain.Nz);
 	//my_plan = fftw_plan_dft_c2r_3d(domain.Nx, domain.Ny, domain.Nz, input, output,
 	//		FFTW_EXHAUSTIVE | FFTW_DESTROY_INPUT); // ToDo : change if program works
-	my_plan = fftw_plan_dft_c2r_3d(domain.Nx, domain.Ny, domain.Nz, input, output, FFTW_ESTIMATE);
+	my_plan = fftw_plan_dft_c2r_3d(domain.Nx, domain.Ny, domain.Nz, input, output, FFTW_PATIENT);
 
 	// optimization level
 	// FFTW_ESTIMATE

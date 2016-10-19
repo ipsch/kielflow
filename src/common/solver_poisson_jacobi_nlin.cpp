@@ -38,7 +38,8 @@ solver_poisson_jacobi_nlin::solver_poisson_jacobi_nlin(interface_3d_fkt &boundar
 	output_stream << "inf" << "\t";
 	output_stream << "sup" << "\t";
 	output_stream << "lim" << "\t";
-	output_stream << "wSOR" << "\n";
+	output_stream << "wSOR" << "\t";
+	output_stream << "N" << "\n";
 	output_stream.close();
 }
 
@@ -287,6 +288,7 @@ void solver_poisson_jacobi_nlin::save_evolution(const field_real &Phi, const fie
 	save_2d(Phi,my_dim,filenameTwo);
    #endif
 
+	int N = Phi.Nx*Phi.Ny*Phi.Nz;
 
 	std::ofstream output_stream(my_logfile, std::ofstream::app);
 	output_stream << invocation << "\t";
@@ -296,7 +298,8 @@ void solver_poisson_jacobi_nlin::save_evolution(const field_real &Phi, const fie
 	output_stream << infinum << "\t";
 	output_stream << supremum << "\t";
 	output_stream << limit_max << "\t";
-	output_stream << omega_SOR << std::endl;
+	output_stream << omega_SOR << "\t";
+	output_stream << N << std::endl;
 	output_stream.close();
 
 	return;

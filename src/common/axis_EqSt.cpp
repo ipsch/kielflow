@@ -56,9 +56,8 @@ double axis_CoEqSt::val_at(const int &index) const
 
 double axis_CoEqSt::k_val_at(const int &index) const
 {
-	std::cout << "axis_CoEqSt::k_val_at(const int &index) const not implemented\n";
-	throw("axis_CoEqSt::k_val_at(const int &index) const not implemented\n");
-	return 0.;
+	double pi = acos(-1.);
+	return ( (index<=N/2) ? (2.*pi*index/L) : (2.*pi*(index-N)/L) );
 }
 
 int axis_CoEqSt::index_at(const double &val) const
@@ -71,6 +70,17 @@ int axis_CoEqSt::k_index_at(const double &val) const
 	std::cout << "axis_CoEqSt::k_index_at(const double &val) const not implemented\n";
 	throw("axis_CoEqSt::k_val_at(const int &index) const not implemented\n");
 	return 0;
+}
+
+
+double axis_CoEqSt::S(const double &x) const
+{
+	return x;
+}
+
+double axis_CoEqSt::dS(const int &index) const
+{
+	return 1.;
 }
 
 

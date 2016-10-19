@@ -830,11 +830,11 @@ void save_2d(const field_real &XX, subdim & sdim,  const std::string &path)
 	{
 		for(i_fast=0; i_fast<N_fast; ++i_fast)
 		{
-			output_stream << std::scientific << std::setprecision(3);
+			output_stream << std::scientific << std::setprecision(8);
 			output_stream << XX.my_grid.x_axis->val_at(*i) << "\t";
 			output_stream << XX.my_grid.y_axis->val_at(*j) << "\t";
 			output_stream << XX.my_grid.z_axis->val_at(*k) << "\t";
-			output_stream << std::scientific << std::setprecision(6);
+			output_stream << std::scientific << std::setprecision(8);
 			 int index = XX.index(*i,*j,*k);
 			output_stream << XX.val[index] << "\n";
 		}

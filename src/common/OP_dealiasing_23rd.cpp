@@ -13,9 +13,9 @@ N(domain.Nx*domain.Ny*(domain.Nz/2+1))
 	double kz_max=domain.z_axis->k_val_at(domain.Nz/2);
 
 	// setup dealiasing-filter 2/3-rule
-	for(int i=0;i<domain.Nx; ++i)
-		for(int j=0;j<domain.Ny; ++j)
-			for (int k=0; k< (domain.Nz/2)+1; ++k)
+	for(int i=0; i<domain.Nx; ++i)
+		for(int j=0; j<domain.Ny; ++j)
+			for (int k=0; k<(domain.Nz/2)+1; ++k)
 			{
 				int ijk = k + (domain.Nz/2+1)*(j + i*domain.Ny);
 				double kx = domain.x_axis->k_val_at(i);

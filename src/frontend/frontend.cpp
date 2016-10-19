@@ -53,12 +53,12 @@ double pi = acos(-1.);
 // number of grid-points
 // in different space directions
 
-int Nx = 128;
+int Nx = 256;
 //int Nx = 384;
 int Ny = 128;
 int Nz = 128;
 // Box dimensions
-double Lx = 8.;
+double Lx = 12.;
 double Ly = 8.;
 double Lz = 8.;
 
@@ -174,12 +174,12 @@ void create_input_from_MGsolver(field_real &ni, field_real &Ph)
 	int * MG_steps_sizes = new int[MG_N]
                  {0,-1,-1,-1};
 	MG_lvl_control * cycle_shape = new MG_lvl_control[MG_N]
-			  { lvl_down, lvl_down, lvl_up, lvl_up};
+			  { lvl_down3, lvl_up, lvl_up, lvl_up};
 	double * MG_error = new double[MG_N]
 			  {.01,
 			   0.0005,
-			   0.0005,
-			   0.0005};
+			   0.0001,
+			   0.0001};
 	MG.set_level_control(MG_N, MG_steps_sizes, cycle_shape, MG_error);
 
 	delete[] MG_steps_sizes;
@@ -279,9 +279,9 @@ int main(int argc,char **argv)
 
 
 
-	axis_CoSiSt x_axis(-0.5*Lx, Lx, Nx, Lx*(1.-0.25)/(2*pi) );
-	axis_CoSiSt y_axis(-0.5*Ly, Ly, Ny, Ly*(1.-0.25)/(2*pi) );
-	axis_CoSiSt z_axis(-0.5*Lz, Lz, Nz, Lz*(1.-0.25)/(2*pi) );
+		axis_CoSiSt x_axis(-0.5*Lx, Lx, Nx, Lx*(1.-0.25)/(2*pi) );
+		axis_CoSiSt y_axis(-0.5*Ly, Ly, Ny, Ly*(1.-0.25)/(2*pi) );
+		axis_CoSiSt z_axis(-0.5*Lz, Lz, Nz, Lz*(1.-0.25)/(2*pi) );
 	/*
 	axis_CoSiSt x_axis(-0.5*Lx, Lx, Nx, Lx*(1.-0.25)/(2*pi) );
 	axis_CoSiSt y_axis(-0.5*Ly, Ly, Ny, Ly*(1.-0.25)/(2*pi) );

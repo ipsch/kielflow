@@ -130,7 +130,7 @@ double axis_CoSiSt::dS(const int &index) const
 {
 	const double pi = acos(-1.);
 	double x = l0 + (L/N)*index;
-	return 1 - (2.*pi*m/L)*cos(2.*pi*x/L);
+	return 1. - (2.*pi*m/L)*cos(2.*pi*x/L);
 }
 
 
