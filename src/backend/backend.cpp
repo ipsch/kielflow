@@ -16,6 +16,7 @@
 
 #include "fftw3.h"
 #include "operations.hpp"
+#include "OP_FFT.hpp"
 #include "effect.hpp"
 
 #include "field_integrate.hpp"
@@ -61,8 +62,11 @@ int main(int argc, char *argv[])
 	std::string file_input = "./data/fields.h5";
 	std::string file_output_1d = "./data/plot_data.dat";
 	std::string file_output_2d = "./data/splot_data.dat";
+	std::string file_output_F1d = "./data/plot_Fdata.dat";
+	std::string file_output_F2d = "./data/splot_Fdata.dat";
 	bool slice_flag = false;
 	bool use_target_dir = false;
+	bool fourier_flag = false;
 	std::string target_dir = "./data/";
 
 	int N_files = 1;
@@ -72,11 +76,18 @@ int main(int argc, char *argv[])
 	int opt_indent;
     opterr = 0;
 
-    while ((switch_opt = getopt (argc, argv, "hsd:")) != -1)
+    while ((switch_opt = getopt (argc, argv, "Fhsd:")) != -1)
     {
 
     	switch (switch_opt)
     	{
+
+    	case 'F': {
+    		fourier_flag = true;
+    		opt_indent+=1;
+    		return 0;
+    		break;
+    	}
 
     	case 'h': {
     		help();
@@ -150,11 +161,15 @@ int main(int argc, char *argv[])
 		{
 			file_output_1d = target_dir + "plot_data " + t_file_;
 			file_output_2d = target_dir + "splot_data " + t_file_;
+			file_output_F1d = target_dir + "plot_Fdata " + t_file_;
+			file_output_F2d = target_dir + "splot_Fdata " + t_file_;
 		}
 		else
 		{
 			file_output_1d = t_dir_ + "plot_data " + t_file_;
 			file_output_2d = t_dir_ + "splot_data " + t_file_;
+			file_output_F1d = t_dir_ + "plot_Fdata " + t_file_;
+			file_output_F2d = t_dir_ + "splot_Fdata " + t_file_;
 		}
 
 	    // status msg to console
@@ -163,7 +178,7 @@ int main(int argc, char *argv[])
 	    std::cout << "                 " << file_output_2d << std::endl;
 
 	    // load parameters and domain
-		grid_Co Omega = load_grid(file_input);
+		grid Omega = load_grid(file_input);
 		parameters Params = load_parameters(file_input);
 		//particle::load();
 
@@ -228,6 +243,26 @@ int main(int argc, char *argv[])
 		   #endif
 			save_2d(Ux, Uy, Uz, ni, Ph, save_opt, file_output_2d);
 			save_1d(Ux, Uy, Uz, ni, Ph, save_opt, file_output_1d);
+
+			if(fourier_flag)
+			{
+				OP_FFT my_FTT(Omega);
+				field_imag FUx(Omega);
+				field_imag FUy(Omega);
+				field_imag FUz(Omega);
+				field_imag Fni(Omega);
+				field_imag FPh(Omega);
+
+				FFT(Ux,FUx);
+				FFT(Uy,FUy);
+				FFT(Uz,FUz);
+				FFT(ni,Fni);
+				FFT(Ph,FPh);
+
+				save_F2d(FUx, FUy, FUz, Fni, FPh, save_opt, file_output_F2d);
+				save_F1d(FUx, FUy, FUz, Fni, FPh, save_opt, file_output_F1d);
+
+			}
 		} // End processing 3d data
 
     } // END loop over file list

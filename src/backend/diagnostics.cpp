@@ -59,13 +59,13 @@ void diagnostics::analyze(const field_real &that)
 		if(supremum != max(that.val[i],supremum))
 		{
 			supremum = max(that.val[i],supremum);
-			that.my_grid->ijk_at(i,i_supremum,j_supremum, k_supremum);
+			//that.my_grid->ijk_at(i,i_supremum,j_supremum, k_supremum);
 		}
 
 		if(infinum  != min(that.val[i],infinum))
 		{
 			infinum  = min(that.val[i],infinum);
-			that.my_grid->ijk_at(i,i_supremum,j_supremum, k_supremum);
+			//that.my_grid->ijk_at(i,i_supremum,j_supremum, k_supremum);
 		}
 
 	}

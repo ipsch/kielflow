@@ -1,6 +1,6 @@
 #include "RKO4.hpp"
 
-//#define _MONITOR_EVOLUTION
+#define _MONITOR_EVOLUTION
 
 void monitor_evolution(const field_imag &target, const std::string &filename)
 {

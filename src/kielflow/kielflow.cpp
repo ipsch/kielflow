@@ -145,7 +145,7 @@ int main(int argc,char **argv)
 
     std::cout << "IO_file " << IO_file << std::endl;
 
-	counter iteration(1000);   // set counter for how many iterations are allowed
+	counter iteration(1);   // set counter for how many iterations are allowed
 	counter i_output(10);
 	counter i_backup(100);
 

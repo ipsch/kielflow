@@ -21,13 +21,13 @@
 
 #define _RHS_POISSON
 #define _RHS_DISSIPATION
-#define _RHS_ADVECTION    // CHECKED
+//#define _RHS_ADVECTION    // CHECKED
 #define _RHS_DIFFUSION
 #define _RHS_E_INT
 #define _RHS_E_EXT
 #define _RHS_CONTINUITY
 //#define _RHS_PENALIZATION_U
-#define _RHS_SVISCOSITY
+//#define _RHS_SVISCOSITY
 
 class rhs_standard : public interface_rhs
 {

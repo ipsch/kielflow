@@ -768,6 +768,102 @@ void save_1d(const field_real &Ux, const field_real &Uy, const field_real  &Uz, 
 	return;
 }
 
+void save_F1d(const field_imag &FUx, const field_imag &FUy, const field_imag  &FUz, const field_imag  &Fni, const field_imag &FPh,
+		     subdim & sdim, const std::string &path)
+{
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	logger my_log("save_1d");
+	my_log << "start";
+   #endif
+
+	 int first_fixed;
+	 int second_fixed;
+
+	 int i_fast;
+	 int N_fast;
+
+	 int *i, *j, *k;
+
+	int direction = sdim.direction;
+
+	switch( direction )
+	{
+	case  0:
+		first_fixed = sdim.ypos;
+		second_fixed = sdim.zpos;
+		i = &i_fast;
+		j = &first_fixed;
+		k = &second_fixed;
+	    N_fast = FUx.Nx;
+		break;
+	case 1:
+		first_fixed = sdim.xpos;
+		second_fixed = sdim.zpos;
+		i = &first_fixed;
+		j = &i_fast;
+		k = &second_fixed;
+	    N_fast = FUx.Ny;
+	    break;
+	case 2:
+		first_fixed = sdim.xpos;
+		second_fixed = sdim.ypos;
+		i = &first_fixed;
+		j = &second_fixed;
+	    k = &i_fast;
+	    N_fast = FUx.Nz;
+	    break;
+	} // END of switch
+
+	std::ofstream output_stream(path.c_str(), std::ofstream::trunc);
+
+	// write header to file (3-lines of header)
+	output_stream << "output from PFluidDy\n";
+	output_stream << "Domain: ";
+	output_stream << "[" << FUx.my_grid.x_axis->val_at(0) << "," <<  FUx.my_grid.x_axis->val_at(FUx.Nx) << "]x";
+	output_stream << "[" << FUx.my_grid.y_axis->val_at(0) << "," <<  FUx.my_grid.y_axis->val_at(FUx.Nx) << "]x";
+	output_stream << "[" << FUx.my_grid.z_axis->val_at(0) << "," <<  FUx.my_grid.z_axis->val_at(FUx.Nx) << "]\t";
+	output_stream << "Nx/Ny/Nz ";
+	output_stream << FUx.Nx << "/";
+	output_stream << FUx.Ny << "/";
+	output_stream << FUy.Nz << "\n";
+	output_stream << "x\ty\tz\tUx\tUy\tUz\tni\n\n";
+
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	my_log << "writing to file";
+   #endif
+
+	// write data to file
+	for(i_fast=0; i_fast<N_fast; ++i_fast)
+	{
+		//std::cout << "(" << *i << "," << *j << "," << *k << ")" << std::endl;
+		//i_fast << " " << domain::index_3d_re(*i,*j,*k) << std::endl;
+		output_stream << std::scientific << std::setprecision(3);
+		output_stream << FUx.my_grid.x_axis->val_at(*i) << "\t";
+		output_stream << FUx.my_grid.y_axis->val_at(*j) << "\t";
+		output_stream << FUx.my_grid.z_axis->val_at(*k) << "\t";
+		output_stream << std::scientific << std::setprecision(6);
+		int index = FUx.index(*i,*j,*k);
+		output_stream << FUx.val[index][0] << "\t";
+		output_stream << FUx.val[index][1] << "\t";
+		output_stream << FUy.val[index][0] << "\t";
+		output_stream << FUy.val[index][1] << "\t";
+		output_stream << FUz.val[index][0] << "\t";
+		output_stream << FUz.val[index][1] << "\t";
+		output_stream << Fni.val[index][0] << "\t";
+		output_stream << Fni.val[index][1] << "\t";
+		output_stream << FPh.val[index][0] << "\t";
+		output_stream << FPh.val[index][1] << "\n";
+		//output_stream << std::endl;
+	}
+
+	output_stream.close();
+
+   #if defined(_MY_VERBOSE_TEDIOUS)
+	my_log << "done.";
+   #endif
+
+	return;
+}
 
 void save_2d(const field_real &XX, subdim & sdim,  const std::string &path)
 {
@@ -873,6 +969,46 @@ void save_2d(const field_real &Ux, const field_real &Uy, const field_real  &Uz, 
 			output_stream << Uz.val[index] << "\t";
 			output_stream << ni.val[index] << "\t";
 			output_stream << Ph.val[index] << "\n";
+		}
+		output_stream << std::endl;
+	}
+	output_stream.close();
+	return;
+}
+
+void save_F2d(const field_imag &FUx, const field_imag &FUy, const field_imag &FUz, const field_imag  &Fni, const field_imag &FPh,
+	 subdim &sdim, const std::string &path)
+{
+   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
+	std::cout << "   save(): saving data to ";
+	std::cout << path;
+	std::cout << " .. this may take a while\n";
+   #endif
+
+	std::ofstream output_stream(path.c_str(), std::ofstream::trunc);
+	output_stream << get_header(FUx.my_grid);
+
+	// write data to file
+	for(sdim.i_slow=0; sdim.i_slow<sdim.N_slow; ++sdim.i_slow)
+	{
+		for(sdim.i_fast=0; sdim.i_fast<sdim.N_fast; ++sdim.i_fast)
+		{
+			output_stream << std::scientific << std::setprecision(3);
+			output_stream << FUx.my_grid.x_axis->val_at(*sdim.i) << "\t";
+			output_stream << FUx.my_grid.y_axis->val_at(*sdim.j) << "\t";
+			output_stream << FUx.my_grid.z_axis->val_at(*sdim.k) << "\t";
+			output_stream << std::scientific << std::setprecision(6);
+			int index = FUx.index(*sdim.i,*sdim.j,*sdim.k);
+			output_stream << FUx.val[index][0] << "\t";
+			output_stream << FUx.val[index][1] << "\t";
+			output_stream << FUy.val[index][0] << "\t";
+			output_stream << FUy.val[index][1] << "\t";
+			output_stream << FUz.val[index][0] << "\t";
+			output_stream << FUz.val[index][1] << "\t";
+			output_stream << Fni.val[index][0] << "\t";
+			output_stream << Fni.val[index][1] << "\t";
+			output_stream << FPh.val[index][0] << "\t";
+			output_stream << FPh.val[index][1] << "\n";
 		}
 		output_stream << std::endl;
 	}

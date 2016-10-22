@@ -1,5 +1,8 @@
 #include "OP_FFT.hpp"
 
+#ifndef MY_FFTW_MODE
+#define MY_FFTW_MODE FFTW_ESTIMATE
+#endif
 
 OP_FFT::OP_FFT(const grid &domain) :
 	N(domain.Nx*domain.Ny*domain.Nz)
@@ -14,7 +17,7 @@ OP_FFT::OP_FFT(const grid &domain) :
 	output = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * domain.Nx*domain.Ny*(domain.Nz/2+1));
 	//my_plan = fftw_plan_dft_r2c_3d(domain.Nx, domain.Ny, domain.Nz, input, output,
 	//		FFTW_EXHAUSTIVE | FFTW_DESTROY_INPUT); // ToDo : change if program works
-	my_plan = fftw_plan_dft_r2c_3d(domain.Nx, domain.Ny, domain.Nz, input, output, FFTW_PATIENT);
+	my_plan = fftw_plan_dft_r2c_3d(domain.Nx, domain.Ny, domain.Nz, input, output, MY_FFTW_MODE);
 
 	// optimization level
 	// FFTW_ESTIMATE

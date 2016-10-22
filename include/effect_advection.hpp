@@ -4,6 +4,7 @@
 #include "effect_base.hpp"
 #include "field.hpp"
 #include "operations.hpp"
+#include "OP_partial_derivative.hpp"
 
 class effect_advection : public effect
 {
