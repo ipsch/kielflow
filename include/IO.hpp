@@ -52,10 +52,14 @@ void save_1d(const field_real &XX,
 		     subdim &sdim, const std::string &path = "./data/plot_data.dat");
 void save_1d(const field_real &Ux, const field_real &Uy, const field_real  &Uz, const field_real  &ni, const field_real &Ph,
 		     subdim &sdim, const std::string &path = "./data/plot_data.dat");
+void save_F1d(const field_imag &FUx, const field_imag &FUy, const field_imag &FUz, const field_imag &Fni, const field_imag &FPh,
+		     subdim &sdim, const std::string &path = "./data/plot_data.dat");
 
 void save_2d(const field_real &XX,
 		     subdim &sdim, const std::string &path = "./data/splot_data.dat");
 void save_2d(const field_real &Ux, const field_real &Uy, const field_real  &Uz, const field_real  &ni, const field_real &Ph,
+		     subdim &sdim, const std::string &path = "./data/splot_data.dat");
+void save_F2d(const field_imag &FUx, const field_imag &FUy, const field_imag &FUz, const field_imag &Fni, const field_imag &FPh,
 		     subdim &sdim, const std::string &path = "./data/splot_data.dat");
 
 void save_3d(const field_real &XX, const std::string &path);

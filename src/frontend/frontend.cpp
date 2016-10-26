@@ -55,12 +55,12 @@ double pi = acos(-1.);
 
 int Nx = 256;
 //int Nx = 384;
-int Ny = 128;
-int Nz = 128;
+int Ny = 160;
+int Nz = 160;
 // Box dimensions
-double Lx = 12.;
-double Ly = 8.;
-double Lz = 8.;
+double Lx = 10.;
+double Ly = 6.;
+double Lz = 6.;
 
 // physical parameters
 double M = .5;
@@ -279,9 +279,9 @@ int main(int argc,char **argv)
 
 
 
-		axis_CoSiSt x_axis(-0.5*Lx, Lx, Nx, Lx*(1.-0.25)/(2*pi) );
-		axis_CoSiSt y_axis(-0.5*Ly, Ly, Ny, Ly*(1.-0.25)/(2*pi) );
-		axis_CoSiSt z_axis(-0.5*Lz, Lz, Nz, Lz*(1.-0.25)/(2*pi) );
+		axis_CoSiSt x_axis(-0.5*Lx, Lx, Nx, Lx*(1.-0.3)/(2*pi) );
+		axis_CoSiSt y_axis(-0.5*Ly, Ly, Ny, Ly*(1.-0.3)/(2*pi) );
+		axis_CoSiSt z_axis(-0.5*Lz, Lz, Nz, Lz*(1.-0.3)/(2*pi) );
 	/*
 	axis_CoSiSt x_axis(-0.5*Lx, Lx, Nx, Lx*(1.-0.25)/(2*pi) );
 	axis_CoSiSt y_axis(-0.5*Ly, Ly, Ny, Ly*(1.-0.25)/(2*pi) );

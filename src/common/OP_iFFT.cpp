@@ -1,5 +1,6 @@
 #include "OP_iFFT.hpp"
 
+#define MY_FFTW_MODE FFTW_PATIENT
 #ifndef MY_FFTW_MODE
 #define MY_FFTW_MODE FFTW_ESTIMATE
 #endif

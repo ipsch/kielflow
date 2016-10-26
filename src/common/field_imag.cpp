@@ -134,6 +134,15 @@ return val[N];
 }
 */
 
+field_imag& field_imag::operator=(const field_imag& rhs) // compound assignment (does not need to be a member,
+{
+	for(int i=0; i<N; ++i)
+	{
+		val[i][0] = rhs.val[i][0];
+		val[i][1] = rhs.val[i][1];
+	}
+	return *this; // return the result by reference
+}
 
 field_imag& field_imag::operator+=(const field_imag& rhs) // compound assignment (does not need to be a member,
 {

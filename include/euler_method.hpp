@@ -29,7 +29,7 @@ class euler_method : public interface_ode_solver
 public :
 	euler_method(interface_rhs &rhs, double dt = 0.1);
 	~euler_method() {	}
-	void solve(const double &t, field_imag &FUx, field_imag &FUy, field_imag &FUz, field_imag &Fni);
+	void solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, field_imag &Fni);
 
 private :
 	//euler_method() : rhs(NULL), dt_(0.), t_(0) { }; // can never be called!

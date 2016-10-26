@@ -833,14 +833,37 @@ void save_F1d(const field_imag &FUx, const field_imag &FUy, const field_imag  &F
    #endif
 
 	// write data to file
-	for(i_fast=0; i_fast<N_fast; ++i_fast)
+	for(i_fast=N_fast/2+1; i_fast<N_fast; ++i_fast)
 	{
 		//std::cout << "(" << *i << "," << *j << "," << *k << ")" << std::endl;
 		//i_fast << " " << domain::index_3d_re(*i,*j,*k) << std::endl;
 		output_stream << std::scientific << std::setprecision(3);
-		output_stream << FUx.my_grid.x_axis->val_at(*i) << "\t";
-		output_stream << FUx.my_grid.y_axis->val_at(*j) << "\t";
-		output_stream << FUx.my_grid.z_axis->val_at(*k) << "\t";
+		output_stream << FUx.my_grid.x_axis->k_val_at(*i) << "\t";
+		output_stream << FUx.my_grid.y_axis->k_val_at(*j) << "\t";
+		output_stream << FUx.my_grid.z_axis->k_val_at(*k) << "\t";
+		output_stream << std::scientific << std::setprecision(6);
+		int index = FUx.index(*i,*j,*k);
+		output_stream << FUx.val[index][0] << "\t";
+		output_stream << FUx.val[index][1] << "\t";
+		output_stream << FUy.val[index][0] << "\t";
+		output_stream << FUy.val[index][1] << "\t";
+		output_stream << FUz.val[index][0] << "\t";
+		output_stream << FUz.val[index][1] << "\t";
+		output_stream << Fni.val[index][0] << "\t";
+		output_stream << Fni.val[index][1] << "\t";
+		output_stream << FPh.val[index][0] << "\t";
+		output_stream << FPh.val[index][1] << "\n";
+		//output_stream << std::endl;
+	}
+
+	for(i_fast=0; i_fast<N_fast/2+1; ++i_fast)
+	{
+		//std::cout << "(" << *i << "," << *j << "," << *k << ")" << std::endl;
+		//i_fast << " " << domain::index_3d_re(*i,*j,*k) << std::endl;
+		output_stream << std::scientific << std::setprecision(3);
+		output_stream << FUx.my_grid.x_axis->k_val_at(*i) << "\t";
+		output_stream << FUx.my_grid.y_axis->k_val_at(*j) << "\t";
+		output_stream << FUx.my_grid.z_axis->k_val_at(*k) << "\t";
 		output_stream << std::scientific << std::setprecision(6);
 		int index = FUx.index(*i,*j,*k);
 		output_stream << FUx.val[index][0] << "\t";
@@ -989,14 +1012,33 @@ void save_F2d(const field_imag &FUx, const field_imag &FUy, const field_imag &FU
 	output_stream << get_header(FUx.my_grid);
 
 	// write data to file
-	for(sdim.i_slow=0; sdim.i_slow<sdim.N_slow; ++sdim.i_slow)
+	for(sdim.i_slow=sdim.N_slow/2+1; sdim.i_slow<sdim.N_slow; ++sdim.i_slow)
 	{
-		for(sdim.i_fast=0; sdim.i_fast<sdim.N_fast; ++sdim.i_fast)
+		for(sdim.i_fast=sdim.N_fast/2+1; sdim.i_fast<sdim.N_fast; ++sdim.i_fast)
 		{
 			output_stream << std::scientific << std::setprecision(3);
-			output_stream << FUx.my_grid.x_axis->val_at(*sdim.i) << "\t";
-			output_stream << FUx.my_grid.y_axis->val_at(*sdim.j) << "\t";
-			output_stream << FUx.my_grid.z_axis->val_at(*sdim.k) << "\t";
+			output_stream << FUx.my_grid.x_axis->k_val_at(*sdim.i) << "\t";
+			output_stream << FUx.my_grid.y_axis->k_val_at(*sdim.j) << "\t";
+			output_stream << FUx.my_grid.z_axis->k_val_at(*sdim.k) << "\t";
+			output_stream << std::scientific << std::setprecision(6);
+			int index = FUx.index(*sdim.i,*sdim.j,*sdim.k);
+			output_stream << FUx.val[index][0] << "\t";
+			output_stream << FUx.val[index][1] << "\t";
+			output_stream << FUy.val[index][0] << "\t";
+			output_stream << FUy.val[index][1] << "\t";
+			output_stream << FUz.val[index][0] << "\t";
+			output_stream << FUz.val[index][1] << "\t";
+			output_stream << Fni.val[index][0] << "\t";
+			output_stream << Fni.val[index][1] << "\t";
+			output_stream << FPh.val[index][0] << "\t";
+			output_stream << FPh.val[index][1] << "\n";
+		}
+		for(sdim.i_fast=0; sdim.i_fast<sdim.N_fast/2+1; ++sdim.i_fast)
+		{
+			output_stream << std::scientific << std::setprecision(3);
+			output_stream << FUx.my_grid.x_axis->k_val_at(*sdim.i) << "\t";
+			output_stream << FUx.my_grid.y_axis->k_val_at(*sdim.j) << "\t";
+			output_stream << FUx.my_grid.z_axis->k_val_at(*sdim.k) << "\t";
 			output_stream << std::scientific << std::setprecision(6);
 			int index = FUx.index(*sdim.i,*sdim.j,*sdim.k);
 			output_stream << FUx.val[index][0] << "\t";
@@ -1012,6 +1054,50 @@ void save_F2d(const field_imag &FUx, const field_imag &FUy, const field_imag &FU
 		}
 		output_stream << std::endl;
 	}
+
+	for(sdim.i_slow=0; sdim.i_slow<sdim.N_slow/2+1; ++sdim.i_slow)
+	{
+		for(sdim.i_fast=sdim.N_fast/2+1; sdim.i_fast<sdim.N_fast; ++sdim.i_fast)
+		{
+			output_stream << std::scientific << std::setprecision(3);
+			output_stream << FUx.my_grid.x_axis->k_val_at(*sdim.i) << "\t";
+			output_stream << FUx.my_grid.y_axis->k_val_at(*sdim.j) << "\t";
+			output_stream << FUx.my_grid.z_axis->k_val_at(*sdim.k) << "\t";
+			output_stream << std::scientific << std::setprecision(6);
+			int index = FUx.index(*sdim.i,*sdim.j,*sdim.k);
+			output_stream << FUx.val[index][0] << "\t";
+			output_stream << FUx.val[index][1] << "\t";
+			output_stream << FUy.val[index][0] << "\t";
+			output_stream << FUy.val[index][1] << "\t";
+			output_stream << FUz.val[index][0] << "\t";
+			output_stream << FUz.val[index][1] << "\t";
+			output_stream << Fni.val[index][0] << "\t";
+			output_stream << Fni.val[index][1] << "\t";
+			output_stream << FPh.val[index][0] << "\t";
+			output_stream << FPh.val[index][1] << "\n";
+		}
+		for(sdim.i_fast=0; sdim.i_fast<sdim.N_fast/2+1; ++sdim.i_fast)
+		{
+			output_stream << std::scientific << std::setprecision(3);
+			output_stream << FUx.my_grid.x_axis->k_val_at(*sdim.i) << "\t";
+			output_stream << FUx.my_grid.y_axis->k_val_at(*sdim.j) << "\t";
+			output_stream << FUx.my_grid.z_axis->k_val_at(*sdim.k) << "\t";
+			output_stream << std::scientific << std::setprecision(6);
+			int index = FUx.index(*sdim.i,*sdim.j,*sdim.k);
+			output_stream << FUx.val[index][0] << "\t";
+			output_stream << FUx.val[index][1] << "\t";
+			output_stream << FUy.val[index][0] << "\t";
+			output_stream << FUy.val[index][1] << "\t";
+			output_stream << FUz.val[index][0] << "\t";
+			output_stream << FUz.val[index][1] << "\t";
+			output_stream << Fni.val[index][0] << "\t";
+			output_stream << Fni.val[index][1] << "\t";
+			output_stream << FPh.val[index][0] << "\t";
+			output_stream << FPh.val[index][1] << "\n";
+		}
+		output_stream << std::endl;
+	}
+
 	output_stream.close();
 	return;
 }

@@ -87,12 +87,12 @@ while getopts ":d:hp:" optname
       "p")
         case "$OPTARG" in
           "plot_Ux") script="plot_Ux" ;;  
-          "plot_density") script="plot_density" ;;
-          "plot_potential") script="plot_potential" ;;
+          "plot_ni") script="plot_ni" ;;
+          "plot_Ph") script="plot_Ph" ;;
           "plot_force") script="plot_force" ;;  
           # 2d data
-          "splot_density") script="splot_density" ;;
-          "splot_potential") script="splot_potential" ;;
+          "splot_ni") script="splot_ni" ;;
+          "splot_Ph") script="splot_Ph" ;;
           "splot_velocity") script="splot_velocity" ;;
           "splot_force") script="splot_force" ;;
           "?")

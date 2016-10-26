@@ -10,7 +10,7 @@ my_rhs(rhs), t_(0.), dt_(dt)
 }
 
 
-void euler_method::solve(const double &t, field_imag &FUx, field_imag &FUy, field_imag &FUz, field_imag &Fni)
+void euler_method::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, field_imag &Fni)
 {
    #ifdef _MY_VERBOSE
 	logger log("RK-method");

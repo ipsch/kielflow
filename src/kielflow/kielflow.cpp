@@ -145,7 +145,7 @@ int main(int argc,char **argv)
 
     std::cout << "IO_file " << IO_file << std::endl;
 
-	counter iteration(1);   // set counter for how many iterations are allowed
+	counter iteration(2000);   // set counter for how many iterations are allowed
 	counter i_output(10);
 	counter i_backup(100);
 
@@ -243,6 +243,7 @@ int main(int argc,char **argv)
 	// ##### TIME-INTEGRATOR #####
 	double t_delta = 0.01;
 	Runge_kutta_O4 time_integrator(rhs, t_delta);
+	//euler_method time_integrator(rhs, t_delta);
 
 
    //#define TEST_MULTIGRID

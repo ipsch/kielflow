@@ -85,7 +85,6 @@ int main(int argc, char *argv[])
     	case 'F': {
     		fourier_flag = true;
     		opt_indent+=1;
-    		return 0;
     		break;
     	}
 
@@ -145,10 +144,9 @@ int main(int argc, char *argv[])
         	files_in[i] = argv[opt_indent+1+i];
     }
 
-
-
     for(int i=0; i<N_files; ++i)
     {
+
     	file_input = files_in[i];
 
     	std::string t_dir_;
@@ -185,7 +183,7 @@ int main(int argc, char *argv[])
 		// set backend to process sliced data (2d instead of 3d data-files)
 		if(slice_flag==true)
 		{
-			std::cout << "do slie " << std::endl;
+			std::cout << "create data from sliced h5-file" << std::endl;
 		   #if defined (_MY_VERBOSE_MORE) || defined (_MY_VERBOSE_TEDIOUS)
 			my_log << "slice_flag==true";
 		   #endif
@@ -214,7 +212,7 @@ int main(int argc, char *argv[])
 
 		if(slice_flag==false)
 		{
-			// Load fields (real-space) from file
+			std::cout << "create data from full h5-file" << std::endl;
 		   #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 			my_log << "load fields (real-space)";
 		   #endif
@@ -246,6 +244,8 @@ int main(int argc, char *argv[])
 
 			if(fourier_flag)
 			{
+				save_opt.zpos = 0;
+				std::cout << "create additional Fourier data" << std::endl;
 				OP_FFT my_FTT(Omega);
 				field_imag FUx(Omega);
 				field_imag FUy(Omega);

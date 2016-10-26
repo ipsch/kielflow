@@ -17,6 +17,7 @@ public :
 
 	fftw_complex * val;
 
+	field_imag& operator=(const field_imag& rhs);
 	field_imag& operator+=(const field_imag& rhs);
 	field_imag& operator-=(const field_imag& rhs);
 
