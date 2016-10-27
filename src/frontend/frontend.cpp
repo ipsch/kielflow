@@ -53,12 +53,12 @@ double pi = acos(-1.);
 // number of grid-points
 // in different space directions
 
-int Nx = 256;
+int Nx = 384;
 //int Nx = 384;
 int Ny = 160;
 int Nz = 160;
 // Box dimensions
-double Lx = 10.;
+double Lx = 15.;
 double Ly = 6.;
 double Lz = 6.;
 
@@ -310,8 +310,8 @@ int main(int argc,char **argv)
 
 
 
-	create_input_from_MGsolver(ni, Ph);
-	//create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
+	//create_input_from_MGsolver(ni, Ph);
+	create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
 
 
 	//ni.fill2([&] (double x, double y, double z) {return 1.;});

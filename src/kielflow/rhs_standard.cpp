@@ -107,13 +107,10 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 	my_poisson_solver.solve(Phi,Buffer_1st);
    #endif
 
-
-
-
-
-	// First derive all all linear terms where no dealiasing is needed
-
-
+	// Linear Terms first:
+    // ###########################################################################
+	// ############ Dissipation & spectral viscosity #############################
+	// ###########################################################################
    #if defined(_RHS_DISSIPATION) && defined(_RHS_SVISCOSITY) // ##################
 	for(int ijk=0; ijk<Buffer_FUx.N; ++ijk)
 	{
@@ -129,6 +126,11 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 	{
 		Buffer_FUz.val[ijk][0] = (my_params.tau+field_SV[ijk])*FUz.val[ijk][0];
 		Buffer_FUz.val[ijk][1] = (my_params.tau+field_SV[ijk])*FUz.val[ijk][1];
+	}
+	for(int ijk=0; ijk<Buffer_Fni.N; ++ijk)
+	{
+		Buffer_Fni.val[ijk][0] = field_SV[ijk]*Fni.val[ijk][0];
+		Buffer_Fni.val[ijk][1] = field_SV[ijk]*Fni.val[ijk][1];
 	}
    #endif
 
@@ -148,6 +150,11 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 		Buffer_FUz.val[ijk][0] = my_params.tau*FUz.val[ijk][0];
 		Buffer_FUz.val[ijk][1] = my_params.tau*FUz.val[ijk][1];
 	}
+	for(int ijk=0; ijk<Buffer_Fni.N; ++ijk)
+	{
+		Buffer_Fni.val[ijk][0] = 0.;
+		Buffer_Fni.val[ijk][1] = 0.;
+	}
 #endif
 
 #if !defined(_RHS_DISSIPATION) && defined(_RHS_SVISCOSITY) // ##################
@@ -156,8 +163,6 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 		Buffer_FUx.val[ijk][0] = field_SV[ijk]*FUx.val[ijk][0];
 		Buffer_FUx.val[ijk][1] = field_SV[ijk]*FUx.val[ijk][1];
 	}
-
-
 	for(int ijk=0; ijk<Buffer_FUy.N; ++ijk)
 	{
 			Buffer_FUy.val[ijk][0] = field_SV[ijk]*FUy.val[ijk][0];
@@ -167,6 +172,11 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 	{
 		Buffer_FUz.val[ijk][0] = field_SV[ijk]*FUz.val[ijk][0];
 		Buffer_FUz.val[ijk][1] = field_SV[ijk]*FUz.val[ijk][1];
+	}
+	for(int ijk=0; ijk<Buffer_Fni.N; ++ijk)
+	{
+		Buffer_Fni.val[ijk][0] = field_SV[ijk]*Fni.val[ijk][0];
+		Buffer_Fni.val[ijk][1] = field_SV[ijk]*Fni.val[ijk][1];
 	}
 #endif
 
@@ -186,8 +196,52 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 		Buffer_FUz.val[ijk][0] = 0.;
 		Buffer_FUz.val[ijk][1] = 0.;
 	}
+	for(int ijk=0; ijk<Buffer_Fni.N; ++ijk)
+	{
+		Buffer_Fni.val[ijk][0] = 0.;
+		Buffer_Fni.val[ijk][1] = 0.;
+	}
    #endif
     // ############# END DISSIPATION ##########################################
+
+
+	// another linear term (note linear because ni rescaled by exp(ni)->ni )
+	// ########################################################################
+	// ################### Internal E-forces ##################################
+	// ########################################################################
+   #if defined(_RHS_DIFFUSION) && defined(_RHS_E_INT) // ######################
+	my_FFT(Phi,FBuffer_1st);
+	//dealiasing_theta(FBuffer_1st, 0.333333); //
+	dealiasing_undesignated(FBuffer_1st, [] (double k) {return exp(-1000.*pow(k,10.));});
+	for(int ijk=0; ijk<FBuffer_1st.N; ++ijk)
+	{
+		FBuffer_1st.val[ijk][0] += Fni.val[ijk][0]/my_params.theta;
+		FBuffer_1st.val[ijk][1] += Fni.val[ijk][1]/my_params.theta;
+	}
+   #endif
+
+   #if defined(_RHS_DIFFUSION) && !defined(_RHS_E_INT) // #####################
+	for(int i=0; i<FBuffer_1st.N; ++i)
+	{
+		FBuffer_1st.val[i][0] = Fni.val[i][0]/my_params.theta;
+		FBuffer_1st.val[i][1] = Fni.val[i][1]/my_params.theta;
+	}
+   #endif
+
+   #if !defined(_RHS_DIFFUSION) && defined(_RHS_E_INT) // #####################
+	my_FFT(Phi,FBuffer_1st);
+   #endif
+
+   #if defined(_RHS_DIFFUSION) || defined(_RHS_E_INT) // #####################
+	//my_dealiasing(FBuffer_1st);
+	d_dx(FBuffer_1st,FBuffer_2nd);
+	Buffer_FUx += FBuffer_2nd;
+	d_dy(FBuffer_1st,FBuffer_2nd);
+	Buffer_FUy += FBuffer_2nd;
+	d_dz(FBuffer_1st,FBuffer_2nd);
+	Buffer_FUz += FBuffer_2nd;
+   #endif
+
 
 	// dealiasing of input prior to evaluation of nonlinear terms
 
@@ -235,44 +289,6 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 	}
    #endif
 
-	// ########################################################################
-   #if defined(_RHS_DIFFUSION) && defined(_RHS_E_INT) // ######################
-	my_FFT(Phi,FBuffer_1st);
-	//dealiasing_theta(FBuffer_1st, 0.333333); //
-	dealiasing_undesignated(FBuffer_1st, [] (double k) {return exp(-1000.*pow(k,10.));});
-	for(int ijk=0; ijk<FBuffer_1st.N; ++ijk)
-	{
-		FBuffer_1st.val[ijk][0] += Fni.val[ijk][0]/my_params.theta;
-		FBuffer_1st.val[ijk][1] += Fni.val[ijk][1]/my_params.theta;
-	}
-   #endif
-
-   #if defined(_RHS_DIFFUSION) && !defined(_RHS_E_INT) // #####################
-	for(int i=0; i<FBuffer_1st.N; ++i)
-	{
-		FBuffer_1st.val[i][0] = Fni.val[i][0]/my_params.theta;
-		FBuffer_1st.val[i][1] = Fni.val[i][1]/my_params.theta;
-	}
-   #endif
-
-   #if !defined(_RHS_DIFFUSION) && defined(_RHS_E_INT) // #####################
-	my_FFT(Phi,FBuffer_1st);
-   #endif
-
-   #if defined(_RHS_DIFFUSION) || defined(_RHS_E_INT) // #####################
-
-	//my_dealiasing(FBuffer_1st);
-	d_dx(FBuffer_1st,FBuffer_2nd);
-	Buffer_FUx += FBuffer_2nd;
-	d_dy(FBuffer_1st,FBuffer_2nd);
-	Buffer_FUy += FBuffer_2nd;
-	d_dz(FBuffer_1st,FBuffer_2nd);
-	Buffer_FUz += FBuffer_2nd;
-   #endif
-
-
-
-
 
 	// ########################################################################
 	// ################## CONTINUITY EQUATION #################################
@@ -291,21 +307,11 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 	}
    #endif
 
-   #if !defined(_RHS_E_EXT) && !defined(_RHS_CONTINUITY) // ###################
-	for(int i=0; i<Buffer_Fni.N; ++i)
-	{
-		Buffer_Fni.val[i][0] = 0.;
-		Buffer_Fni.val[i][1] = 0.;
-	}
-   #endif
 
-
-
-	/*
 	// ########################################################################
    #if defined(_RHS_CONTINUITY)
 	// LaTeX: n = div(\mathbf{u}) + [..]
-	Buffer_Fni  = dFUx_dx;
+	Buffer_Fni += dFUx_dx;
 	Buffer_Fni += dFUy_dy;
 	Buffer_Fni += dFUz_dz;
 
@@ -339,10 +345,10 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 	Buffer_Fni += FBuffer_1st;
 
    #endif
-*/
 
 
 
+/*
 #if defined(_RHS_CONTINUITY)
 	my_iFFT(Fni,Buffer_1st);
 	for(int i=0; i<Buffer_1st.N; ++i)
@@ -374,14 +380,10 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 	my_FFT(Buffer_2nd,Buffer_Fni);
 
 #endif
+*/
 
 
 
-	for(int ijk=0; ijk<Buffer_Fni.N; ++ijk)
-	{
-		Buffer_Fni.val[ijk][0] += field_SV[ijk]*Fni.val[ijk][0];
-		Buffer_Fni.val[ijk][1] += field_SV[ijk]*Fni.val[ijk][1];
-	}
 
 
 	// ########################################################################
