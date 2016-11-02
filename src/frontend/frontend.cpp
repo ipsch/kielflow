@@ -38,7 +38,9 @@
 #include "solver_poisson_jacobi_lin.hpp"
 #include "solver_poisson_jacobi_nlin.hpp"
 #include "solver_poisson_multigrid.hpp"
-
+#include "OP_FFT.hpp"
+#include "OP_iFFT.hpp"
+#include "operations.hpp"
 #include "IO.hpp"
 
 
@@ -58,7 +60,7 @@ int Nx = 384;
 int Ny = 160;
 int Nz = 160;
 // Box dimensions
-double Lx = 15.;
+double Lx = 12.;
 double Ly = 6.;
 double Lz = 6.;
 
@@ -70,6 +72,7 @@ double mu = 0.;
 double beta = 0.0;
 double global_Q = -11498.5;
 
+double radius_a = 0.15;
 
 void create_input_from_old_data(field_real &Ux, field_real &Uy, field_real &Uz, field_real &ni, field_real &Ph)
 {
@@ -141,7 +144,7 @@ void create_input_from_MGsolver(field_real &ni, field_real &Ph)
 	double scale_Q = 8.1720e-06;
 	// -Q/2299.7
 	//fkt3d_Gauss dust_3d_fkt(Q*scale_Q,0.15,0.15,0.15);
-	fkt3d_Gauss dust_3d_fkt(default_Q*scale_Q,0.15,0.15,0.15);
+	fkt3d_Gauss dust_3d_fkt(default_Q*scale_Q,radius_a,radius_a,radius_a);
 	//fkt3d_shift H_3d_shifted_fkt(dust_3d_fkt, shift, 0., 0.);
 	nd.fill(dust_3d_fkt);
 
@@ -214,11 +217,16 @@ int main(int argc,char **argv)
 	int switch_opt;
 	int opt_indent = 0;
     opterr = 0;
-	 while ((switch_opt = getopt (argc, argv, "hM:Q:T:t:b:")) != -1)
+	 while ((switch_opt = getopt (argc, argv, "a:hM:Q:T:t:b:")) != -1)
 	    {
 
 	    	switch (switch_opt)
 	    	{
+
+	        case 'a':
+	        	radius_a = std::atof(optarg);
+	        	opt_indent+=2;
+	        	break;
 
 	        case 'M':
 	        	Params.M = std::atof(optarg);
@@ -308,11 +316,23 @@ int main(int argc,char **argv)
 	field_real ni(Omega);
 	field_real Ph(Omega);
 
+	field_imag Fni(Omega);
+	field_imag FPh(Omega);
 
+	create_input_from_MGsolver(ni, Ph);
+	//create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
 
-	//create_input_from_MGsolver(ni, Ph);
-	create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
+	OP_FFT my_FFT(Omega);
+	OP_iFFT my_iFFT(Omega);
 
+	my_FFT(ni,Fni);
+	my_FFT(Ph,FPh);
+
+	dealiasing_undesignated(Fni, [] (double k) {return exp(-2000.*pow(k,15.));});
+	dealiasing_undesignated(FPh, [] (double k) {return exp(-2000.*pow(k,15.));});
+
+	my_iFFT(Fni,ni);
+	my_iFFT(FPh,Ph);
 
 	//ni.fill2([&] (double x, double y, double z) {return 1.;});
 	//ni.fill2([&] (double x, double y, double z) {return 1.+exp(-(x*x)/0.1);});

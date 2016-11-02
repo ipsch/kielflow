@@ -93,6 +93,9 @@ while getopts ":d:hp:" optname
           # 2d data
           "splot_ni") script="splot_ni" ;;
           "splot_Ph") script="splot_Ph" ;;
+          "splot_FUx") script="splot_FUx" ;; 
+          "splot_Fni") script="splot_Fni" ;;
+          "splot_FPh") script="splot_FPh" ;;
           "splot_velocity") script="splot_velocity" ;;
           "splot_force") script="splot_force" ;;
           "?")

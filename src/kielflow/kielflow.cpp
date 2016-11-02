@@ -69,7 +69,8 @@ int main(int argc,char **argv)
 	my_log << VERSION_STRING;
    #endif
 
-	double default_Q = -11498.5;
+	double charge_Q = -11498.5;
+	double radius_a = 0.15;
     bool override_M = false;
     bool override_theta = false;
     bool override_tau = false;
@@ -85,14 +86,17 @@ int main(int argc,char **argv)
     	opt_indent+=2;
     	switch (switch_opt)
     	{
+        case 'a':
+        	radius_a = std::atof(optarg);
+        	break;
+
+        case 'Q':
+        	charge_Q = std::atof(optarg);
+        	break;
 
         case 'M':
         	override_M = true;
         	override_Params.M = std::atof(optarg);
-        	break;
-
-        case 'Q':
-        	default_Q = std::atof(optarg);
         	break;
 
         case 'T':
@@ -187,11 +191,11 @@ int main(int argc,char **argv)
 	// ##### DUST #####
 	double scale_Q = 8.1720e-06; // umrechnungsfaktor auf dimensionslose Einheiten
 	field_real nd(FPh.my_grid);
-	fkt3d_Gauss dust_3d_fkt(default_Q*scale_Q,0.15,0.15,0.15);
+	fkt3d_Gauss dust_3d_fkt(charge_Q*scale_Q,radius_a,radius_a,radius_a);
 	nd.fill(dust_3d_fkt);
 
 	field_real Hd(FPh.my_grid);
-	fkt3d_Gauss dust_3d_mask(1.,0.15,0.15,0.15);
+	fkt3d_Gauss dust_3d_mask(1.,radius_a,radius_a,radius_a);
 	Hd.fill(dust_3d_mask);
 
 
@@ -242,8 +246,8 @@ int main(int argc,char **argv)
    #endif
 	// ##### TIME-INTEGRATOR #####
 	double t_delta = 0.01;
-	Runge_kutta_O4 time_integrator(rhs, t_delta);
-	//euler_method time_integrator(rhs, t_delta);
+	//Runge_kutta_O4 time_integrator(rhs, t_delta);
+	euler_method time_integrator(rhs, t_delta);
 
 
    //#define TEST_MULTIGRID

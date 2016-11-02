@@ -1,16 +1,19 @@
 #!/bin/bash
 #SBATCH -c 1
-#SBATCH --mem=4G
-#SBATCH --time=6-00:00:00
+#SBATCH --mem=6G
+#SBATCH --time=1-00:00:00
 #SBATCH --mail-type=END,FAIL                          # notifications for job done & fail
 #SBATCH --mail-user=schnell@theo-physik.uni-kiel.de   # send-to address
 
 default_file="./data/fields.h5"
 argline=""
 
-while getopts ":T:M:Q:" optname
+while getopts ":a:T:M:Q:" optname
   do
     case "$optname" in
+      "a")
+        argline="$argline -a $OPTARG"
+        ;;
       "T")
         argline="$argline -T $OPTARG"
         ;;
