@@ -23,17 +23,14 @@
 
 
 
-
-
 class Runge_kutta_O4 : public interface_ode_solver
 {
-
 public :
 	Runge_kutta_O4(interface_rhs &rhs, double dt = 0.01);
 	~Runge_kutta_O4() {	}
 	void solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, field_imag &Fni);
-
 private :
+	//
 	std::string my_logfile;
 	double t_;
 	double dt_;

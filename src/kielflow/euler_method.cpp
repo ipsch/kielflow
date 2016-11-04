@@ -24,8 +24,8 @@ void euler_method::solve(field_imag &FUx, field_imag &FUy, field_imag &FUz, fiel
 	// Es fehlt eine Schrittweiten-steuerung oder
 	// zumindeest Schrittweitenkonstrolle
 
-	dt_ = cfl_all(dt_,FUx,FUy,FUz);
-	std::cout <<"t+dt = " << t_ << "+" << dt_ << std::endl;
+	//dt_ = cfl_all(dt_,FUx,FUy,FUz);
+	//std::cout <<"t+dt = " << t_ << "+" << dt_ << std::endl;
 
 	// Speicher für Runge-Kutta-Koeffizienten allokieren (hier ist FniCHTS optimiert)
    #ifdef _MY_VERBOSE

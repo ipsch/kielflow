@@ -46,11 +46,6 @@ protected :
 	field_real &nd;
 	field_real &my_solids;
 
-	field_imag Buffer_FUx;
-	field_imag Buffer_FUy;
-	field_imag Buffer_FUz;
-	field_imag Buffer_Fni;
-
 	field_real Ux;
 	field_real Uy;
 	field_real Uz;
@@ -67,21 +62,23 @@ protected :
 	field_imag dFUy_dz;
 	field_imag dFUz_dz;
 
+	field_real Buffer_1st;
+	field_real Buffer_2nd;
+
+	field_imag FBuffer_Ux;
+	field_imag FBuffer_Uy;
+	field_imag FBuffer_Uz;
+	field_imag FBuffer_ni;
+
+	field_imag FBuffer_1st;
+	field_imag FBuffer_2nd;
+
 	OP_FFT my_FFT;
 	OP_iFFT my_iFFT;
 	OP_partial_derivative d_dx;
 	OP_partial_derivative d_dy;
 	OP_partial_derivative d_dz;
-	OP_dealiasing_23rd my_dealiasing;
-
-
-
-	field_real Buffer_1st;
-	field_real Buffer_2nd;
-
-	field_imag FBuffer_1st;
-	field_imag FBuffer_2nd;
-
+	OP_dealiasing my_dealiasing;
 
 	double * field_SV;
 

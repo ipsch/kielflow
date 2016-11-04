@@ -15,12 +15,12 @@ d_dx(domain, e_x), d_dy(domain, e_y), d_dz(domain, e_z),
 my_FFT(domain), my_iFFT(domain),
 // Buffers
 nd(density_dust),
-Buffer_FUx(domain), Buffer_FUy(domain), Buffer_FUz(domain), Buffer_Fni(domain),
+FBuffer_Ux(domain), FBuffer_Uy(domain), FBuffer_Uz(domain), FBuffer_ni(domain),
 Ux(domain), Uy(domain), Uz(domain),
 dFUx_dx(domain), dFUy_dx(domain), dFUz_dx(domain),
 dFUx_dy(domain), dFUy_dy(domain), dFUz_dy(domain),
 dFUx_dz(domain), dFUy_dz(domain), dFUz_dz(domain),
-my_dealiasing(domain),
+my_dealiasing(domain, [] (const double &k) {return k<(2./3.) ? 1. : 0.;}),
 FBuffer_1st(domain),
 FBuffer_2nd(domain),
 Buffer_1st(domain),
@@ -108,94 +108,94 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 	// ############ Dissipation & spectral viscosity #############################
 	// ###########################################################################
    #if defined(_RHS_DISSIPATION) && defined(_RHS_SVISCOSITY) // ##################
-	for(int ijk=0; ijk<Buffer_FUx.N; ++ijk)
+	for(int ijk=0; ijk<FBuffer_Ux.N; ++ijk)
 	{
-		Buffer_FUx.val[ijk][0] = (my_params.tau+field_SV[ijk])*FUx.val[ijk][0];
-		Buffer_FUx.val[ijk][1] = (my_params.tau+field_SV[ijk])*FUx.val[ijk][1];
+		FBuffer_Ux.val[ijk][0] = (my_params.tau+field_SV[ijk])*FUx.val[ijk][0];
+		FBuffer_Ux.val[ijk][1] = (my_params.tau+field_SV[ijk])*FUx.val[ijk][1];
 	}
-	for(int ijk=0; ijk<Buffer_FUy.N; ++ijk)
+	for(int ijk=0; ijk<FBuffer_Uy.N; ++ijk)
 	{
-		Buffer_FUy.val[ijk][0] = (my_params.tau+field_SV[ijk])*FUy.val[ijk][0];
-		Buffer_FUy.val[ijk][1] = (my_params.tau+field_SV[ijk])*FUy.val[ijk][1];
+		FBuffer_Uy.val[ijk][0] = (my_params.tau+field_SV[ijk])*FUy.val[ijk][0];
+		FBuffer_Uy.val[ijk][1] = (my_params.tau+field_SV[ijk])*FUy.val[ijk][1];
 	}
-	for(int ijk=0; ijk<Buffer_FUz.N; ++ijk)
+	for(int ijk=0; ijk<FBuffer_Uz.N; ++ijk)
 	{
-		Buffer_FUz.val[ijk][0] = (my_params.tau+field_SV[ijk])*FUz.val[ijk][0];
-		Buffer_FUz.val[ijk][1] = (my_params.tau+field_SV[ijk])*FUz.val[ijk][1];
+		FBuffer_Uz.val[ijk][0] = (my_params.tau+field_SV[ijk])*FUz.val[ijk][0];
+		FBuffer_Uz.val[ijk][1] = (my_params.tau+field_SV[ijk])*FUz.val[ijk][1];
 	}
-	for(int ijk=0; ijk<Buffer_Fni.N; ++ijk)
+	for(int ijk=0; ijk<FBuffer_ni.N; ++ijk)
 	{
-		Buffer_Fni.val[ijk][0] = field_SV[ijk]*Fni.val[ijk][0];
-		Buffer_Fni.val[ijk][1] = field_SV[ijk]*Fni.val[ijk][1];
+		FBuffer_ni.val[ijk][0] = field_SV[ijk]*Fni.val[ijk][0];
+		FBuffer_ni.val[ijk][1] = field_SV[ijk]*Fni.val[ijk][1];
 	}
    #endif
 
 #if defined(_RHS_DISSIPATION) && !defined(_RHS_SVISCOSITY) // ##############
 	for(int ijk=0; ijk<FUx.N; ++ijk)
 	{
-		Buffer_FUx.val[ijk][0] = my_params.tau*FUx.val[ijk][0];
-		Buffer_FUx.val[ijk][1] = my_params.tau*FUx.val[ijk][1];
+		FBuffer_Ux.val[ijk][0] = my_params.tau*FUx.val[ijk][0];
+		FBuffer_Ux.val[ijk][1] = my_params.tau*FUx.val[ijk][1];
 	}
 	for(int ijk=0; ijk<FUy.N; ++ijk)
 	{
-		Buffer_FUy.val[ijk][0] = my_params.tau*FUy.val[ijk][0];
-		Buffer_FUy.val[ijk][1] = my_params.tau*FUy.val[ijk][1];
+		FBuffer_Uy.val[ijk][0] = my_params.tau*FUy.val[ijk][0];
+		FBuffer_Uy.val[ijk][1] = my_params.tau*FUy.val[ijk][1];
 	}
 	for(int ijk=0; ijk<FUz.N; ++ijk)
 	{
-		Buffer_FUz.val[ijk][0] = my_params.tau*FUz.val[ijk][0];
-		Buffer_FUz.val[ijk][1] = my_params.tau*FUz.val[ijk][1];
+		FBuffer_Uz.val[ijk][0] = my_params.tau*FUz.val[ijk][0];
+		FBuffer_Uz.val[ijk][1] = my_params.tau*FUz.val[ijk][1];
 	}
-	for(int ijk=0; ijk<Buffer_Fni.N; ++ijk)
+	for(int ijk=0; ijk<FBuffer_ni.N; ++ijk)
 	{
-		Buffer_Fni.val[ijk][0] = 0.;
-		Buffer_Fni.val[ijk][1] = 0.;
+		FBuffer_ni.val[ijk][0] = 0.;
+		FBuffer_ni.val[ijk][1] = 0.;
 	}
 #endif
 
 #if !defined(_RHS_DISSIPATION) && defined(_RHS_SVISCOSITY) // ##################
-	for(int ijk=0; ijk<Buffer_FUx.N; ++ijk)
+	for(int ijk=0; ijk<FBuffer_Ux.N; ++ijk)
 	{
-		Buffer_FUx.val[ijk][0] = field_SV[ijk]*FUx.val[ijk][0];
-		Buffer_FUx.val[ijk][1] = field_SV[ijk]*FUx.val[ijk][1];
+		FBuffer_Ux.val[ijk][0] = field_SV[ijk]*FUx.val[ijk][0];
+		FBuffer_Ux.val[ijk][1] = field_SV[ijk]*FUx.val[ijk][1];
 	}
-	for(int ijk=0; ijk<Buffer_FUy.N; ++ijk)
+	for(int ijk=0; ijk<FBuffer_Uy.N; ++ijk)
 	{
-			Buffer_FUy.val[ijk][0] = field_SV[ijk]*FUy.val[ijk][0];
-			Buffer_FUy.val[ijk][1] = field_SV[ijk]*FUy.val[ijk][1];
+			FBuffer_Uy.val[ijk][0] = field_SV[ijk]*FUy.val[ijk][0];
+			FBuffer_Uy.val[ijk][1] = field_SV[ijk]*FUy.val[ijk][1];
 	}
-	for(int ijk=0; ijk<Buffer_FUz.N; ++ijk)
+	for(int ijk=0; ijk<FBuffer_Uz.N; ++ijk)
 	{
-		Buffer_FUz.val[ijk][0] = field_SV[ijk]*FUz.val[ijk][0];
-		Buffer_FUz.val[ijk][1] = field_SV[ijk]*FUz.val[ijk][1];
+		FBuffer_Uz.val[ijk][0] = field_SV[ijk]*FUz.val[ijk][0];
+		FBuffer_Uz.val[ijk][1] = field_SV[ijk]*FUz.val[ijk][1];
 	}
-	for(int ijk=0; ijk<Buffer_Fni.N; ++ijk)
+	for(int ijk=0; ijk<FBuffer_ni.N; ++ijk)
 	{
-		Buffer_Fni.val[ijk][0] = field_SV[ijk]*Fni.val[ijk][0];
-		Buffer_Fni.val[ijk][1] = field_SV[ijk]*Fni.val[ijk][1];
+		FBuffer_ni.val[ijk][0] = field_SV[ijk]*Fni.val[ijk][0];
+		FBuffer_ni.val[ijk][1] = field_SV[ijk]*Fni.val[ijk][1];
 	}
 #endif
 
 #if !defined(_RHS_DISSIPATION) && !defined(_RHS_SVISCOSITY) // #################
-	for(int ijk=0; ijk<Buffer_FUx.N; ++ijk)
+	for(int ijk=0; ijk<FBuffer_Ux.N; ++ijk)
 	{
-		Buffer_FUx.val[ijk][0] = 0.;
-		Buffer_FUx.val[ijk][1] = 0.;
+		FBuffer_Ux.val[ijk][0] = 0.;
+		FBuffer_Ux.val[ijk][1] = 0.;
 	}
-	for(int ijk=0; ijk<Buffer_FUy.N; ++ijk)
+	for(int ijk=0; ijk<FBuffer_Uy.N; ++ijk)
 	{
-		Buffer_FUy.val[ijk][0] = 0.;
-		Buffer_FUy.val[ijk][1] = 0.;
+		FBuffer_Uy.val[ijk][0] = 0.;
+		FBuffer_Uy.val[ijk][1] = 0.;
 	}
-	for(int ijk=0; ijk<Buffer_FUz.N; ++ijk)
+	for(int ijk=0; ijk<FBuffer_Uz.N; ++ijk)
 	{
-		Buffer_FUz.val[ijk][0] = 0.;
-		Buffer_FUz.val[ijk][1] = 0.;
+		FBuffer_Uz.val[ijk][0] = 0.;
+		FBuffer_Uz.val[ijk][1] = 0.;
 	}
-	for(int ijk=0; ijk<Buffer_Fni.N; ++ijk)
+	for(int ijk=0; ijk<FBuffer_ni.N; ++ijk)
 	{
-		Buffer_Fni.val[ijk][0] = 0.;
-		Buffer_Fni.val[ijk][1] = 0.;
+		FBuffer_ni.val[ijk][0] = 0.;
+		FBuffer_ni.val[ijk][1] = 0.;
 	}
    #endif
     // ############# END DISSIPATION ##########################################
@@ -208,7 +208,7 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
    #if defined(_RHS_DIFFUSION) && defined(_RHS_E_INT) // ######################
 	my_FFT(Phi,FBuffer_1st);
 	dealiasing_undesignated(FBuffer_1st, [] (double k) {return exp(-2000.*pow(k,15.));});
-	for(int ijk=0; ijk<FBuffer_1st.N; ++ijk)
+	for(int ijk=0; ijk<FBuffer_1st.N; ijk++)
 	{
 		FBuffer_1st.val[ijk][0] += Fni.val[ijk][0]/my_params.theta;
 		FBuffer_1st.val[ijk][1] += Fni.val[ijk][1]/my_params.theta;
@@ -230,11 +230,11 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
    #if defined(_RHS_DIFFUSION) || defined(_RHS_E_INT) // #####################
 	//my_dealiasing(FBuffer_1st);
 	d_dx(FBuffer_1st,FBuffer_2nd);
-	Buffer_FUx += FBuffer_2nd;
+	FBuffer_Ux += FBuffer_2nd;
 	d_dy(FBuffer_1st,FBuffer_2nd);
-	Buffer_FUy += FBuffer_2nd;
+	FBuffer_Uy += FBuffer_2nd;
 	d_dz(FBuffer_1st,FBuffer_2nd);
-	Buffer_FUz += FBuffer_2nd;
+	FBuffer_Uz += FBuffer_2nd;
    #endif
 
 
@@ -267,20 +267,20 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 
 	// ########################################################################
    #if defined(_RHS_E_EXT) // #################################################
-	for(int i=0; i<Buffer_FUx.N; ++i)
+	for(int i=0; i<FBuffer_Ux.N; ++i)
 	{
-		Buffer_FUx.val[i][0] += my_params.M*dFUx_dx.val[i][0];
-		Buffer_FUx.val[i][1] += my_params.M*dFUx_dx.val[i][1];
+		FBuffer_Ux.val[i][0] += my_params.M*dFUx_dx.val[i][0];
+		FBuffer_Ux.val[i][1] += my_params.M*dFUx_dx.val[i][1];
 	}
-	for(int i=0; i<Buffer_FUy.N; ++i)
+	for(int i=0; i<FBuffer_Uy.N; ++i)
 	{
-		Buffer_FUy.val[i][0] += my_params.M*dFUy_dx.val[i][0];
-		Buffer_FUy.val[i][1] += my_params.M*dFUy_dx.val[i][1];
+		FBuffer_Uy.val[i][0] += my_params.M*dFUy_dx.val[i][0];
+		FBuffer_Uy.val[i][1] += my_params.M*dFUy_dx.val[i][1];
 	}
-	for(int i=0; i<Buffer_FUz.N; ++i)
+	for(int i=0; i<FBuffer_Uz.N; ++i)
 	{
-		Buffer_FUz.val[i][0] += my_params.M*dFUz_dx.val[i][0];
-		Buffer_FUz.val[i][1] += my_params.M*dFUz_dx.val[i][1];
+		FBuffer_Uz.val[i][0] += my_params.M*dFUz_dx.val[i][0];
+		FBuffer_Uz.val[i][1] += my_params.M*dFUz_dx.val[i][1];
 	}
    #endif
 
@@ -292,11 +292,11 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 
 	// ########################################################################
    #if defined(_RHS_E_EXT) // #################################################
-	d_dx(Fni, );
-	for(int i=0; i<Buffer_Fni.N; ++i)
+	d_dx(Fni,FBuffer_ni);
+	for(int i=0; i<FBuffer_ni.N; ++i)
 	{
-		Buffer_Fni.val[i][0] += my_params.M*FBuffer_1st.val[i][0];
-		Buffer_Fni.val[i][1] += my_params.M*FBuffer_1st.val[i][1];
+		FBuffer_ni.val[i][0] += my_params.M*FBuffer_1st.val[i][0];
+		FBuffer_ni.val[i][1] += my_params.M*FBuffer_1st.val[i][1];
 	}
    #endif
 
@@ -304,9 +304,9 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 	// ########################################################################
    #if defined(_RHS_CONTINUITY)
 	// LaTeX: n = div(\mathbf{u}) + [..]
-	Buffer_Fni += dFUx_dx;
-	Buffer_Fni += dFUy_dy;
-	Buffer_Fni += dFUz_dz;
+	FBuffer_ni += dFUx_dx;
+	FBuffer_ni += dFUy_dy;
+	FBuffer_ni += dFUz_dz;
 
 	// LaTeX: \dot{n} = \left(\frac{\partial n}{\partial x}\right) u_x
 	//d_dx(Fni,FBuffer_1st); // see above
@@ -330,7 +330,7 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 		Buffer_2nd.val[i] += Buffer_1st.val[i]*Uz.val[i];
 
 	my_FFT(Buffer_2nd,FBuffer_1st);
-	Buffer_Fni += FBuffer_1st;
+	FBuffer_ni += FBuffer_1st;
 
    #endif
 
@@ -346,26 +346,26 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 		Buffer_2nd.val[i] = Buffer_1st.val[i]*(M+Ux.val[i]);
 	my_FFT(Buffer_2nd,FBuffer_1st);
 	d_dx(FBuffer_1st,FBuffer_1st);
-	Buffer_Fni = FBuffer_1st;
+	FBuffer_ni = FBuffer_1st;
 
 
 	for(int i=0; i<Buffer_2nd.N; ++i)				 // Ux*(dn/dx)
 		Buffer_2nd.val[i] = Buffer_1st.val[i]*Uy.val[i];
 	my_FFT(Buffer_2nd,FBuffer_1st);
 	d_dy(FBuffer_1st,FBuffer_1st);
-	Buffer_Fni += FBuffer_1st;
+	FBuffer_ni += FBuffer_1st;
 
 	for(int i=0; i<Buffer_2nd.N; ++i)				 // Ux*(dn/dx)
 		Buffer_2nd.val[i] = Buffer_1st.val[i]*Uz.val[i];
 	my_FFT(Buffer_2nd,FBuffer_1st);
 	d_dz(FBuffer_1st,FBuffer_1st);
-	Buffer_Fni += FBuffer_1st;
+	FBuffer_ni += FBuffer_1st;
 
 
-	my_iFFT(Buffer_Fni,Buffer_2nd);
+	my_iFFT(FBuffer_ni,Buffer_2nd);
 	for(int i=0; i<Buffer_2nd.N; ++i)
 		Buffer_2nd.val[i] = Buffer_2nd.val[i]/Buffer_1st.val[i];
-	my_FFT(Buffer_2nd,Buffer_Fni);
+	my_FFT(Buffer_2nd,FBuffer_ni);
 
 #endif
 */
@@ -400,7 +400,7 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 	for(int i=0; i<Buffer_2nd.N; ++i)
 		Buffer_2nd.val[i] += Uz.val[i]*Buffer_1st.val[i];
 	my_FFT(Buffer_2nd, FBuffer_1st);
-	Buffer_FUx += FBuffer_1st;
+	FBuffer_Ux += FBuffer_1st;
 
 	my_iFFT(dFUy_dx,Buffer_1st);
 	for(int i=0; i<Buffer_2nd.N; ++i)
@@ -412,7 +412,7 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 	for(int i=0; i<Buffer_2nd.N; ++i)
 		Buffer_2nd.val[i] += Uz.val[i]*Buffer_1st.val[i];
 	my_FFT(Buffer_2nd, FBuffer_1st);
-	Buffer_FUy += FBuffer_1st;
+	FBuffer_Uy += FBuffer_1st;
 
 	my_iFFT(dFUz_dx,Buffer_1st);
 	for(int i=0; i<Buffer_2nd.N; ++i)
@@ -424,7 +424,7 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 	for(int i=0; i<Buffer_2nd.N; ++i)
 		Buffer_2nd.val[i] += Uz.val[i]*Buffer_1st.val[i];
 	my_FFT(Buffer_2nd, FBuffer_1st);
-	Buffer_FUz += FBuffer_1st;
+	FBuffer_Uz += FBuffer_1st;
 
    #endif
 
@@ -436,36 +436,36 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
    #if defined(_RHS_PENALIZATION_U) // ########################################
 	static effect_penalization UX_penalization(-.5, my_solids, 0.);
 	static effect_penalization ni_penalization(-.5, my_solids, 1.);
-	UX_penalization.execute(FUx,Buffer_FUx);
-	UX_penalization.execute(FUy,Buffer_FUy);
-	UX_penalization.execute(FUz,Buffer_FUz);
-	ni_penalization.execute(Fni,Buffer_Fni);
+	UX_penalization.execute(FUx,FBuffer_Ux);
+	UX_penalization.execute(FUy,FBuffer_Uy);
+	UX_penalization.execute(FUz,FBuffer_Uz);
+	ni_penalization.execute(Fni,FBuffer_ni);
    #endif
 
 	// ########################################################################
 	// RHS-VALUE BACK TO I/O ##################################################
 	for(int ijk=0; ijk<FUx.N; ++ijk)
 	{
-		FUx.val[ijk][0] = (-Buffer_FUx.val[ijk][0]);
-		FUx.val[ijk][1] = (-Buffer_FUx.val[ijk][1]);
+		FUx.val[ijk][0] = (-FBuffer_Ux.val[ijk][0]);
+		FUx.val[ijk][1] = (-FBuffer_Ux.val[ijk][1]);
 	}
 
 	for(int ijk=0; ijk<FUy.N; ++ijk)
 	{
-		FUy.val[ijk][0] = (-Buffer_FUy.val[ijk][0]);
-		FUy.val[ijk][1] = (-Buffer_FUy.val[ijk][1]);
+		FUy.val[ijk][0] = (-FBuffer_Uy.val[ijk][0]);
+		FUy.val[ijk][1] = (-FBuffer_Uy.val[ijk][1]);
 	}
 
 	for(int ijk=0; ijk<FUz.N; ++ijk)
 	{
-		FUz.val[ijk][0] = (-Buffer_FUz.val[ijk][0]);
-		FUz.val[ijk][1] = (-Buffer_FUz.val[ijk][1]);
+		FUz.val[ijk][0] = (-FBuffer_Uz.val[ijk][0]);
+		FUz.val[ijk][1] = (-FBuffer_Uz.val[ijk][1]);
 	}
 
 	for(int ijk=0; ijk<Fni.N; ++ijk)
 	{
-		Fni.val[ijk][0] = (-Buffer_Fni.val[ijk][0]);
-		Fni.val[ijk][1] = (-Buffer_Fni.val[ijk][1]);
+		Fni.val[ijk][0] = (-FBuffer_ni.val[ijk][0]);
+		Fni.val[ijk][1] = (-FBuffer_ni.val[ijk][1]);
 	}
 
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)

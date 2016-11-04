@@ -8,7 +8,8 @@ OP_partial_derivative::OP_partial_derivative(const field_real &field_caller, con
 }
 
 OP_partial_derivative::OP_partial_derivative(const grid &domain, const direction &e_i) :
-		my_FFT(domain), my_iFFT(domain), Buffer(domain), my_dealiasing(domain)
+		my_FFT(domain), my_iFFT(domain), Buffer(domain),
+		my_dealiasing(domain, [] (const double &k) {return k<(2./3.) ? 1. : 0.;})
 {
 	switch(e_i)
 	{
