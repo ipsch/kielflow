@@ -1,8 +1,13 @@
 #include "OP_FFT.hpp"
 
-#define MY_FFTW_MODE FFTW_PATIENT
-#ifndef MY_FFTW_MODE
-#define MY_FFTW_MODE FFTW_ESTIMATE
+#if defined(_DEBUG)
+  #if !defined(MY_FFTW_MODE)
+  #define MY_FFTW_MODE FFTW_ESTIMATE
+  #endif
+#else
+  #if !defined(MY_FFTW_MODE)
+  #define MY_FFTW_MODE FFTW_PATIENT
+  #endif
 #endif
 
 OP_FFT::OP_FFT(const grid &domain) :

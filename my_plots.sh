@@ -101,6 +101,10 @@ while getopts ":d:hp:" optname
           "?")
             echo "unshiny"
             ;;
+          *)
+	    echo "unknown plot option: $OPTARG"
+	    exit 
+	  ;;
         esac
         ;;
         

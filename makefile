@@ -12,6 +12,7 @@ DEF_FLAGS += -D_MY_VERBOSE
 #DEF_FLAGS += -D_MY_VERBOSE_MORE
 #DEF_FLAGS += -D_MY_VERBOSE_TEDIOUS
 #DEF_FLAGS += -D_OLD_IO
+DEF_FLAGS += -D_DEBUG
 
 
 ############### GIT VERSION? ####################

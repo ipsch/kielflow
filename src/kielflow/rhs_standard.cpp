@@ -4,7 +4,6 @@
 
 
 
-
 rhs_standard::rhs_standard(parameters &Params, interface_poisson_solver &Solver,
 		field_real &potential, field_real &density_dust, field_real &solid_mask, const grid &domain) :
 my_params(Params),
@@ -35,6 +34,20 @@ N(domain.Nx*domain.Ny*(domain.Nz/2+1))
 	bool SV_warning_lower = true;
 
 
+	double N_real = domain.Nx*domain.Ny*domain.Nz;
+
+	penalization_barrier = (double*) fftw_malloc(sizeof(double) * N_real);
+	for(int i=0; i<domain.Nx; i++)
+		for(int j=0; j<domain.Ny; j++)
+			for(int k=0; k<domain.Nz; k++)
+			{
+				int ijk = (k + (domain.Nz)*(j + i*domain.Ny));
+				double x=domain.x_axis->val_at(i);
+				double L=domain.x_axis->L;
+				const double pi=acos(-1);
+				penalization_barrier[ijk] = (x<-0.5*L/3.) ? pow(cos(2*(1.5)*pi/L*x),2.) : 0.;
+			}
+
 	field_SV = (double*) fftw_malloc(sizeof(double) * N);
 	double kx_max = domain.x_axis->k_val_at(domain.Nx/2);
 	double ky_max = domain.y_axis->k_val_at(domain.Ny/2);
@@ -42,10 +55,6 @@ N(domain.Nx*domain.Ny*(domain.Nz/2+1))
 	double kpow2 = kx_max*kx_max + ky_max*ky_max + kz_max*kz_max;
 	//double eps = .9/kpow2;
 	double eps = .5;
-
-	std::cout << "epsilon in spectral viscosity set to!!\n";
-	std::cout << "eps= " << eps << "\n";
-
 	for(int i=0; i<domain.Nx; ++i)
 		for(int j=0; j<domain.Ny; ++j)
 			for(int k=0; k<domain.Nz/2+1; ++k)
@@ -201,6 +210,7 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
     // ############# END DISSIPATION ##########################################
 
 
+
 	// another linear term (note linear because ni rescaled by exp(ni)->ni )
 	// ########################################################################
 	// ################### Internal E-forces ##################################
@@ -208,6 +218,7 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
    #if defined(_RHS_DIFFUSION) && defined(_RHS_E_INT) // ######################
 	my_FFT(Phi,FBuffer_1st);
 	dealiasing_undesignated(FBuffer_1st, [] (double k) {return exp(-2000.*pow(k,15.));});
+	my_dealiasing(FBuffer_1st);
 	for(int ijk=0; ijk<FBuffer_1st.N; ijk++)
 	{
 		FBuffer_1st.val[ijk][0] += Fni.val[ijk][0]/my_params.theta;
@@ -441,6 +452,87 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 	UX_penalization.execute(FUz,FBuffer_Uz);
 	ni_penalization.execute(Fni,FBuffer_ni);
    #endif
+
+
+
+	// ########################################################################
+	// PENALIZATION ###########################################################
+   #if defined(_RHS_PENALIZATION)
+    // penalization is calculated for two regions:
+	// fist in the proximity to the dust grain (my_soldis) and second
+	// far away in upstream direction (penalization_arrier) to recover
+	// the undisturbed solution from the disturbed solution after
+	// fields (note: periodic boundaries) reenter the simulation box.
+	// For the 4 treated fields the process far away from the dust grain is
+	// same (exponentially damp field value to zero where penalization_barrier
+	// is non zero).
+	// The process in proximity to the grain is slightly different as
+	// discribed below:
+	// for dFUx_dt: damp field to -machnumber where my_solids is non zero
+	// (because we are in a moving reference frame)
+	// for dFUy_dt and dFUz_dt: damp field to zero where my_solids is non zero.
+	// for dFni_dt: reduce field by my_solid multiplied by some constant value
+	// (note: ni (ion density) is in logarithmic scaling this means:
+	// an almost infinite negative value corresponds to an actual vacuum.
+
+	double eps1 = 2.;
+	double eps2 = 1.0;
+
+	iFFT(FUx, Buffer_1st);
+	iFFT(FBuffer_Ux,Buffer_2nd);
+	double sup = 0.;
+	for(int ijk=0; ijk<Buffer_1st.N; ijk++)
+	{
+		double tmp;
+		tmp = eps1*my_solids.val[ijk]*(Buffer_1st.val[ijk]+my_params.M*my_solids.val[ijk]);
+		tmp+= (1.-my_solids.val[ijk])*Buffer_2nd.val[ijk];
+		tmp+= (penalization_barrier[ijk])*Buffer_1st.val[ijk];
+		Buffer_1st.val[ijk] = tmp;
+	}
+	FFT(Buffer_1st,FBuffer_Ux);
+	my_dealiasing(FBuffer_Ux);
+
+
+	iFFT(FUy, Buffer_1st);
+	iFFT(FBuffer_Uy,Buffer_2nd);
+	for(int ijk=0; ijk<Buffer_1st.N; ijk++)
+	{
+		double tmp;
+		tmp = eps1*my_solids.val[ijk]*(Buffer_1st.val[ijk]+0.);
+		tmp+= (1.-my_solids.val[ijk])*Buffer_2nd.val[ijk];
+		tmp+= (penalization_barrier[ijk])*Buffer_1st.val[ijk];
+		Buffer_1st.val[ijk] = tmp;
+	}
+	FFT(Buffer_1st,FBuffer_Uy);
+	my_dealiasing(FBuffer_Uy);
+
+	iFFT(FUz, Buffer_1st);
+	iFFT(FBuffer_Uz,Buffer_2nd);
+	for(int ijk=0; ijk<Buffer_1st.N; ijk++)
+	{
+		double tmp;
+		tmp = eps1*my_solids.val[ijk]*(Buffer_1st.val[ijk]+0.);
+		tmp+= (1.-my_solids.val[ijk])*Buffer_2nd.val[ijk];
+		tmp+= (penalization_barrier[ijk])*Buffer_1st.val[ijk];
+		Buffer_1st.val[ijk] = tmp;
+	}
+	FFT(Buffer_1st,FBuffer_Uz);
+	my_dealiasing(FBuffer_Uz);
+
+	iFFT(Fni, Buffer_1st);
+	iFFT(FBuffer_ni,Buffer_2nd);
+	for(int ijk=0; ijk<Buffer_1st.N; ijk++)
+	{
+		double tmp;
+		tmp = eps1*my_solids.val[ijk]*(Buffer_1st.val[ijk]+10.);
+		tmp+= (1.-my_solids.val[ijk])*Buffer_2nd.val[ijk];
+		tmp+= (penalization_barrier[ijk])*Buffer_1st.val[ijk];
+		Buffer_1st.val[ijk] = tmp;
+	}
+	FFT(Buffer_1st,FBuffer_ni);
+	my_dealiasing(FBuffer_ni);
+#endif
+
 
 	// ########################################################################
 	// RHS-VALUE BACK TO I/O ##################################################

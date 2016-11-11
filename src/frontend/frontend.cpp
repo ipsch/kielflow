@@ -55,19 +55,19 @@ double pi = acos(-1.);
 // number of grid-points
 // in different space directions
 
-int Nx = 384;
+int Nx = 128;
 //int Nx = 384;
-int Ny = 160;
-int Nz = 160;
+int Ny = 128;
+int Nz = 128;
 // Box dimensions
-double Lx = 12.;
+double Lx = 6.;
 double Ly = 6.;
 double Lz = 6.;
 
 // physical parameters
 double M = .5;
 double tau = 0.1;
-double global_theta = 50.;
+double global_theta = 30.;
 double mu = 0.;
 double beta = 0.0;
 double global_Q = -11498.5;
@@ -132,11 +132,6 @@ void create_input_from_old_data(field_real &Ux, field_real &Uy, field_real &Uz, 
 
 void create_input_from_MGsolver(field_real &ni, field_real &Ph)
 {
-
-	double pi = acos(-1.);
-	double L = 8;
-
-
 	// ##### DUST #####
 	field_real nd(ni.my_grid);
 	//double Rd = 0.1183;
@@ -319,8 +314,8 @@ int main(int argc,char **argv)
 	field_imag Fni(Omega);
 	field_imag FPh(Omega);
 
-	create_input_from_MGsolver(ni, Ph);
-	//create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
+	//create_input_from_MGsolver(ni, Ph);
+	create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
 
 	OP_FFT my_FFT(Omega);
 	OP_iFFT my_iFFT(Omega);

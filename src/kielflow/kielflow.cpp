@@ -149,7 +149,7 @@ int main(int argc,char **argv)
 
     std::cout << "IO_file " << IO_file << std::endl;
 
-	counter iteration(2000);   // set counter for how many iterations are allowed
+	counter iteration(3000);   // set counter for how many iterations are allowed
 	counter i_output(10);
 	counter i_backup(100);
 
@@ -186,15 +186,15 @@ int main(int argc,char **argv)
 		ni_tmp.val[i] = log(ni_tmp.val[i]);
 	}
 	FFT(ni_tmp,Fni);
-	//dealaising_theta(Fni, 0.666);
+	dealiasing_undesignated(Fni, [] (const double &k) {return (abs(k))<(1./3.) ? 1. : 0.; });
 
 	// ##### DUST #####
 	double scale_Q = 8.1720e-06; // umrechnungsfaktor auf dimensionslose Einheiten
-	field_real nd(FPh.my_grid);
+	field_real nd(Omega);
 	fkt3d_Gauss dust_3d_fkt(charge_Q*scale_Q,radius_a,radius_a,radius_a);
 	nd.fill(dust_3d_fkt);
 
-	field_real Hd(FPh.my_grid);
+	field_real Hd(Omega);
 	fkt3d_Gauss dust_3d_mask(1.,radius_a,radius_a,radius_a);
 	Hd.fill(dust_3d_mask);
 
@@ -235,8 +235,9 @@ int main(int argc,char **argv)
 
 	// ##### RHS #####
 	fkt3d_barrier Barrier_fkt(nd.my_grid.x_axis->val_at(0), -3.);
-	field_real Barrier(FPh.my_grid);
-    Barrier.fill(Barrier_fkt);
+	field_real Barrier(Omega);
+	Barrier.fill2([] (const double &x, const double &y, const double &z) {return exp(-pow(x/0.15,2.) - pow(y/0.15,2.) - pow(z/0.15,2.));;});
+    //Barrier.fill2([] (const double &x, const double &y, const double &z) {return 0.;});
 	field_real Ph(FPh.my_grid);
 	iFFT(FPh, Ph);
 	rhs_standard rhs(Params, MG, Ph, nd, Barrier, Omega);

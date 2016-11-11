@@ -26,7 +26,7 @@
 #define _RHS_E_INT
 #define _RHS_E_EXT
 #define _RHS_CONTINUITY
-//#define _RHS_PENALIZATION_U
+//#define _RHS_PENALIZATION
 #define _RHS_SVISCOSITY
 
 class rhs_standard : public interface_rhs
@@ -81,6 +81,8 @@ protected :
 	OP_dealiasing my_dealiasing;
 
 	double * field_SV;
+	double * penalization_barrier;
+	double * penalization_grain;
 
 };
 
