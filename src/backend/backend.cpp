@@ -17,7 +17,6 @@
 #include "fftw3.h"
 #include "operations.hpp"
 #include "OP_FFT.hpp"
-#include "effect.hpp"
 
 #include "field_integrate.hpp"
 

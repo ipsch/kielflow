@@ -21,6 +21,7 @@ public :
 	void log_msg(std::string msg);
 	void save(double * DEST);
 	//void save(fftw_complex * DEST);
+	static void set_file(const std::string &name_logfile);
 
 	void operator<<(const std::string& msg)
 	{
@@ -66,9 +67,11 @@ public :
 		log_stream.flush();
 	    return;
 	}
+
 private:
+    static std::string file;
 	std::string name;
-	static std::string file;
+
 
 
 } ;

@@ -17,32 +17,28 @@
 #include <string>    // class : string (here: used for filenames only; Maybe I should avoid this library)
 #include <sstream>   // class : string-stream (MORE OVERHEAD) I'am using this to interpret data read from a file
 
-#include <vector>
 
 
-// uncommon libraries
-#include "fftw3.h"   // google it (something about discret fourier Transformations)
-
-// own includes
-
+// components
 #include "parameters.hpp"
-#include "field.hpp"
+#include "grid.hpp"
+#include "field_real.hpp"
+#include "field_imag.hpp"
 #include "IO.hpp"
 #include "counter.hpp"
 #include "operations.hpp"
 
-
-#include "particle.hpp"
-
-
+// solver for poission equation
+#include "solver_poisson_multigrid.hpp"
 #include "solver_poisson_jacobi_lin.hpp"
 #include "solver_poisson_jacobi_nlin.hpp"
-#include "solver_poisson_multigrid.hpp"
 
+// evaluation of right hand side
 #include "rhs.hpp"
 #include "rhs_standard.hpp"
 //#include "rhs_lab.hpp"
 
+// time integration
 #include "euler_method.hpp"
 #include "RKO4.hpp"
 
@@ -54,7 +50,6 @@
 
 
 
-#include "bisection_method.hpp"
 
 
 
@@ -65,9 +60,14 @@ int main(int argc,char **argv)
 {
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	logger my_log("main");
+	my_log.set_file("./kielstream.log");
 	my_log << "running version";
 	my_log << VERSION_STRING;
    #endif
+
+	int iterations= 3000;
+	counter i_output(10);
+	counter i_backup(50);
 
 	double charge_Q = -11498.5;
 	double radius_a = 0.15;
@@ -147,15 +147,11 @@ int main(int argc,char **argv)
     for(int i=opt_indent+1; i<argc; ++i)
     	IO_file = argv[i];
 
-    std::cout << "IO_file " << IO_file << std::endl;
 
-	counter iteration(3000);   // set counter for how many iterations are allowed
-	counter i_output(10);
-	counter i_backup(100);
-
-
+	std::cout << "IO_file " << IO_file << std::endl;
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
-	my_log << "loading input";
+	my_log << "loading input from";
+	my_log << IO_file;
    #endif
 	grid Omega     = load_grid(IO_file);
 	double t_total    = load_time(IO_file);
@@ -165,8 +161,6 @@ int main(int argc,char **argv)
 	field_imag FUz    = load_field_imag("Uz", IO_file);
 	field_imag Fni    = load_field_imag("ni", IO_file);
 	field_imag FPh    = load_field_imag("Ph", IO_file);
-	std::vector<particle> particle_list;
-	load_particles(particle_list, "./config/particles.dat");
 
 
 	if(override_M) Params.M = override_Params.M;
@@ -186,7 +180,7 @@ int main(int argc,char **argv)
 		ni_tmp.val[i] = log(ni_tmp.val[i]);
 	}
 	FFT(ni_tmp,Fni);
-	dealiasing_undesignated(Fni, [] (const double &k) {return (abs(k))<(1./3.) ? 1. : 0.; });
+	//dealiasing_undesignated(Fni, [] (const double &k) {return k<(1./3.) ? 1. : 0.; });
 
 	// ##### DUST #####
 	double scale_Q = 8.1720e-06; // umrechnungsfaktor auf dimensionslose Einheiten
@@ -217,12 +211,8 @@ int main(int argc,char **argv)
               {0,-1,-1,-1};
 	MG_lvl_control * cycle_shape = new MG_lvl_control[MG_N]
 			  { lvl_down3, lvl_up, lvl_up, lvl_up};
-
 	double * MG_error = new double[MG_N]
-								   {0.01,
-									0.0005,
-									0.0001,
-									0.0001};
+			  { 0.01, 0.0005, 0.0001, 0.0001};
 
 	MG.set_level_control(MG_N, MG_steps_sizes, cycle_shape, MG_error);
 
@@ -247,8 +237,8 @@ int main(int argc,char **argv)
    #endif
 	// ##### TIME-INTEGRATOR #####
 	double t_delta = 0.01;
-	//Runge_kutta_O4 time_integrator(rhs, t_delta);
-	euler_method time_integrator(rhs, t_delta);
+	Runge_kutta_O4 time_integrator(rhs, t_delta);
+	//euler_method time_integrator(rhs, t_delta);
 
 
    //#define TEST_MULTIGRID
@@ -284,19 +274,16 @@ int main(int argc,char **argv)
    // #define KILL_MAIN_LOOP
    #ifndef KILL_MAIN_LOOP
 	// #### Time-Step #########################################################
-	while(iteration.good())
+	for(unsigned int step=0; step<iterations; step++, ++i_output, ++i_backup)
 	{
-		std::cout << "step(time) (iteration: " << (iteration.show()) << ")" << std::endl;
+		std::cout << "step(time) (iteration: " << step << ")" << std::endl;
        #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 		std::stringstream sstr;
-		sstr << "step(time) (iteration: " << (iteration.show()) << ")";
+		sstr << "step(time) (iteration: " << step << ")";
 		my_log << sstr.str();
        #endif
 
 		time_integrator.solve(FUx, FUy, FUz, Fni);
-		iteration.up();
-		i_output.up();
-		i_backup.up();
 
 
 		// ##### SLICE OUTPUT #####
@@ -313,7 +300,7 @@ int main(int argc,char **argv)
 			for(int i=0; i<ni_tmp.N; ++i)
 				ni_tmp.val[i] = exp(ni_tmp.val[i]);
 			FFT(ni_tmp, Fni_tmp);
-			save_slice(iteration.show(),particle_list, Omega, t_total, Params, FUx, FUy, FUz, Fni_tmp, FPh);
+			save_slice(step, Omega, t_total, Params, FUx, FUy, FUz, Fni_tmp, FPh);
 
 			i_output.reset();
 		}
@@ -333,8 +320,8 @@ int main(int argc,char **argv)
 
 			std::stringstream sstr;
 	        sstr.str(std::string());
-			sstr << "./data/backup_at_" << (iteration.show()) << ".h5";
-			save_all(particle_list, Omega, t_total, Params, FUx, FUy, FUz, Fni_tmp, FPh, sstr.str());
+			sstr << "./data/backup_at_" << step << ".h5";
+			save_all(Omega, t_total, Params, FUx, FUy, FUz, Fni_tmp, FPh, sstr.str());
 
 			i_backup.reset();
 		}
@@ -352,7 +339,7 @@ int main(int argc,char **argv)
 		ni_tmp.val[i] = exp(ni_tmp.val[i]);
 	FFT(ni_tmp,Fni);
 
-	//save_all(particle_list, Omega, t_total, Params, FUx, FUy, FUz, Fni, FPh, IO_file);
+	//save_all(Omega, t_total, Params, FUx, FUy, FUz, Fni, FPh, IO_file);
 
 	std::cout  << "finished - kielflow terminated" << std::endl;
    #if defined (_MY_VERBOSE) || defined (_MY_VERBOSE_MORE) || defined (_MY_VERBOSE_TEDIOUS)

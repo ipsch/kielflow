@@ -41,6 +41,13 @@ void logger::save(double * DEST)
 	return;
 }
 
+void logger::set_file(const std::string &name_logfile)
+{
+	logger::file = name_logfile;
+	logger::log_stream.close();
+	logger::log_stream.open(logger::file.c_str(), std::ofstream::trunc);
+	return;
+}
 
 /*
 void logger::save(fftw_complex * DEST)

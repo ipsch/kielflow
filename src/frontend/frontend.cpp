@@ -65,7 +65,7 @@ double Ly = 6.;
 double Lz = 6.;
 
 // physical parameters
-double M = .5;
+double M = .6;
 double tau = 0.1;
 double global_theta = 30.;
 double mu = 0.;
@@ -314,8 +314,8 @@ int main(int argc,char **argv)
 	field_imag Fni(Omega);
 	field_imag FPh(Omega);
 
-	//create_input_from_MGsolver(ni, Ph);
-	create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
+	create_input_from_MGsolver(ni, Ph);
+	//create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
 
 	OP_FFT my_FFT(Omega);
 	OP_iFFT my_iFFT(Omega);

@@ -19,8 +19,8 @@ std::string get_header(const grid &domain)
 	// write header to file (3-lines of header)
 	std::stringstream sstr;
 
-	sstr << "output from PFluidDy\n";
-	sstr << "Domain: ";
+	sstr << "# output from PFluidDy\n";
+	sstr << "# Domain: ";
 	sstr << "[" << domain.x_axis->val_at(0) << "," << domain.x_axis->val_at(domain.Nx)<< "]x";
 	sstr << "[" << domain.y_axis->val_at(0) << "," << domain.y_axis->val_at(domain.Nx)<< "]x";
 	sstr << "[" << domain.z_axis->val_at(0) << "," << domain.z_axis->val_at(domain.Nx)<< "]x";
@@ -28,7 +28,7 @@ std::string get_header(const grid &domain)
 	sstr << domain.Nx << "/";
 	sstr << domain.Ny << "/";
 	sstr << domain.Nz << "\n";
-	sstr << "x\ty\tz\tUx\tUy\tUz\tni\tPhi\n\n";
+	sstr << "# x\ty\tz\tUx\tUy\tUz\tni\tPhi\n\n";
 
 	return sstr.str();
 }
@@ -1292,8 +1292,7 @@ std::string I4(int number){
 
 
 
-void save_all(std::vector<particle> &particle_list,
-		      const grid &Omega,
+void save_all(const grid &Omega,
 			  const double &Time,
 		      const parameters &Params,
 		      const field_imag &FUx, const field_imag &FUy, const field_imag &FUz,
@@ -1316,7 +1315,6 @@ void save_all(std::vector<particle> &particle_list,
 
 
 void save_slice(const int &step,
-		  std::vector<particle> &particle_list,
 	      const grid &Omega,
 		  const double &Time,
 	      const parameters &Params,
@@ -1326,7 +1324,6 @@ void save_slice(const int &step,
 {
 	std::string path = "./data/slice_"+I4(step)+".h5";
 
-	save_particles(particle_list, "./config/particles.dat");
 	file_create(path);
 	save_grid(Omega, path);
 	save_time(Time, path);

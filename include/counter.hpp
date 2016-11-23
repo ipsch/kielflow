@@ -15,6 +15,7 @@ public :
 	int show(void) {return step;}
 	bool up(void);
 	bool good(void) {return (step<step_max) ? true : false;}
+	void operator ++() {step++;}
 
 };
 

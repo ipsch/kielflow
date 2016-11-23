@@ -111,8 +111,7 @@ void save_particles(std::vector<particle> &particle_list,
 		            const std::string &path = "./config/particles.dat");
 
 
-void save_all(std::vector<particle> &particle_list,
-		      const grid &Omega,
+void save_all(const grid &Omega,
 			  const double &Time,
 		      const parameters &Params,
 		      const field_imag &FUx, const field_imag &FUy, const field_imag &FUz,
@@ -121,7 +120,6 @@ void save_all(std::vector<particle> &particle_list,
 
 
 void save_slice(const int &step,
-		  std::vector<particle> &particle_list,
 	      const grid &Omega,
 		  const double &Time,
 	      const parameters &Params,

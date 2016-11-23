@@ -218,7 +218,6 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
    #if defined(_RHS_DIFFUSION) && defined(_RHS_E_INT) // ######################
 	my_FFT(Phi,FBuffer_1st);
 	dealiasing_undesignated(FBuffer_1st, [] (double k) {return exp(-2000.*pow(k,15.));});
-	my_dealiasing(FBuffer_1st);
 	for(int ijk=0; ijk<FBuffer_1st.N; ijk++)
 	{
 		FBuffer_1st.val[ijk][0] += Fni.val[ijk][0]/my_params.theta;
@@ -303,7 +302,7 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 
 	// ########################################################################
    #if defined(_RHS_E_EXT) // #################################################
-	d_dx(Fni,FBuffer_ni);
+	d_dx(Fni,FBuffer_1st);
 	for(int i=0; i<FBuffer_ni.N; ++i)
 	{
 		FBuffer_ni.val[i][0] += my_params.M*FBuffer_1st.val[i][0];
@@ -538,26 +537,26 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 	// RHS-VALUE BACK TO I/O ##################################################
 	for(int ijk=0; ijk<FUx.N; ++ijk)
 	{
-		FUx.val[ijk][0] = (-FBuffer_Ux.val[ijk][0]);
-		FUx.val[ijk][1] = (-FBuffer_Ux.val[ijk][1]);
+		FUx.val[ijk][0] = -FBuffer_Ux.val[ijk][0];
+		FUx.val[ijk][1] = -FBuffer_Ux.val[ijk][1];
 	}
 
 	for(int ijk=0; ijk<FUy.N; ++ijk)
 	{
-		FUy.val[ijk][0] = (-FBuffer_Uy.val[ijk][0]);
-		FUy.val[ijk][1] = (-FBuffer_Uy.val[ijk][1]);
+		FUy.val[ijk][0] = -FBuffer_Uy.val[ijk][0];
+		FUy.val[ijk][1] = -FBuffer_Uy.val[ijk][1];
 	}
 
 	for(int ijk=0; ijk<FUz.N; ++ijk)
 	{
-		FUz.val[ijk][0] = (-FBuffer_Uz.val[ijk][0]);
-		FUz.val[ijk][1] = (-FBuffer_Uz.val[ijk][1]);
+		FUz.val[ijk][0] = -FBuffer_Uz.val[ijk][0];
+		FUz.val[ijk][1] = -FBuffer_Uz.val[ijk][1];
 	}
 
 	for(int ijk=0; ijk<Fni.N; ++ijk)
 	{
-		Fni.val[ijk][0] = (-FBuffer_ni.val[ijk][0]);
-		Fni.val[ijk][1] = (-FBuffer_ni.val[ijk][1]);
+		Fni.val[ijk][0] = -FBuffer_ni.val[ijk][0];
+		Fni.val[ijk][1] = -FBuffer_ni.val[ijk][1];
 	}
 
    #if defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
