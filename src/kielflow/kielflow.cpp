@@ -65,11 +65,11 @@ int main(int argc,char **argv)
 	my_log << VERSION_STRING;
    #endif
 
-	int iterations= 3000;
-	counter i_output(10);
-	counter i_backup(50);
+	int iterations= 80000;
+	counter i_output(500);
+	counter i_backup(1000);
 
-	double charge_Q = -11498.5;
+	double charge_Q = 0.; // -11498.5;
 	double radius_a = 0.15;
     bool override_M = false;
     bool override_theta = false;
@@ -205,14 +205,14 @@ int main(int argc,char **argv)
 
 	// ##### MULTIGRID #####
 	solver_poisson_multigrid MG(NLJ);
-	const int MG_N = 4;
+	const int MG_N = 1;
 
 	int * MG_steps_sizes = new int[MG_N]
-              {0,-1,-1,-1};
+              {-1};
 	MG_lvl_control * cycle_shape = new MG_lvl_control[MG_N]
-			  { lvl_down3, lvl_up, lvl_up, lvl_up};
+			  { lvl_keep };
 	double * MG_error = new double[MG_N]
-			  { 0.01, 0.0005, 0.0001, 0.0001};
+			  { 0.001};
 
 	MG.set_level_control(MG_N, MG_steps_sizes, cycle_shape, MG_error);
 

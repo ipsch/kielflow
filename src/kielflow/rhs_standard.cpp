@@ -48,6 +48,36 @@ N(domain.Nx*domain.Ny*(domain.Nz/2+1))
 				penalization_barrier[ijk] = (x<-0.5*L/3.) ? pow(cos(2*(1.5)*pi/L*x),2.) : 0.;
 			}
 
+	penalization_mask = (int*) fftw_malloc(sizeof(double) * N_real);
+	penalization_ramp = (double*) fftw_malloc(sizeof(double) * N_real);
+	for(int i=0; i<domain.Nx; i++)
+		for(int j=0; j<domain.Ny; j++)
+			for(int k=0; k<domain.Nz; k++)
+			{
+				double x = domain.x_axis->val_at(i);
+				double L = domain.x_axis->L;
+				double A = 0.1;
+				double mask_val = 1.;
+				int ijk = (k + (domain.Nz)*(j + i*domain.Ny));
+
+
+				const double pi=acos(-1);
+
+				if(x <= -L/2+4.)
+				{
+					penalization_mask[ijk] =1.;
+					mask_val = 1. -A - A*sin(0.25*pi*(x+L/2.+2.));
+					mask_val = log(mask_val);
+				}
+				else
+				{
+					mask_val = 0.;
+				}
+
+
+				penalization_ramp[ijk] = mask_val;
+			}
+
 	field_SV = (double*) fftw_malloc(sizeof(double) * N);
 	double kx_max = domain.x_axis->k_val_at(domain.Nx/2);
 	double ky_max = domain.y_axis->k_val_at(domain.Ny/2);
@@ -532,6 +562,19 @@ void rhs_standard::solve(const double &t, field_imag &FUx, field_imag &FUy, fiel
 	my_dealiasing(FBuffer_ni);
 #endif
 
+
+	iFFT(Fni, Buffer_1st);
+	iFFT(FBuffer_ni,Buffer_2nd);
+	for(int ijk=0; ijk<Buffer_2nd.N; ijk++)
+	{
+		if(penalization_mask[ijk]==1)
+			Buffer_2nd.val[ijk] = 2.0*(Buffer_1st.val[ijk]-penalization_ramp[ijk]);
+	}
+	FFT(Buffer_2nd,FBuffer_ni);
+	my_dealiasing(FBuffer_ni);
+
+
+	//penalization_ramp
 
 	// ########################################################################
 	// RHS-VALUE BACK TO I/O ##################################################

@@ -55,23 +55,23 @@ double pi = acos(-1.);
 // number of grid-points
 // in different space directions
 
-int Nx = 128;
+int Nx = 512;
 //int Nx = 384;
-int Ny = 128;
-int Nz = 128;
+int Ny = 4;
+int Nz = 4;
 // Box dimensions
-double Lx = 6.;
-double Ly = 6.;
-double Lz = 6.;
+double Lx = 26.;
+double Ly = 2.;
+double Lz = 2.;
 
 // physical parameters
-double M = .6;
+double M = .0;
 double tau = 0.1;
 double global_theta = 30.;
 double mu = 0.;
 double beta = 0.0;
-double global_Q = -11498.5;
-
+//double global_Q = -11498.5;
+double global_Q = 0.;
 double radius_a = 0.15;
 
 void create_input_from_old_data(field_real &Ux, field_real &Uy, field_real &Uz, field_real &ni, field_real &Ph)
@@ -153,9 +153,13 @@ void create_input_from_MGsolver(field_real &ni, field_real &Ph)
 	save_2d(nd, my_dim, "./data/nd2d.dat");
 	save_1d(nd, my_dim, "./data/nd1d.dat");
 
-	field_integrate Integrator(nd);
-	double Qges=Integrator.execute(nd);
-	std::cout << "Qges= " << Qges << std::endl;
+	field_integrate IntegratorTrapez(nd.my_grid, 1);
+	field_integrate IntegratorSimpson(nd.my_grid, 2);
+	double Qges;
+	Qges=IntegratorTrapez.execute(nd);
+	std::cout << "Qges= " << Qges << " (by trapez rule)\n";
+	Qges=IntegratorSimpson.execute(nd);
+	std::cout << "Qges= " << Qges << " (by Simpson rule)\n";
 
 	// ##### RELAXATIONS-SOLVER #####
 	fkt3d_const boundary_shape(0.); // there are no additional boundarys (except Domain borders)
@@ -285,6 +289,8 @@ int main(int argc,char **argv)
 		axis_CoSiSt x_axis(-0.5*Lx, Lx, Nx, Lx*(1.-0.3)/(2*pi) );
 		axis_CoSiSt y_axis(-0.5*Ly, Ly, Ny, Ly*(1.-0.3)/(2*pi) );
 		axis_CoSiSt z_axis(-0.5*Lz, Lz, Nz, Lz*(1.-0.3)/(2*pi) );
+
+
 	/*
 	axis_CoSiSt x_axis(-0.5*Lx, Lx, Nx, Lx*(1.-0.25)/(2*pi) );
 	axis_CoSiSt y_axis(-0.5*Ly, Ly, Ny, Ly*(1.-0.25)/(2*pi) );
@@ -314,7 +320,7 @@ int main(int argc,char **argv)
 	field_imag Fni(Omega);
 	field_imag FPh(Omega);
 
-	create_input_from_MGsolver(ni, Ph);
+	//create_input_from_MGsolver(ni, Ph);
 	//create_input_from_old_data(Ux, Uy, Uz, ni, Ph);
 
 	OP_FFT my_FFT(Omega);
@@ -329,13 +335,13 @@ int main(int argc,char **argv)
 	my_iFFT(Fni,ni);
 	my_iFFT(FPh,Ph);
 
-	//ni.fill2([&] (double x, double y, double z) {return 1.;});
+	ni.fill2([&] (double x, double y, double z) {return 1.;});
 	//ni.fill2([&] (double x, double y, double z) {return 1.+exp(-(x*x)/0.1);});
 	//Ux.fill2([&] (double x, double y, double z) {return 0.2*sin(2*3.14152*x/8.);});
-
-	//Ux.fill2([&] (double x, double y, double z) {return 0.;});
-	//Uy.fill2([&] (double x, double y, double z) {return 0.;});
-	//Uz.fill2([&] (double x, double y, double z) {return 0.;});
+	Ph.fill2([&] (double x, double y, double z) {return 0.;});
+	Ux.fill2([&] (double x, double y, double z) {return 0.;});
+	Uy.fill2([&] (double x, double y, double z) {return 0.;});
+	Uz.fill2([&] (double x, double y, double z) {return 0.;});
 
    #if defined(_MY_VERBOSE) || defined(_MY_VERBOSE_MORE) || defined(_MY_VERBOSE_TEDIOUS)
 	std::cout << "save all" << std::endl;
